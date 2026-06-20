@@ -1,0 +1,12 @@
+{
+  "name": "ucf-flow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/start.mjs",
+    "frontend": "node server/frontend.mjs",
+    "backend": "node server/backend.mjs",
+    "dev": "npm start"
+  }
+}

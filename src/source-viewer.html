@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>出典ビューア</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --line: #e6e9ef;
+      --text: #1f2733;
+      --muted: #6b7480;
+      --green: #0f835c;
+      --green-bg: #eaf7f0;
+      --primary: #4f6ef7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .shell { min-height: 100vh; display: flex; flex-direction: column; }
+    header {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+    }
+    .badge {
+      flex: none;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+      background: var(--green-bg);
+      border: 1px solid #c6ecd8;
+      border-radius: 999px;
+      padding: 4px 10px;
+    }
+    .title { min-width: 0; flex: 1; }
+    h1 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .meta { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+    .actions { flex: none; display: flex; gap: 8px; }
+    a.button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    a.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    main { flex: 1; min-height: 0; }
+    iframe { display: block; width: 100%; height: calc(100vh - 58px); border: 0; background: #fff; }
+    .pdf-layout {
+      height: calc(100vh - 58px);
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      background: #eef1f5;
+    }
+    .pdf-pane { min-width: 0; min-height: 0; background: #fff; }
+    .pdf-pane iframe { height: 100%; }
+    .reference-pane {
+      min-width: 0;
+      min-height: 0;
+      overflow: auto;
+      border-left: 1px solid var(--line);
+      background: #fbfcfe;
+      padding: 14px;
+    }
+    .reference-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 13px 14px;
+      box-shadow: 0 1px 4px rgba(16, 24, 40, .04);
+    }
+    .reference-card h2 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: var(--green);
+    }
+    .query {
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+    .snippet {
+      font-size: 12.5px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #2b333f;
+    }
+    mark {
+      background: #fff0a6;
+      color: inherit;
+      padding: 0 .08em;
+      border-radius: 3px;
+      box-shadow: inset 0 -1px 0 #e5c84a;
+    }
+    @media (max-width: 900px) {
+      .pdf-layout { grid-template-columns: 1fr; grid-template-rows: 58vh minmax(220px, auto); height: auto; min-height: calc(100vh - 58px); }
+      .reference-pane { border-left: 0; border-top: 1px solid var(--line); }
+      .pdf-pane iframe { height: 58vh; }
+    }
+    .fallback {
+      max-width: 980px;
+      margin: 22px auto;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 2px 8px rgba(16, 24, 40, .05);
+    }
+    .fallback h2 { margin: 0 0 10px; font-size: 14px; }
+    .notice {
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border-radius: 9px;
+      border: 1px solid #f0dfb8;
+      background: #fff9ea;
+      color: #85620f;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font: 13px/1.75 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      color: #2b333f;
+    }
+    .empty {
+      max-width: 680px;
+      margin: 48px auto;
+      padding: 22px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <span class="badge" id="kind">出典</span>
+      <div class="title">
+        <h1 id="title">読み込み中...</h1>
+        <div class="meta" id="meta"></div>
+      </div>
+      <div class="actions" id="actions"></div>
+    </header>
+    <main id="main">
+      <div class="empty">出典を読み込んでいます。</div>
+    </main>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const ws = params.get("ws") || "ws_default";
+    const ref = params.get("ref") || "";
+    const highlightQuery = params.get("q") || params.get("query") || "";
+
+    function readJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (_) {
+        return fallback;
+      }
+    }
+
+    function kbKey(workspaceId) { return "tpf_kbsrc_" + (workspaceId || "ws_default"); }
+    function dbKey(workspaceId) { return "tpf_db_" + (workspaceId || "ws_default"); }
+
+    function childFolderIds(db, rootId) {
+      const ids = { [rootId || ""]: true };
+      let changed = true;
+      while (changed) {
+        changed = false;
+        (db.folders || []).forEach(f => {
+          if (!ids[f.id] && ids[f.parentId || ""]) {
+            ids[f.id] = true;
+            changed = true;
+          }
+        });
+      }
+      return ids;
+    }
+
+    function resolvePublished(key) {
+      const reg = readJson("tpf_pub_v1", {});
+      const ent = reg[key];
+      if (!ent) return null;
+      const db = readJson(dbKey(ent.ownerWs), { folders: [], docs: [] });
+      const ids = childFolderIds(db, ent.folderId || "");
+      const sources = readJson(kbKey(ent.ownerWs), []).filter(s => ids[s.folderId || ""]);
+      const docs = (db.docs || []).filter(d => ids[d.folderId || ""]);
+      return { ownerWs: ent.ownerWs, name: ent.name, sources, docs };
+    }
+
+    function parseRef(value) {
+      let m = /^src:([^:]+):(\d+)$/.exec(value);
+      if (m) return { type: "src", sourceId: m[1], page: Number(m[2]), workspaceId: ws };
+      m = /^doc:([^:]+)$/.exec(value);
+      if (m) return { type: "doc", docId: m[1], workspaceId: ws };
+      m = /^shsrc:([^:]+):([^:]+):(\d+)$/.exec(value);
+      if (m) return { type: "shsrc", pubKey: m[1], sourceId: m[2], page: Number(m[3]) };
+      m = /^shdoc:([^:]+):([^:]+)$/.exec(value);
+      if (m) return { type: "shdoc", pubKey: m[1], docId: m[2] };
+      return null;
+    }
+
+    function resolveRef(value) {
+      const parsed = parseRef(value);
+      if (!parsed) return null;
+      if (parsed.type === "src") {
+        const sources = readJson(kbKey(parsed.workspaceId), []);
+        const source = sources.find(s => s.id === parsed.sourceId);
+        const page = source && (source.pages || []).find(p => Number(p.page) === parsed.page);
+        return source && page ? { kind: "pdf-page", source, page, pageNo: parsed.page, workspaceId: parsed.workspaceId } : null;
+      }
+      if (parsed.type === "doc") {
+        const db = readJson(dbKey(parsed.workspaceId), { docs: [] });
+        const doc = (db.docs || []).find(d => d.id === parsed.docId);
+        return doc ? { kind: "doc", doc, workspaceId: parsed.workspaceId } : null;
+      }
+      if (parsed.type === "shsrc") {
+        const pub = resolvePublished(parsed.pubKey);
+        const source = pub && pub.sources.find(s => s.id === parsed.sourceId);
+        const page = source && (source.pages || []).find(p => Number(p.page) === parsed.page);
+        return source && page ? { kind: "pdf-page", source, page, pageNo: parsed.page, workspaceId: pub.ownerWs, sharedName: pub.name } : null;
+      }
+      if (parsed.type === "shdoc") {
+        const pub = resolvePublished(parsed.pubKey);
+        const doc = pub && pub.docs.find(d => d.id === parsed.docId);
+        return doc ? { kind: "doc", doc, workspaceId: pub.ownerWs, sharedName: pub.name } : null;
+      }
+      return null;
+    }
+
+    function openPdfStore() {
+      return new Promise((resolve, reject) => {
+        if (!window.indexedDB) { reject(new Error("IndexedDBを利用できません。")); return; }
+        const req = indexedDB.open("tpf_pdf_store_v1", 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains("pdfs")) db.createObjectStore("pdfs");
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error("PDFストアを開けませんでした。"));
+      });
+    }
+
+    async function readPdfBlob(key) {
+      if (!key) return null;
+      const db = await openPdfStore();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction("pdfs", "readonly");
+        const req = tx.objectStore("pdfs").get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error || new Error("PDFを読めませんでした。"));
+      });
+    }
+
+    function samplePdfUrl(source) {
+      const name = ((source && source.pdf) || "") + " " + ((source && source.name) || "");
+      return name.indexOf("サンプル_日立プリンタ_基本操作説明書") >= 0 ? "assets/sample-manual.pdf" : "";
+    }
+
+    function setHeader(kind, title, meta) {
+      document.getElementById("kind").textContent = kind;
+      document.getElementById("title").textContent = title;
+      document.getElementById("meta").textContent = meta || "";
+      document.title = title || "出典ビューア";
+    }
+
+    function setActions(pdfUrl) {
+      const actions = document.getElementById("actions");
+      actions.innerHTML = "";
+      if (!pdfUrl) return;
+      const a = document.createElement("a");
+      a.className = "button primary";
+      a.href = pdfUrl;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.textContent = "PDFを別タブで開く";
+      actions.appendChild(a);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+
+    function escapeRegExp(value) {
+      return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function highlightTermsFromQuery(query, fallbackText) {
+      const raw = String(query || "");
+      const normalized = raw
+        .replace(/(について|教えてください|教えて|ください|お願いします|とは|どこ|どれ|どの|場合|方法|手順|確認)/g, " ")
+        .replace(/[、。，．,.?？!！:：;；()[\]「」『』【】]/g, " ")
+        .replace(/[のをにはがとでもやへ]/g, " ");
+      const out = [];
+      const seen = {};
+      const add = (term) => {
+        term = String(term || "").trim();
+        if (!term) return;
+        if (/^(これ|それ|あれ|どれ|です|ます|して|ください|教えて|とは|について|場合|確認|方法|手順)$/i.test(term)) return;
+        if (/^[a-z0-9]+$/i.test(term) ? term.length < 2 : term.length < 2) return;
+        const key = term.toLowerCase();
+        if (!seen[key]) { seen[key] = true; out.push(term); }
+      };
+      const re = /[a-z0-9][a-z0-9_-]*|[ぁ-んァ-ヶー一-龥々〆ヵヶ]{2,}/gi;
+      let m;
+      while ((m = re.exec(normalized))) add(m[0]);
+      if (!out.length) {
+        const text = String(fallbackText || "");
+        while ((m = re.exec(text)) && out.length < 3) add(m[0]);
+      }
+      return out.sort((a, b) => b.length - a.length).slice(0, 12);
+    }
+
+    function makeSnippet(text, terms) {
+      const src = String(text || "").replace(/\s+\n/g, "\n").trim();
+      if (!src) return "";
+      let hit = -1;
+      for (const term of terms || []) {
+        const i = src.toLowerCase().indexOf(String(term).toLowerCase());
+        if (i >= 0 && (hit < 0 || i < hit)) hit = i;
+      }
+      if (hit < 0) return src.slice(0, 1800);
+      const start = Math.max(0, hit - 520);
+      const end = Math.min(src.length, hit + 1300);
+      return (start > 0 ? "… " : "") + src.slice(start, end) + (end < src.length ? " …" : "");
+    }
+
+    function highlightHtml(text, terms) {
+      let html = escapeHtml(text || "");
+      (terms || []).forEach(term => {
+        if (!term) return;
+        const re = new RegExp("(" + escapeRegExp(escapeHtml(term)) + ")", "gi");
+        html = html.replace(re, "<mark>$1</mark>");
+      });
+      return html;
+    }
+
+    function pdfFragment(pageNo, terms) {
+      const parts = ["page=" + encodeURIComponent(pageNo || 1)];
+      const searchTerm = (terms || []).find(t => !/^[a-z0-9_-]+$/i.test(t)) || (terms || [])[0];
+      if (searchTerm) parts.push("search=" + encodeURIComponent(searchTerm));
+      return "#" + parts.join("&");
+    }
+
+    function showReferencePane(entry) {
+      if (!entry || !entry.page) return "";
+      const text = entry.page.md || entry.page.summary || "";
+      const terms = highlightTermsFromQuery(highlightQuery, text);
+      const snippet = makeSnippet(text, terms);
+      return [
+        '<aside class="reference-pane">',
+        '<div class="reference-card">',
+        '<h2>参考箇所（抽出本文）</h2>',
+        highlightQuery ? ('<div class="query">質問: ' + escapeHtml(highlightQuery) + '</div>') : '<div class="query">質問文が渡されていないため、ページ本文を表示しています。</div>',
+        '<div class="snippet">' + highlightHtml(snippet || "このページには抽出済み本文がありません。", terms) + '</div>',
+        '</div>',
+        '</aside>'
+      ].join("");
+    }
+
+    function showPdf(url, source, pageNo, entry) {
+      const text = entry && entry.page ? (entry.page.md || entry.page.summary || "") : "";
+      const terms = highlightTermsFromQuery(highlightQuery, text);
+      const pdfUrl = url + pdfFragment(pageNo, terms);
+      setHeader("PDF", (source.name || source.pdf || "PDF") + " p" + pageNo, source.pdf || "");
+      setActions(pdfUrl);
+      if (entry && entry.page) {
+        document.getElementById("main").innerHTML = '<div class="pdf-layout"><section class="pdf-pane"><iframe title="PDFビューア"></iframe></section>' + showReferencePane(entry) + '</div>';
+      } else {
+        document.getElementById("main").innerHTML = '<iframe title="PDFビューア"></iframe>';
+      }
+      document.querySelector("iframe").src = pdfUrl;
+    }
+
+    function showText(entry, notice) {
+      const title = entry.kind === "doc" ? (entry.doc.title || "メモ") : ((entry.source.name || "PDF") + " p" + entry.pageNo);
+      const body = entry.kind === "doc" ? (entry.doc.body || "") : (entry.page.md || entry.page.summary || "");
+      setHeader(entry.kind === "doc" ? "メモ" : "抽出本文", title, entry.sharedName ? ("共有: " + entry.sharedName) : "");
+      setActions("");
+      const main = document.getElementById("main");
+      const wrap = document.createElement("div");
+      wrap.className = "fallback";
+      if (notice) {
+        const n = document.createElement("div");
+        n.className = "notice";
+        n.textContent = notice;
+        wrap.appendChild(n);
+      }
+      const h = document.createElement("h2");
+      h.textContent = title;
+      wrap.appendChild(h);
+      const pre = document.createElement("pre");
+      const terms = highlightTermsFromQuery(highlightQuery, body);
+      pre.innerHTML = highlightHtml(makeSnippet(body, terms) || "この出典には表示できる本文がありません。", terms);
+      wrap.appendChild(pre);
+      main.innerHTML = "";
+      main.appendChild(wrap);
+    }
+
+    function showEmpty(message) {
+      setHeader("出典", "出典を開けません", "");
+      document.getElementById("main").innerHTML = '<div class="empty"></div>';
+      document.querySelector(".empty").textContent = message;
+    }
+
+    async function main() {
+      const directPdf = params.get("pdf") || "";
+      if (directPdf) {
+        const directPage = Math.max(1, Number(params.get("page") || 1) || 1);
+        const fileName = decodeURIComponent(directPdf.split("/").pop() || "PDF");
+        showPdf(directPdf, { name: fileName, pdf: directPdf }, directPage, null);
+        return;
+      }
+
+      const entry = resolveRef(ref);
+      if (!entry) { showEmpty("指定された出典が見つかりませんでした。"); return; }
+      if (entry.kind === "doc") { showText(entry, ""); return; }
+
+      const directUrl = entry.source.pdfUrl || samplePdfUrl(entry.source);
+      if (directUrl) { showPdf(directUrl, entry.source, entry.pageNo, entry); return; }
+
+      let blob = null;
+      try { blob = await readPdfBlob(entry.source.pdfBlobKey); } catch (_) { blob = null; }
+      if (blob) {
+        const pdfBlob = blob instanceof Blob ? blob : new Blob([blob], { type: "application/pdf" });
+        const objectUrl = URL.createObjectURL(pdfBlob);
+        showPdf(objectUrl, entry.source, entry.pageNo, entry);
+        return;
+      }
+
+      showText(entry, "このPDFは本体保存機能の追加前に取り込まれたため、PDFビューアではなく抽出済みページ本文を表示しています。今後取り込むPDFはPDFビューアで該当ページを開けます。");
+    }
+
+    main().catch(err => showEmpty((err && err.message) || "出典の読み込みに失敗しました。"));
+  </script>
+</body>
+</html>

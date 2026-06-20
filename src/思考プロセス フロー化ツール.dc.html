@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kurenaido&family=Yusei+Magic&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#f4f0e6;font-family:'Zen Kurenaido',sans-serif;color:#2f2b26;-webkit-font-smoothing:antialiased;}
+  *{box-sizing:border-box;}
+  :root{--paper:#f4f0e6;--ink:#2f2b26;--line:#c9c1b1;--soft:#7a7264;--accent:#e8623d;--mark:#ffd84d;--node:#fff;--card-shadow:3px 3px 0 rgba(47,43,38,.13);}
+  ::-webkit-scrollbar{height:9px;width:9px;}
+  ::-webkit-scrollbar-thumb{background:#cdc6b6;border-radius:8px;}
+</style>
+</helmet>
+
+<div style="{{ rootStyle }}">
+
+  <!-- ===== HEADER ===== -->
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:8px;">
+    <span style="font-family:'Yusei Magic',sans-serif;font-size:12px;letter-spacing:3px;color:var(--accent);">WIREFRAME ・ 方向性さがし（ラフ案）</span>
+    <h1 style="font-family:'Yusei Magic',sans-serif;font-size:34px;line-height:1.25;margin:0;max-width:780px;">専門家の思考プロセスを<br>フローにするツール</h1>
+    <p style="margin:0;font-size:16px;color:var(--soft);max-width:760px;">Q&amp;A・故障対応・チャット・マニュアル・面談の文字起こしから、熟練者の判断の道すじを抽出し、<span style="background:var(--mark);padding:0 3px;">分岐するフローチャート</span>として残すためのツール。全体フローのアイデアを5案ならべました。</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+      <span style="border:2px solid var(--ink);border-radius:20px;padding:4px 12px;font-size:13px;background:#fff;">対象：製造設備の保守 / IT機器サポート</span>
+      <span style="border:2px solid var(--ink);border-radius:20px;padding:4px 12px;font-size:13px;background:#fff;">AIが自動抽出 → 人が確認・修正</span>
+      <span style="border:2px solid var(--ink);border-radius:20px;padding:4px 12px;font-size:13px;background:#fff;">使う人：熟練者本人 / ナレッジ管理者</span>
+    </div>
+  </div>
+
+  <!-- ===== OVERVIEW STRIP ===== -->
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin:26px 0 8px;padding:16px;border:2px dashed var(--line);border-radius:14px;background:#faf7ef;">
+    <span style="width:100%;font-size:13px;color:var(--soft);margin-bottom:2px;">5案ざっくり比較 ↓</span>
+    <!-- A -->
+    <div style="flex:1;min-width:200px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="width:30px;height:30px;flex:none;border:2px solid var(--ink);border-radius:8px 7px 9px 6px;background:var(--accent);color:#fff;font-family:'Yusei Magic',sans-serif;display:flex;align-items:center;justify-content:center;">A</span>
+      <div><div style="font-size:14px;">パイプライン型</div><div style="font-size:12.5px;color:var(--soft);">取り込み→AI抽出→編集→公開の王道</div></div>
+    </div>
+    <!-- B -->
+    <div style="flex:1;min-width:200px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="width:30px;height:30px;flex:none;border:2px solid var(--ink);border-radius:8px 7px 9px 6px;background:#fff;font-family:'Yusei Magic',sans-serif;display:flex;align-items:center;justify-content:center;">B</span>
+      <div><div style="font-size:14px;">インタビュー対話型</div><div style="font-size:12.5px;color:var(--soft);">AIが質問して暗黙知を引き出す</div></div>
+    </div>
+    <!-- C -->
+    <div style="flex:1;min-width:200px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="width:30px;height:30px;flex:none;border:2px solid var(--ink);border-radius:8px 7px 9px 6px;background:#fff;font-family:'Yusei Magic',sans-serif;display:flex;align-items:center;justify-content:center;">C</span>
+      <div><div style="font-size:14px;">ギャップ検出型</div><div style="font-size:12.5px;color:var(--soft);">下書きの"穴"だけ専門家が埋める</div></div>
+    </div>
+    <!-- D -->
+    <div style="flex:1;min-width:200px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="width:30px;height:30px;flex:none;border:2px solid var(--ink);border-radius:8px 7px 9px 6px;background:#fff;font-family:'Yusei Magic',sans-serif;display:flex;align-items:center;justify-content:center;">D</span>
+      <div><div style="font-size:14px;">診断ファースト型</div><div style="font-size:12.5px;color:var(--soft);">使われ方からフローが育つ</div></div>
+    </div>
+    <!-- E -->
+    <div style="flex:1;min-width:200px;display:flex;gap:10px;align-items:flex-start;">
+      <span style="width:30px;height:30px;flex:none;border:2px solid var(--ink);border-radius:8px 7px 9px 6px;background:#fff;font-family:'Yusei Magic',sans-serif;display:flex;align-items:center;justify-content:center;">E</span>
+      <div><div style="font-size:14px;">トピック整理型</div><div style="font-size:12.5px;color:var(--soft);">膨大な履歴を主題ごとに束ねる</div></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ===== APPROACH A : PIPELINE ===== -->
+  <!-- ============================================================ -->
+  <div style="margin-top:46px;display:flex;align-items:flex-start;gap:16px;">
+    <span style="width:52px;height:52px;flex:none;border:2.5px solid var(--ink);border-radius:13px 11px 14px 10px;background:var(--accent);color:#fff;font-family:'Yusei Magic',sans-serif;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:var(--card-shadow);">A</span>
+    <div>
+      <h2 style="font-family:'Yusei Magic',sans-serif;font-size:23px;margin:0 0 4px;">パイプライン型 ― 集めて、下書きして、直す</h2>
+      <p style="margin:0;font-size:14.5px;color:var(--soft);max-width:680px;">過去データをまとめて読み込み、AIが候補フローを下書き。専門家はキャンバスで分岐を直して公開する、いちばん素直な流れ。</p>
+      <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;">
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">強み：分かりやすい</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">大量データ向き</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">弱み：最初の編集が重い</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:4px;overflow-x:auto;padding:18px 2px 14px;">
+    <!-- A1 -->
+    <div style="flex:none;width:288px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">1</span><span style="font-size:13px;">データを集める</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">取り込みソース</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:9px;min-height:172px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;"><span style="width:15px;height:15px;border:2px solid var(--ink);border-radius:4px;background:var(--accent);flex:none;"></span>Q&amp;A・問い合わせ履歴</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;"><span style="width:15px;height:15px;border:2px solid var(--ink);border-radius:4px;background:var(--accent);flex:none;"></span>故障対応・トラブル記録</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;"><span style="width:15px;height:15px;border:2px solid var(--ink);border-radius:4px;background:var(--accent);flex:none;"></span>チャット / メール</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);"><span style="width:15px;height:15px;border:2px solid var(--ink);border-radius:4px;background:#fff;flex:none;"></span>マニュアル・手順書</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);"><span style="width:15px;height:15px;border:2px solid var(--ink);border-radius:4px;background:#fff;flex:none;"></span>面談の文字起こし</div>
+          <div style="margin-top:auto;align-self:flex-start;border:2px solid var(--ink);border-radius:20px;padding:5px 14px;font-size:12px;background:var(--mark);">＋ 接続 / アップロード</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- A2 -->
+    <div style="flex:none;width:288px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">2</span><span style="font-size:13px;">AIが下書きを抽出</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">候補フロー（AI抽出）</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:9px;min-height:172px;">
+          <div style="border:2px solid var(--ink);border-radius:9px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:12.5px;">ポンプ異音の切り分け</span>
+            <div style="height:7px;border-radius:4px;background:var(--line);position:relative;overflow:hidden;"><div style="position:absolute;inset:0;width:72%;background:var(--accent);"></div></div>
+            <span style="font-size:10.5px;color:var(--soft);">信頼度 高 ・ ノード 9</span>
+          </div>
+          <div style="border:2px solid var(--ink);border-radius:9px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+            <span style="font-size:12.5px;">ネットワーク接続エラー</span>
+            <div style="height:7px;border-radius:4px;background:var(--line);position:relative;overflow:hidden;"><div style="position:absolute;inset:0;width:48%;background:var(--accent);"></div></div>
+            <span style="font-size:10.5px;color:var(--soft);">信頼度 中 ・ ノード 6</span>
+          </div>
+          <span style="font-size:11.5px;color:var(--soft);">… ほか 12 件を検出</span>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(-1.5deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ AIは"下書き"。確定は人。</div></sc-if>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- A3 -->
+    <div style="flex:none;width:312px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">3</span><span style="font-size:13px;">フローを編集</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">編集キャンバス</span></div>
+        <div style="display:flex;min-height:172px;">
+          <div style="flex:1;padding:12px;display:flex;flex-direction:column;align-items:center;gap:5px;background:repeating-linear-gradient(0deg,transparent,transparent 17px,#efeadd 17px,#efeadd 18px);">
+            <div style="border:2px solid var(--ink);border-radius:7px;padding:4px 12px;font-size:11.5px;background:#fff;">開始：異音</div>
+            <span style="font-size:13px;">↓</span>
+            <div style="width:50px;height:50px;transform:rotate(45deg);border:2px solid var(--ink);background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(-45deg);font-size:10.5px;">連続音?</span></div>
+            <span style="font-size:13px;">↓</span>
+            <div style="display:flex;gap:8px;"><div style="border:2px solid var(--ink);border-radius:7px;padding:4px 9px;font-size:11px;background:#fff;">Yes→点検</div><div style="border:2px solid var(--ink);border-radius:7px;padding:4px 9px;font-size:11px;background:#fff;">No→継続</div></div>
+          </div>
+          <div style="flex:none;width:96px;border-left:2px dashed var(--line);padding:10px 8px;display:flex;flex-direction:column;gap:7px;">
+            <span style="font-size:10.5px;color:var(--accent);">AI提案</span>
+            <div style="border:2px solid var(--ink);border-radius:7px;padding:5px;font-size:10px;">「温度確認」を追加？ <span style="display:block;margin-top:4px;color:var(--soft);">✓ 採用 / ✕</span></div>
+          </div>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(1.2deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ ドラッグで分岐を直す</div></sc-if>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- A4 -->
+    <div style="flex:none;width:288px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">4</span><span style="font-size:13px;">公開して使う</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">公開 / 共有</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:10px;min-height:172px;">
+          <div style="border:2px solid var(--ink);border-radius:9px;padding:9px;background:#eef6ee;display:flex;align-items:center;gap:8px;font-size:12.5px;"><span style="width:18px;height:18px;border-radius:50%;background:#3a9e63;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;flex:none;">✓</span>公開しました</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--soft);"><span style="border:2px solid var(--ink);border-radius:6px;padding:4px 8px;background:#fff;">🔗 共有リンク</span>コピー</div>
+          <div style="margin-top:auto;border:2px dashed var(--line);border-radius:9px;padding:9px;font-size:11.5px;color:var(--soft);">若手が「診断モード」で利用 →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ===== APPROACH B : INTERVIEW ===== -->
+  <!-- ============================================================ -->
+  <div style="margin-top:54px;display:flex;align-items:flex-start;gap:16px;">
+    <span style="width:52px;height:52px;flex:none;border:2.5px solid var(--ink);border-radius:13px 11px 14px 10px;background:#fff;font-family:'Yusei Magic',sans-serif;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:var(--card-shadow);">B</span>
+    <div>
+      <h2 style="font-family:'Yusei Magic',sans-serif;font-size:23px;margin:0 0 4px;">インタビュー対話型 ― AIが聞き出す</h2>
+      <p style="margin:0;font-size:14.5px;color:var(--soft);max-width:680px;">AIが履歴を下敷きに専門家へ質問。会話するだけで、右側のフローが少しずつ組み上がっていく。手が空いていない熟練者に向く。</p>
+      <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;">
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">強み：暗黙知を引き出す</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">操作が軽い</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">弱み：時間がかかる</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:4px;overflow-x:auto;padding:18px 2px 14px;">
+    <!-- B1 -->
+    <div style="flex:none;width:270px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">1</span><span style="font-size:13px;">履歴を読み込む</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">論点を抽出中</span></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:10px;min-height:172px;align-items:center;justify-content:center;">
+          <div style="display:flex;gap:6px;"><span style="width:38px;height:48px;border:2px solid var(--ink);border-radius:4px;background:#fff;"></span><span style="width:38px;height:48px;border:2px solid var(--ink);border-radius:4px;background:#fff;transform:rotate(4deg);"></span><span style="width:38px;height:48px;border:2px solid var(--ink);border-radius:4px;background:#fff;transform:rotate(-3deg);"></span></div>
+          <span style="font-size:12px;color:var(--soft);">3,210 件の履歴を解析</span>
+          <div style="width:80%;height:7px;border-radius:4px;background:var(--line);position:relative;overflow:hidden;"><div style="position:absolute;inset:0;width:60%;background:var(--accent);"></div></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- B2 -->
+    <div style="flex:none;width:340px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">2</span><span style="font-size:13px;">AIがあなたに質問</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;display:flex;min-height:200px;">
+        <div style="flex:1.3;padding:11px;display:flex;flex-direction:column;gap:8px;border-right:2px dashed var(--line);">
+          <div style="align-self:flex-start;max-width:90%;border:2px solid var(--ink);border-radius:11px 11px 11px 3px;padding:7px 9px;font-size:11.5px;background:#eef2f8;">ポンプの異音、まず何を確認しますか？</div>
+          <div style="align-self:flex-end;max-width:90%;border:2px solid var(--ink);border-radius:11px 11px 3px 11px;padding:7px 9px;font-size:11.5px;background:var(--mark);">回転数と温度。連続音なら軸受。</div>
+          <div style="align-self:flex-start;max-width:90%;border:2px solid var(--ink);border-radius:11px 11px 11px 3px;padding:7px 9px;font-size:11.5px;background:#eef2f8;">温度が高い時は？</div>
+          <div style="margin-top:auto;border:2px solid var(--line);border-radius:8px;padding:6px 9px;font-size:11px;color:var(--soft);">回答を入力…</div>
+        </div>
+        <div style="flex:1;padding:11px;display:flex;flex-direction:column;align-items:center;gap:4px;background:repeating-linear-gradient(0deg,transparent,transparent 15px,#efeadd 15px,#efeadd 16px);">
+          <span style="font-size:10px;color:var(--accent);align-self:flex-start;">構築中のフロー</span>
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 9px;font-size:10.5px;background:#fff;">異音</div>
+          <span style="font-size:11px;">↓</span>
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 9px;font-size:10.5px;background:#fff;">回転数・温度</div>
+          <span style="font-size:11px;">↓</span>
+          <div style="border:2px dashed var(--accent);border-radius:6px;padding:3px 9px;font-size:10.5px;color:var(--accent);">温度高い? …</div>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(-1.3deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ 話すだけで形になる</div></sc-if>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- B3 -->
+    <div style="flex:none;width:270px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">3</span><span style="font-size:13px;">分岐を一緒に確認</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">分岐の提案</span></div>
+        <div style="padding:13px;display:flex;flex-direction:column;gap:11px;min-height:172px;">
+          <div style="border:2px solid var(--ink);border-radius:11px 11px 11px 3px;padding:9px;font-size:12px;background:#eef2f8;">ここで対応が<span style="background:var(--mark);">2つに分かれ</span>そうです。合っていますか？</div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+            <div style="width:46px;height:46px;transform:rotate(45deg);border:2px dashed var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(-45deg);font-size:10px;color:var(--accent);">温度?</span></div>
+          </div>
+          <div style="margin-top:auto;display:flex;gap:7px;"><span style="flex:1;text-align:center;border:2px solid var(--ink);border-radius:8px;padding:6px;font-size:11.5px;background:var(--accent);color:#fff;">はい、分けます</span><span style="border:2px solid var(--ink);border-radius:8px;padding:6px 10px;font-size:11.5px;background:#fff;">いいえ</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- B4 -->
+    <div style="flex:none;width:248px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">4</span><span style="font-size:13px;">フロー完成</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">対話の成果物</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:172px;background:repeating-linear-gradient(0deg,transparent,transparent 17px,#efeadd 17px,#efeadd 18px);">
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 10px;font-size:10.5px;background:#fff;">異音</div><span style="font-size:12px;">↓</span>
+          <div style="width:44px;height:44px;transform:rotate(45deg);border:2px solid var(--ink);border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(-45deg);font-size:9.5px;">温度?</span></div><span style="font-size:12px;">↓</span>
+          <div style="display:flex;gap:7px;"><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 8px;font-size:10px;background:#fff;">軸受点検</div><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 8px;font-size:10px;background:#fff;">様子見</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ===== APPROACH C : GAP DETECTION ===== -->
+  <!-- ============================================================ -->
+  <div style="margin-top:54px;display:flex;align-items:flex-start;gap:16px;">
+    <span style="width:52px;height:52px;flex:none;border:2.5px solid var(--ink);border-radius:13px 11px 14px 10px;background:#fff;font-family:'Yusei Magic',sans-serif;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:var(--card-shadow);">C</span>
+    <div>
+      <h2 style="font-family:'Yusei Magic',sans-serif;font-size:23px;margin:0 0 4px;">ギャップ検出型 ― 穴だけ埋める</h2>
+      <p style="margin:0;font-size:14.5px;color:var(--soft);max-width:680px;">AIがまず全体の下書きを作り、"判断基準が不明" "情報不足" な箇所だけをハイライト。専門家はその穴をピンポイントで埋める。</p>
+      <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;">
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">強み：専門家の手間が最小</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">抜け漏れに強い</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">弱み：下書き精度に依存</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:4px;overflow-x:auto;padding:18px 2px 14px;">
+    <!-- C1 -->
+    <div style="flex:none;width:268px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">1</span><span style="font-size:13px;">下書きを自動生成</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;position:relative;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">自動ドラフト</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:172px;opacity:.55;">
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 10px;font-size:10.5px;">症状</div><span>↓</span>
+          <div style="width:44px;height:44px;transform:rotate(45deg);border:2px solid var(--ink);border-radius:6px;"></div><span>↓</span>
+          <div style="display:flex;gap:7px;"><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 9px;font-size:10px;">A</div><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 9px;font-size:10px;">B</div></div>
+        </div>
+        <span style="position:absolute;top:46px;right:10px;transform:rotate(-9deg);border:2px solid var(--accent);color:var(--accent);border-radius:6px;padding:2px 9px;font-size:13px;font-family:'Yusei Magic',sans-serif;">下書き</span>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- C2 -->
+    <div style="flex:none;width:312px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">2</span><span style="font-size:13px;">AIが穴を指摘</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;display:flex;min-height:200px;">
+        <div style="flex:1;padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;border-right:2px dashed var(--line);">
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 10px;font-size:10.5px;background:#fff;">症状</div><span style="font-size:12px;">↓</span>
+          <div style="position:relative;"><div style="width:46px;height:46px;transform:rotate(45deg);border:2.5px solid var(--accent);border-radius:6px;background:#fff8f5;"></div><span style="position:absolute;top:-9px;right:-9px;width:20px;height:20px;background:var(--accent);color:#fff;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;">!</span></div>
+          <span style="font-size:12px;">↓</span>
+          <div style="display:flex;gap:7px;"><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 9px;font-size:10px;background:#fff;">A</div><div style="border:2px dashed var(--accent);border-radius:6px;padding:3px 9px;font-size:10px;color:var(--accent);">? 不明</div></div>
+        </div>
+        <div style="flex:none;width:118px;padding:11px 9px;display:flex;flex-direction:column;gap:8px;">
+          <span style="font-size:10.5px;color:var(--accent);">見つかった穴 3</span>
+          <div style="border:2px solid var(--ink);border-radius:7px;padding:5px;font-size:10px;background:#fff8f5;">分岐条件が不明</div>
+          <div style="border:2px solid var(--ink);border-radius:7px;padding:5px;font-size:10px;background:#fff8f5;">対処Bが空</div>
+          <div style="border:2px solid var(--ink);border-radius:7px;padding:5px;font-size:10px;background:#fff8f5;">根拠が薄い</div>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(1.4deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ 全部やり直さない</div></sc-if>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- C3 -->
+    <div style="flex:none;width:268px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">3</span><span style="font-size:13px;">穴だけ埋める</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">穴うめ（1 / 3）</span></div>
+        <div style="padding:13px;display:flex;flex-direction:column;gap:10px;min-height:172px;">
+          <div style="font-size:12.5px;">Q. この分岐、何で判断していますか？</div>
+          <div style="border:2px solid var(--ink);border-radius:8px;padding:8px;font-size:11.5px;background:var(--mark);min-height:48px;">温度が60℃以上かどうか</div>
+          <div style="margin-top:auto;display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--soft);"><span style="border:2px solid var(--ink);border-radius:8px;padding:6px 14px;background:var(--accent);color:#fff;">埋める</span><span>スキップ</span></div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- C4 -->
+    <div style="flex:none;width:258px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">4</span><span style="font-size:13px;">完成・信頼度</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">カバレッジ</span></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:12px;min-height:172px;align-items:center;justify-content:center;">
+          <div style="font-family:'Yusei Magic',sans-serif;font-size:34px;color:#3a9e63;">92%</div>
+          <div style="width:88%;height:9px;border:2px solid var(--ink);border-radius:6px;position:relative;overflow:hidden;background:#fff;"><div style="position:absolute;inset:0;width:92%;background:#3a9e63;"></div></div>
+          <span style="font-size:11.5px;color:var(--soft);">穴 3 → 0 ・ レビュー完了</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ===== APPROACH D : DIAGNOSIS FIRST ===== -->
+  <!-- ============================================================ -->
+  <div style="margin-top:54px;display:flex;align-items:flex-start;gap:16px;">
+    <span style="width:52px;height:52px;flex:none;border:2.5px solid var(--ink);border-radius:13px 11px 14px 10px;background:#fff;font-family:'Yusei Magic',sans-serif;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:var(--card-shadow);">D</span>
+    <div>
+      <h2 style="font-family:'Yusei Magic',sans-serif;font-size:23px;margin:0 0 4px;">診断ファースト型 ― 使われ方から育てる</h2>
+      <p style="margin:0;font-size:14.5px;color:var(--soft);max-width:680px;">まず若手が診断で使う体験を中心に置く。AIは履歴から最初のフローを作り、実際に辿られた経路の"詰まり"を専門家が見て改善していく。</p>
+      <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;">
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">強み：すぐ役立つ</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">改善が回り続ける</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">弱み：初期フローが要る</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:4px;overflow-x:auto;padding:18px 2px 14px;">
+    <!-- D1 -->
+    <div style="flex:none;width:260px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">1</span><span style="font-size:13px;">若手が症状を入力</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">診断スタート</span></div>
+        <div style="padding:13px;display:flex;flex-direction:column;gap:11px;min-height:172px;">
+          <div style="border:2px solid var(--ink);border-radius:9px;padding:9px;font-size:12px;color:var(--soft);background:#fff;">🔍 症状を入力…</div>
+          <span style="font-size:11px;color:var(--soft);">よくある相談</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span style="border:2px solid var(--ink);border-radius:16px;padding:3px 9px;font-size:11px;background:#fff;">異音がする</span>
+            <span style="border:2px solid var(--ink);border-radius:16px;padding:3px 9px;font-size:11px;background:#fff;">起動しない</span>
+            <span style="border:2px solid var(--ink);border-radius:16px;padding:3px 9px;font-size:11px;background:#fff;">通信エラー</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- D2 -->
+    <div style="flex:none;width:300px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">2</span><span style="font-size:13px;">質問に答えて辿る</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="font-size:12px;color:var(--soft);">ステップ 2 / 5</span><div style="flex:1;height:6px;border-radius:4px;background:var(--line);position:relative;overflow:hidden;"><div style="position:absolute;inset:0;width:40%;background:var(--accent);"></div></div></div>
+        <div style="padding:14px;display:flex;flex-direction:column;gap:12px;min-height:176px;">
+          <div style="font-size:14px;">異音は<span style="background:var(--mark);">連続して</span>聞こえますか？</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="border:2px solid var(--ink);border-radius:10px;padding:10px;font-size:13px;background:var(--accent);color:#fff;">はい、連続音</div>
+            <div style="border:2px solid var(--ink);border-radius:10px;padding:10px;font-size:13px;background:#fff;">いいえ、断続的</div>
+          </div>
+          <span style="margin-top:auto;font-size:11px;color:var(--soft);">← 1つ戻る</span>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(-1.2deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ フローを1問ずつ見せる</div></sc-if>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- D3 -->
+    <div style="flex:none;width:258px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">3</span><span style="font-size:13px;">解決 / エスカレ</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">結果</span></div>
+        <div style="padding:13px;display:flex;flex-direction:column;gap:11px;min-height:172px;">
+          <div style="border:2px solid var(--ink);border-radius:9px;padding:10px;background:#eef6ee;font-size:12.5px;">対処：軸受を点検・給油。<br>解決しましたか？</div>
+          <div style="display:flex;gap:7px;"><span style="flex:1;text-align:center;border:2px solid var(--ink);border-radius:8px;padding:7px;font-size:11.5px;background:var(--accent);color:#fff;">解決した 👍</span><span style="border:2px solid var(--ink);border-radius:8px;padding:7px 9px;font-size:11.5px;background:#fff;">まだ</span></div>
+          <div style="margin-top:auto;border:2px dashed var(--line);border-radius:8px;padding:8px;font-size:11px;color:var(--soft);">解決しない → 専門家に相談</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- D4 -->
+    <div style="flex:none;width:300px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">4</span><span style="font-size:13px;">専門家が経路から改善</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">利用ログ / 改善</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:9px;min-height:172px;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;"><span style="width:80px;flex:none;color:var(--soft);">よく辿る</span><div style="flex:1;height:9px;border-radius:4px;background:var(--line);position:relative;overflow:hidden;"><div style="position:absolute;inset:0;width:80%;background:#3a9e63;"></div></div></div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11.5px;"><span style="width:80px;flex:none;color:var(--soft);">詰まる所</span><div style="flex:1;height:9px;border-radius:4px;background:var(--line);position:relative;overflow:hidden;"><div style="position:absolute;inset:0;width:55%;background:var(--accent);"></div></div></div>
+          <div style="border:2px solid var(--accent);border-radius:9px;padding:9px;font-size:11.5px;background:#fff8f5;margin-top:2px;">⚠ 「通信エラー」で離脱が多い<br><span style="color:var(--accent);">→ 分岐を追加して改善</span></div>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(1.3deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ 使われ方からフローが育つ ♻</div></sc-if>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ===== APPROACH E : TOPIC / CLUSTER ===== -->
+  <!-- ============================================================ -->
+  <div style="margin-top:54px;display:flex;align-items:flex-start;gap:16px;">
+    <span style="width:52px;height:52px;flex:none;border:2.5px solid var(--ink);border-radius:13px 11px 14px 10px;background:#fff;font-family:'Yusei Magic',sans-serif;font-size:26px;display:flex;align-items:center;justify-content:center;box-shadow:var(--card-shadow);">E</span>
+    <div>
+      <h2 style="font-family:'Yusei Magic',sans-serif;font-size:23px;margin:0 0 4px;">トピック整理型 ― 主題ごとに束ねる</h2>
+      <p style="margin:0;font-size:14.5px;color:var(--soft);max-width:680px;">AIが膨大な履歴をトピックへ自動クラスタリング。専門家は主題を選んで、そのトピックのフローだけを作り込む。全体の網羅状況も見える。</p>
+      <div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;">
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">強み：大量・多種の履歴向き</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">網羅性が見える</span>
+        <span style="border:2px solid var(--ink);border-radius:16px;padding:2px 9px;font-size:11.5px;background:#fff;">弱み：粒度の調整が要る</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:flex-start;gap:4px;overflow-x:auto;padding:18px 2px 14px;">
+    <!-- E1 -->
+    <div style="flex:none;width:296px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">1</span><span style="font-size:13px;">履歴を自動クラスタリング</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">トピックマップ</span></div>
+        <div style="padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:172px;">
+          <span style="border:2px solid var(--ink);border-radius:30px;padding:10px 16px;font-size:14px;background:var(--accent);color:#fff;">異音 ・38</span>
+          <span style="border:2px solid var(--ink);border-radius:30px;padding:7px 12px;font-size:12px;background:#fff;">過熱 ・24</span>
+          <span style="border:2px solid var(--ink);border-radius:30px;padding:9px 14px;font-size:13px;background:#fff;">通信エラー ・31</span>
+          <span style="border:2px solid var(--ink);border-radius:30px;padding:6px 11px;font-size:11px;background:#fff;">起動不良 ・15</span>
+          <span style="border:2px solid var(--ink);border-radius:30px;padding:6px 11px;font-size:11px;background:#fff;">漏れ ・9</span>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- E2 -->
+    <div style="flex:none;width:258px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">2</span><span style="font-size:13px;">トピックを選ぶ</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="font-size:12.5px;background:var(--mark);padding:1px 7px;border-radius:5px;">▸ 異音</span><span style="font-size:11px;color:var(--soft);">38件</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:8px;min-height:172px;">
+          <div style="border:2px solid var(--ink);border-radius:8px;padding:7px 9px;font-size:11.5px;background:#fff;">Q. 起動直後にキュルキュル音</div>
+          <div style="border:2px solid var(--ink);border-radius:8px;padding:7px 9px;font-size:11.5px;background:#fff;">Q. 高負荷時のうなり音</div>
+          <div style="border:2px solid var(--ink);border-radius:8px;padding:7px 9px;font-size:11.5px;background:#fff;">Q. 金属が擦れる音</div>
+          <span style="font-size:11px;color:var(--soft);margin-top:auto;">… 35件をまとめる</span>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- E3 -->
+    <div style="flex:none;width:258px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">3</span><span style="font-size:13px;">トピックのフロー生成</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">「異音」フロー</span></div>
+        <div style="padding:12px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:172px;background:repeating-linear-gradient(0deg,transparent,transparent 17px,#efeadd 17px,#efeadd 18px);">
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 10px;font-size:10.5px;background:#fff;">異音の種類?</div><span style="font-size:12px;">↓</span>
+          <div style="display:flex;gap:7px;"><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 8px;font-size:10px;background:#fff;">連続</div><div style="border:2px solid var(--ink);border-radius:6px;padding:3px 8px;font-size:10px;background:#fff;">断続</div></div>
+          <span style="font-size:12px;">↓</span>
+          <div style="border:2px solid var(--ink);border-radius:6px;padding:3px 10px;font-size:10.5px;background:#fff;">軸受 / ベルト点検</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:none;align-self:center;color:var(--accent);font-size:26px;padding:0 2px;">→</div>
+    <!-- E4 -->
+    <div style="flex:none;width:320px;display:flex;flex-direction:column;gap:9px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:23px;height:23px;border-radius:50%;border:2px solid var(--ink);background:var(--ink);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;">4</span><span style="font-size:13px;">ナレッジライブラリ</span></div>
+      <div style="border:2.5px solid var(--ink);border-radius:14px 12px 15px 11px;background:var(--node);box-shadow:var(--card-shadow);overflow:hidden;">
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 11px;border-bottom:2px solid var(--ink);background:#efeadd;"><span style="display:flex;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span><span style="width:8px;height:8px;border-radius:50%;background:var(--line);"></span></span><span style="font-size:12.5px;">フロー一覧</span><span style="margin-left:auto;font-size:11px;border:2px solid var(--ink);border-radius:6px;padding:2px 8px;background:#fff;color:var(--soft);">🔍 検索</span></div>
+        <div style="padding:11px;display:flex;flex-direction:column;gap:7px;min-height:172px;">
+          <div style="display:flex;align-items:center;font-size:10.5px;color:var(--soft);padding:0 4px;"><span style="flex:1;">トピック</span><span style="width:48px;text-align:center;">件数</span><span style="width:70px;text-align:center;">網羅</span></div>
+          <div style="display:flex;align-items:center;border:2px solid var(--ink);border-radius:8px;padding:7px 8px;font-size:11.5px;background:#fff;"><span style="flex:1;">異音</span><span style="width:48px;text-align:center;color:var(--soft);">38</span><span style="width:70px;text-align:center;color:#3a9e63;">95%</span></div>
+          <div style="display:flex;align-items:center;border:2px solid var(--ink);border-radius:8px;padding:7px 8px;font-size:11.5px;background:#fff;"><span style="flex:1;">通信エラー</span><span style="width:48px;text-align:center;color:var(--soft);">31</span><span style="width:70px;text-align:center;color:var(--accent);">60%</span></div>
+          <div style="display:flex;align-items:center;border:2px solid var(--ink);border-radius:8px;padding:7px 8px;font-size:11.5px;background:#fff;"><span style="flex:1;">過熱</span><span style="width:48px;text-align:center;color:var(--soft);">24</span><span style="width:70px;text-align:center;color:var(--soft);">未着手</span></div>
+        </div>
+      </div>
+      <sc-if value="{{ showNotes }}" hint-placeholder-val="{{ true }}"><div style="align-self:flex-start;transform:rotate(-1.2deg);background:var(--mark);border:2px solid var(--ink);border-radius:11px;padding:5px 10px;font-size:12.5px;box-shadow:var(--card-shadow);">✎ どこが手薄か一目で分かる</div></sc-if>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <div style="margin-top:50px;border-top:2px dashed var(--line);padding-top:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-family:'Yusei Magic',sans-serif;font-size:15px;">次のステップ →</span>
+    <span style="font-size:14px;color:var(--soft);">気に入った案（または組み合わせ）を選べば、その方向で画面を作り込みます。右上の設定で色や注釈の表示も切り替えられます。</span>
+  </div>
+
+</div>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#e8a04a"/>
+  <g stroke="#ffffff" stroke-width="3.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="33" y="29" width="34" height="15" rx="3.5"/>
+    <rect x="33" y="56" width="34" height="15" rx="3.5"/>
+    <path d="M50 44v12"/>
+  </g>
+</svg>
+</template>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: 1480, &quot;height&quot;: 980 },
+  &quot;accent&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;コーラル&quot;, &quot;options&quot;: [&quot;コーラル&quot;, &quot;ブルー&quot;, &quot;グリーン&quot;, &quot;パープル&quot;], &quot;tsType&quot;: &quot;string&quot; },
+  &quot;showNotes&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot; },
+  &quot;sketchy&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot; }
+}">
+class Component extends DCLogic {
+  renderVals() {
+    const map = { "コーラル": "#e8623d", "ブルー": "#3b7ddd", "グリーン": "#2f9e6f", "パープル": "#7a5cd0" };
+    const accent = map[this.props.accent] ?? "#e8623d";
+    const sketchy = this.props.sketchy ?? true;
+    const showNotes = this.props.showNotes ?? true;
+    const rootStyle = {
+      maxWidth: "1480px",
+      margin: "0 auto",
+      padding: "30px 34px 70px",
+      "--accent": accent,
+      "--card-shadow": sketchy ? "3px 3px 0 rgba(47,43,38,.13)" : "none",
+    };
+    return { rootStyle, showNotes };
+  }
+}
+</script>
+</body>
+</html>
