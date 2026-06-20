@@ -7,6 +7,7 @@
     "start": "node server/start.mjs",
     "frontend": "node server/frontend.mjs",
     "backend": "node server/backend.mjs",
-    "dev": "npm start"
+    "dev": "npm start",
+    "verify:flow-search": "node scripts/verify-flow-search.mjs"
   }
 }

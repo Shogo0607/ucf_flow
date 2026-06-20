@@ -24,6 +24,18 @@
   @keyframes pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
   @keyframes popIn{from{opacity:0;transform:translateY(7px) scale(.97);}to{opacity:1;transform:none;}}
   [contenteditable]:focus{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px;}
+  .chat-md{font-size:13px;line-height:1.75;color:#2b333f;word-break:break-word;}
+  .chat-md p{margin:0 0 10px;}
+  .chat-md p:last-child{margin-bottom:0;}
+  .chat-md ul,.chat-md ol{margin:6px 0 12px 1.35em;padding:0;}
+  .chat-md li{margin:4px 0;padding-left:2px;}
+  .chat-md li>p{margin:4px 0;}
+  .chat-md strong{font-weight:800;color:#172033;}
+  .chat-md code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;background:#f1f3f8;border:1px solid #e4e8f0;border-radius:5px;padding:1px 5px;}
+  .chat-md pre{margin:8px 0 12px;background:#1f2733;color:#f7f9fc;border-radius:8px;padding:10px 12px;overflow:auto;font-size:12px;line-height:1.55;}
+  .chat-md pre code{background:transparent;border:none;color:inherit;padding:0;}
+  .chat-md a{color:var(--primary);font-weight:700;text-decoration:none;border-bottom:1px solid rgba(79,110,247,.3);}
+  .chat-md blockquote{margin:8px 0 12px;padding:7px 10px;border-left:3px solid #cfd9ff;background:#f6f8ff;border-radius:0 8px 8px 0;color:#4a5363;}
 </style>
 </helmet>
 
@@ -42,26 +54,49 @@
       <span style="flex:1;min-width:0;"><span style="display:block;font-size:10px;color:#aab1bc;font-weight:700;">ワークスペース</span><span style="display:block;font-size:13px;font-weight:700;color:#2b333f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ curWsName }}</span></span>
       <span style="color:#aab1bc;font-size:11px;flex:none;">⇅</span>
     </button>
-    <button onClick="{{ newFlowDraft }}" style="margin:8px 14px 8px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--primary);color:#fff;border-radius:11px;padding:11px;font-weight:700;font-size:13px;box-shadow:0 5px 14px rgba(79,110,247,.32);">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>新しいフロー
+    <button onClick="{{ goHome }}" style="{{ homeNavStyle }}">
+      <span style="width:20px;height:20px;border-radius:6px;background:rgba(79,110,247,.12);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:11px;font-weight:800;flex:none;">AI</span>AIに相談
     </button>
-    <div style="flex:1;overflow:auto;padding:6px 10px 10px;">
-      <div style="font-size:10px;font-weight:700;color:#aab1bc;letter-spacing:.5px;padding:6px 8px 4px;">フロー一覧</div>
-      <sc-for list="{{ wsFlows }}" as="f" hint-placeholder-count="0">
-        <div data-id="{{ f.id }}" onClick="{{ loadFlow }}" style="{{ f.navStyle }}">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;opacity:.7;"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
-          <span style="flex:1;min-width:0;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.title }}</span>
-          <span style="font-size:10px;color:#aab1bc;flex:none;">{{ f.nodes }}</span>
+    <button onClick="{{ newFlowDraft }}" style="margin:8px 14px 8px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--primary);color:#fff;border-radius:11px;padding:11px;font-weight:700;font-size:13px;box-shadow:0 5px 14px rgba(79,110,247,.32);">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>フロー生成
+    </button>
+    <div style="flex:1;overflow:auto;padding:12px 10px 10px;">
+      <div style="padding:0 4px 8px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="font-size:10.5px;font-weight:800;color:#aab1bc;letter-spacing:.5px;flex:1;">相談履歴</div>
+          <button onClick="{{ newChat }}" title="新規相談" style="width:28px;height:28px;border-radius:8px;border:1px solid #e0e4ec;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--primary);flex:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
         </div>
-      </sc-for>
-      <sc-if value="{{ wsFlowsEmpty }}" hint-placeholder-val="{{ true }}">
-        <div style="font-size:11.5px;color:#b3b9c4;line-height:1.6;padding:10px 8px;">まだ保存されたフローがありません。新規作成して右上の「保存」で登録します。</div>
-      </sc-if>
+        <button onClick="{{ newChat }}" style="width:100%;display:flex;align-items:center;gap:8px;border:1px solid #dbe2ee;background:#fbfcfe;border-radius:10px;padding:9px 10px;color:#3a414c;font-size:12.5px;font-weight:700;text-align:left;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path><path d="M12 8v6M9 11h6"></path></svg>
+          新しい相談
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <sc-for list="{{ chatSessionNav }}" as="h" hint-placeholder-count="0">
+          <button data-id="{{ h.id }}" onClick="{{ loadChatSession }}" title="{{ h.title }}" style="{{ h.rowStyle }}">
+            <div style="flex:1;min-width:0;text-align:left;">
+              <div style="font-size:12.5px;font-weight:700;color:#2b333f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ h.title }}</div>
+              <div style="font-size:10.5px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;">{{ h.preview }}</div>
+            </div>
+            <span style="font-size:9.5px;color:#aab1bc;flex:none;">{{ h.time }}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ chatSessionsEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="border:1px dashed #dde3ec;background:#fbfcfe;border-radius:10px;padding:10px 11px;margin:2px 4px 0;font-size:11.5px;color:#8a93a0;line-height:1.55;">相談を送信すると、ここに履歴が並びます。履歴を開くとその続きから会話できます。</div>
+        </sc-if>
+      </div>
+      <div style="padding:9px 8px 0;font-size:10.5px;color:#aab1bc;">保存済みフロー {{ wsFlowCount }} 件</div>
     </div>
     <div style="border-top:1px solid #f1f3f8;padding:8px 10px;display:flex;flex-direction:column;gap:2px;">
       <button onClick="{{ toggleDb }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
         <span style="flex:1;">ナレッジデータベース</span><span style="font-size:10.5px;color:#aab1bc;">{{ dbCount }}</span>
+      </button>
+      <button onClick="{{ toggleFlowLib }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
+        <span style="flex:1;">思考プロセス</span><span style="font-size:10.5px;color:#aab1bc;">{{ flowLibCount }}</span>
       </button>
       <button onClick="{{ toggleSettings }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -250,6 +285,7 @@
                   <div data-id="{{ s.id }}" onClick="{{ dbToggleSrc }}" style="display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:grab;background:#fbfcfe;">
                     <span style="font-size:16px;flex:none;">📘</span>
                     <div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.name }}</div><div style="font-size:11px;color:#8a93a0;">{{ s.pageCount }} ページ</div></div>
+                    <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" title="このPDFから新しいフローを生成" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
                     <button data-id="{{ s.id }}" onClick="{{ runProposalsForSource }}" title="このPDFから既存フローへの差分を提案" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#4f6ef7;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg></button>
                     <button data-id="{{ s.id }}" onClick="{{ delKbSource }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
                     <span style="color:#aab1bc;font-size:11px;flex:none;">{{ s.chevron }}</span>
@@ -298,6 +334,103 @@
       </div>
       <div style="padding:14px 22px;border-top:1px solid #eef1f5;display:flex;justify-content:flex-end;">
         <button onClick="{{ toggleDb }}" style="font-size:13.5px;font-weight:700;color:#fff;background:var(--primary);padding:10px 20px;border-radius:10px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- FLOW LIBRARY -->
+  <sc-if value="{{ flowLibOpen }}" hint-placeholder-val="">
+  <div style="position:fixed;inset:0;background:rgba(20,26,38,.45);z-index:52;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px;overflow:auto;">
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:980px;box-shadow:0 24px 60px rgba(16,24,40,.3);overflow:hidden;">
+      <div style="padding:16px 22px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;gap:10px;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#5a626f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
+        <div style="font-size:16px;font-weight:700;flex:1;">思考プロセス <span style="font-size:12px;color:#8a93a0;font-weight:500;">{{ flowLibCount }} フロー ・ {{ flowLibNodeCount }} ノード / DB参照 {{ flowLibDbRefCount }} 件</span></div>
+        <button onClick="{{ closeFlowLib }}" style="font-size:22px;color:#8a93a0;width:30px;height:30px;line-height:1;">×</button>
+      </div>
+      <div style="display:flex;align-items:stretch;height:66vh;min-height:420px;">
+        <div style="width:290px;flex:none;border-right:1px solid #eef1f5;overflow:auto;padding:12px;background:#fbfcfe;">
+          <div style="font-size:10.5px;font-weight:800;color:#aab1bc;letter-spacing:.5px;margin:0 2px 9px;">保存済みフロー</div>
+          <sc-for list="{{ flowLibRows }}" as="f" hint-placeholder-count="0">
+            <button data-id="{{ f.id }}" onClick="{{ flowLibPick }}" style="{{ f.rowStyle }}">
+              <span style="width:30px;height:30px;border-radius:8px;background:#eef1ff;color:var(--primary);display:flex;align-items:center;justify-content:center;flex:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
+              </span>
+              <span style="flex:1;min-width:0;text-align:left;">
+                <span style="display:block;font-size:12.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.title }}</span>
+                <span style="display:block;font-size:10.5px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;">{{ f.folderPath }}</span>
+                <span style="display:block;font-size:10px;color:#aab1bc;margin-top:3px;">{{ f.nodeCount }} ノード ・ DB参照 {{ f.dbRefCount }}</span>
+              </span>
+            </button>
+          </sc-for>
+          <sc-if value="{{ flowLibEmpty }}" hint-placeholder-val="">
+            <div style="border:1px dashed #dde3ec;background:#fff;border-radius:11px;padding:14px 12px;font-size:12px;color:#8a93a0;line-height:1.6;">まだ保存済みの思考プロセスがありません。フロー生成後にここへ一覧表示されます。</div>
+          </sc-if>
+        </div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
+          <sc-if value="{{ flowLibSelected }}" hint-placeholder-val="">
+            <div style="padding:14px 18px;border-bottom:1px solid #f2f4f8;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:220px;">
+                <div style="font-size:15px;font-weight:800;color:#1f2733;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ flowLibTitle }}</div>
+                <div style="font-size:11.5px;color:#8a93a0;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ flowLibPath }}</div>
+              </div>
+              <button data-id="{{ flowLibCurrentId }}" onClick="{{ flowLibOpenFlow }}" style="font-size:12.5px;font-weight:700;color:#fff;background:var(--primary);border-radius:9px;padding:8px 14px;flex:none;">フロー図で開く</button>
+            </div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:12px;flex:1;min-height:0;padding:12px;background:#fbfcfe;">
+              <div style="overflow:auto;min-width:0;">
+                <div style="font-size:11px;font-weight:800;color:#8a93a0;letter-spacing:.4px;margin:2px 2px 9px;">ノード一覧</div>
+                <sc-for list="{{ flowLibNodes }}" as="n" hint-placeholder-count="0">
+                  <div style="{{ n.rowStyle }}">
+                    <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px;">
+                      <span style="font-size:10px;font-weight:800;color:#fff;background:var(--primary);border-radius:6px;padding:2px 6px;flex:none;">{{ n.id }}</span>
+                      <span style="font-size:10.5px;font-weight:700;color:#5a626f;background:#eef1f5;border-radius:999px;padding:2px 8px;flex:none;">{{ n.kindLabel }}</span>
+                      <span style="font-size:12.5px;font-weight:800;color:#1f2733;line-height:1.45;">{{ n.text }}</span>
+                    </div>
+                    <sc-if value="{{ n.hasWhy }}" hint-placeholder-val=""><div style="font-size:11.5px;color:#6b7480;line-height:1.55;margin-top:4px;">理由: {{ n.why }}</div></sc-if>
+                    <sc-if value="{{ n.hasDetail }}" hint-placeholder-val=""><div style="font-size:11.5px;color:#5a626f;line-height:1.55;background:#f7f8fa;border-radius:8px;padding:7px 9px;margin-top:6px;">{{ n.detail }}</div></sc-if>
+                    <sc-if value="{{ n.hasDbQuery }}" hint-placeholder-val=""><div style="font-size:11.5px;color:#0f835c;line-height:1.55;background:#f3faf6;border:1px solid #d3ecdd;border-radius:8px;padding:7px 9px;margin-top:6px;">DB確認: {{ n.dbQuery }}</div></sc-if>
+                    <sc-if value="{{ n.hasModels }}" hint-placeholder-val=""><div style="font-size:11px;color:#3b54c4;margin-top:5px;">条件タグ: {{ n.models }}</div></sc-if>
+                    <sc-if value="{{ n.hasPages }}" hint-placeholder-val=""><div style="font-size:11px;color:#8a93a0;margin-top:5px;">出典ページ: {{ n.pages }}</div></sc-if>
+                    <sc-if value="{{ n.hasBranches }}" hint-placeholder-val="">
+                      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;">
+                        <sc-for list="{{ n.branches }}" as="b" hint-placeholder-count="0"><span style="font-size:10.5px;font-weight:700;color:#5a626f;background:#f1f3f8;border-radius:999px;padding:3px 8px;">{{ b.label }} → {{ b.to }}</span></sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ n.hasLinks }}" hint-placeholder-val="">
+                      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;">
+                        <sc-for list="{{ n.links }}" as="l" hint-placeholder-count="0"><span style="font-size:10.5px;font-weight:700;color:#0f835c;background:#eaf7f0;border:1px solid #c6ecd8;border-radius:999px;padding:3px 8px;">{{ l.label }}</span></sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <aside style="overflow:auto;min-width:0;">
+                <div style="background:#fff;border:1px solid #e6e9ef;border-radius:11px;padding:12px;margin-bottom:10px;">
+                  <div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:8px;">構造</div>
+                  <div style="display:flex;align-items:baseline;gap:7px;"><span style="font-size:26px;font-weight:900;color:#1f2733;">{{ flowLibNodeCount }}</span><span style="font-size:11px;color:#8a93a0;">ノード</span></div>
+                  <div style="display:flex;align-items:baseline;gap:7px;margin-top:6px;"><span style="font-size:22px;font-weight:900;color:#0f835c;">{{ flowLibDbRefCount }}</span><span style="font-size:11px;color:#8a93a0;">DB参照</span></div>
+                </div>
+                <div style="background:#fff;border:1px solid #e6e9ef;border-radius:11px;padding:12px;">
+                  <div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:8px;">DB参照一覧</div>
+                  <sc-if value="{{ hasFlowLibDbRefs }}" hint-placeholder-val="">
+                    <sc-for list="{{ flowLibDbRefs }}" as="r" hint-placeholder-count="0">
+                      <div style="border-bottom:1px solid #f2f4f8;padding:7px 0;">
+                        <div style="font-size:10.5px;color:#8a93a0;font-weight:700;">{{ r.nodeId }}</div>
+                        <div style="font-size:11.5px;color:#2b333f;line-height:1.45;word-break:break-word;">{{ r.label }}</div>
+                      </div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ hasNoFlowLibDbRefs }}" hint-placeholder-val="">
+                    <div style="font-size:11.5px;color:#aab1bc;line-height:1.6;">このフローにはまだDB参照リンクがありません。</div>
+                  </sc-if>
+                </div>
+              </aside>
+            </div>
+          </sc-if>
+          <sc-if value="{{ flowLibNoSelection }}" hint-placeholder-val="">
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;color:#aab1bc;font-size:13px;">表示する思考プロセスがありません。</div>
+          </sc-if>
+        </div>
       </div>
     </div>
   </div>
@@ -359,7 +492,9 @@
             <div style="font-size:12.5px;color:#2b333f;line-height:1.6;">{{ p.reason }}</div>
             <sc-if value="{{ p.hasModels }}" hint-placeholder-val=""><div style="font-size:11.5px;color:#3b54c4;margin-top:4px;">🏷️ 適用条件: {{ p.models }}</div></sc-if>
             <sc-if value="{{ p.hasDetail }}" hint-placeholder-val=""><div style="font-size:12px;color:#5a626f;margin-top:5px;background:#f7f8fa;border-radius:8px;padding:8px 11px;line-height:1.6;">{{ p.detail }}</div></sc-if>
-            <sc-if value="{{ p.isNote }}" hint-placeholder-val=""><div style="font-size:11px;color:#b26a00;margin-top:5px;">※ 構造変更が必要なため自動反映できません。フロー図で手動編集してください。</div></sc-if>
+            <sc-if value="{{ p.hasRefs }}" hint-placeholder-val=""><div style="font-size:11.5px;color:#0f835c;margin-top:4px;">根拠リンク: {{ p.refs }}</div></sc-if>
+            <sc-if value="{{ p.hasConfidence }}" hint-placeholder-val=""><div style="font-size:10.5px;color:#aab1bc;margin-top:4px;">信頼度: {{ p.confidencePct }}%</div></sc-if>
+            <sc-if value="{{ p.isNote }}" hint-placeholder-val=""><div style="font-size:11px;color:#b26a00;margin-top:5px;">※ 新規化や判断確認が必要なため、この提案は承認しても自動反映しません。</div></sc-if>
             <sc-if value="{{ p.isPending }}" hint-placeholder-val="">
               <div style="display:flex;gap:8px;margin-top:9px;">
                 <button data-pid="{{ p.id }}" data-act="approve" onClick="{{ decideProposal }}" style="font-size:12px;font-weight:700;color:#fff;background:#16a875;border-radius:8px;padding:7px 14px;">承認して反映</button>
@@ -465,26 +600,17 @@
         </div>
         <div style="flex:1;min-width:0;display:flex;flex-direction:column;">
           <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid #f2f4f8;">
-            <div style="flex:1;font-size:14px;font-weight:700;">「{{ curWsName }}」のフロー</div>
+            <div style="flex:1;font-size:14px;font-weight:700;">「{{ curWsName }}」の保存状況</div>
             <button onClick="{{ newFlowDraft }}" style="font-size:12.5px;font-weight:700;color:#fff;background:var(--primary);border-radius:9px;padding:7px 13px;">＋ 新しいフローを作る</button>
           </div>
-          <div style="flex:1;overflow:auto;padding:10px;">
-            <sc-for list="{{ wsFlows }}" as="f" hint-placeholder-count="0">
-              <div data-id="{{ f.id }}" onClick="{{ loadFlow }}" style="display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid #eef1f5;border-radius:10px;margin-bottom:8px;cursor:pointer;" style-hover="background:#f5f7fb;">
-                <span style="width:34px;height:34px;border-radius:9px;background:#eef1ff;display:flex;align-items:center;justify-content:center;flex:none;">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
-                </span>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.title }}</div>
-                  <div style="font-size:11px;color:#8a93a0;">{{ f.nodes }} ノード</div>
-                </div>
-                <sc-if value="{{ f.current }}" hint-placeholder-val=""><span style="font-size:10.5px;font-weight:700;color:#0f835c;background:#e3f6ef;border-radius:999px;padding:2px 9px;flex:none;">表示中</span></sc-if>
-                <button data-id="{{ f.id }}" onClick="{{ loadFlow }}" style="font-size:11.5px;color:var(--primary);font-weight:700;flex:none;">開く</button>
-                <button data-id="{{ f.id }}" onClick="{{ delFlow }}" style="font-size:11.5px;color:#c0392b;flex:none;">削除</button>
-              </div>
-            </sc-for>
+          <div style="flex:1;overflow:auto;padding:18px;">
+            <div style="border:1px solid #eef1f5;border-radius:12px;background:#fbfcfe;padding:18px 20px;">
+              <div style="font-size:12px;font-weight:700;color:#8a93a0;margin-bottom:8px;">保存済みフロー</div>
+              <div style="font-size:30px;font-weight:800;color:#1f2733;line-height:1;">{{ wsFlowCount }}</div>
+              <div style="font-size:12.5px;color:#6b7480;line-height:1.7;margin-top:10px;">フローが増えても一覧から探さず、AI相談で質問に合うフローを自動選択します。回答内の「使用したフロー」から、実際に辿った経路を表示・ハイライトできます。</div>
+            </div>
             <sc-if value="{{ wsFlowsEmpty }}" hint-placeholder-val="{{ true }}">
-              <div style="text-align:center;color:#aab1bc;font-size:13px;padding:42px 0;line-height:1.7;">このワークスペースにはまだフローがありません。<br>フローを作成し、右上の「保存」で登録できます。</div>
+              <div style="text-align:center;color:#aab1bc;font-size:13px;padding:30px 0 10px;line-height:1.7;">このワークスペースにはまだフローがありません。<br>フローを作成し、右上の「保存」で登録できます。</div>
             </sc-if>
           </div>
         </div>
@@ -499,6 +625,90 @@
   <!-- ===== MAIN ===== -->
   <main style="flex:1;min-width:0;height:100vh;overflow:auto;background:#f4f6fa;">
 
+  <!-- HOME : AI CONSULTATION -->
+  <sc-if value="{{ isHome }}" hint-placeholder-val="">
+  <div style="height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f4f6fa;">
+    <div style="padding:22px 28px 14px;border-bottom:1px solid #e6e9ef;background:#fff;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px;">
+          <span style="width:28px;height:28px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;">AI</span>
+          <h1 style="font-size:20px;font-weight:800;margin:0;color:#1f2733;">AIに相談</h1>
+        </div>
+        <div style="font-size:13px;color:#6b7480;line-height:1.6;">質問に応じて、保存済みフローとナレッジDBを横断して回答します。使用したフローがある場合は、回答内から経路を表示・ハイライトできます。</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onClick="{{ newFlowDraft }}" style="display:flex;align-items:center;gap:7px;background:var(--primary);color:#fff;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;box-shadow:0 4px 12px rgba(79,110,247,.25);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>フロー生成
+        </button>
+        <button onClick="{{ toggleDb }}" style="display:flex;align-items:center;gap:7px;border:1px solid #dbe2ee;background:#fff;color:#5a626f;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>DB管理
+        </button>
+        <button onClick="{{ toggleFlowLib }}" style="display:flex;align-items:center;gap:7px;border:1px solid #dbe2ee;background:#fff;color:#5a626f;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>思考プロセス
+        </button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;flex:1;min-height:0;padding:18px;">
+      <div style="background:#fff;border:1px solid #e6e9ef;border-radius:16px;box-shadow:0 4px 18px rgba(16,24,40,.05);display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:14px;font-weight:800;flex:1;">相談内容</div>
+          <button onClick="{{ newChat }}" title="新規チャット" style="width:32px;height:32px;border-radius:9px;border:1px solid #e0e4ec;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+          </button>
+        </div>
+        <div style="padding:11px 18px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:11px;font-weight:700;color:#6b7480;flex:none;">回答方針</span>
+          <div style="display:inline-flex;background:#f1f3f8;border:1px solid #e6e9ef;border-radius:9px;padding:3px;gap:3px;">
+            <button data-mode="conditional" onClick="{{ pickAnswerMode }}" style="{{ answerModeConditionalStyle }}">まとめて回答</button>
+            <button data-mode="confirm" onClick="{{ pickAnswerMode }}" style="{{ answerModeConfirmStyle }}">確認しながら</button>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:#6b7480;flex:none;margin-left:4px;">絞り込み条件</span>
+          <input list="kb-models-home" value="{{ activeModel }}" onInput="{{ setActiveModel }}" placeholder="任意・製品名/型式/契約種別など" style="flex:1;min-width:180px;border:1.5px solid #e0e4ec;border-radius:8px;padding:6px 9px;font-size:12px;background:#fbfcfe;" />
+          <datalist id="kb-models-home"><sc-for list="{{ modelOpts }}" as="m" hint-placeholder-count="0"><option value="{{ m }}"></option></sc-for></datalist>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px;">
+          <sc-if value="{{ chatEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:13px;color:#7a8390;line-height:1.7;background:#f5f8fc;border:1px dashed #dde3ec;border-radius:12px;padding:16px;">相談内容を入力してください。AIが質問に応じて、関連するフローの経路とDBの根拠資料を組み合わせて回答します。<br>例：「納入品について教えて」「見積もりと仕様について相談したい」</div>
+          </sc-if>
+          <sc-for list="{{ chatMsgs }}" as="m" hint-placeholder-count="0">
+            <sc-if value="{{ m.isUser }}" hint-placeholder-val=""><div style="align-self:flex-end;max-width:78%;background:var(--primary);color:#fff;border-radius:13px 13px 4px 13px;padding:9px 12px;font-size:13px;line-height:1.55;">{{ m.text }}</div></sc-if>
+            <sc-if value="{{ m.isAssistant }}" hint-placeholder-val="">
+              <div style="align-self:flex-start;max-width:88%;background:#fff;border:1px solid #e6e9ef;border-radius:13px 13px 13px 4px;padding:12px 14px;box-shadow:0 1px 3px rgba(16,24,40,.05);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+                  <div style="font-size:11px;font-weight:700;color:#4f6ef7;flex:1;">最終回答結果</div>
+                  <button data-mi="{{ m.idx }}" onClick="{{ copyAnswerMarkdown }}" title="{{ m.copyTitle }}" style="{{ m.copyStyle }}">
+                    <sc-if value="{{ m.notCopied }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></sc-if>
+                    <sc-if value="{{ m.copied }}" hint-placeholder-val=""><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+                  </button>
+                </div>
+                <div className="chat-md" dangerouslySetInnerHTML="{{ m.answerHtml }}"></div><sc-if value="{{ m.isStreaming }}" hint-placeholder-val=""><span style="display:inline-block;width:7px;height:1.1em;margin-left:2px;background:var(--primary);vertical-align:-2px;animation:blink 1s steps(2,start) infinite;"></span></sc-if>
+                <sc-if value="{{ m.hasUsedFlow }}" hint-placeholder-val="">
+                  <div style="margin-top:10px;border:1px solid #d6def6;background:#f6f8ff;border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:9px;">
+                    <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;color:var(--primary);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></span>
+                    <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:700;color:#6b7480;">使用したフロー</div><div style="font-size:12.5px;font-weight:700;color:#1f2733;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.usedFlowTitle }}</div><sc-if value="{{ m.hasUsedFlowPath }}" hint-placeholder-val=""><div style="font-size:10.5px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.usedFlowPath }}</div></sc-if></div>
+                    <button data-mi="{{ m.idx }}" onClick="{{ showMessageFlow }}" style="font-size:11.5px;color:var(--primary);font-weight:700;flex:none;">表示・ハイライト</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ m.hasDetail }}" hint-placeholder-val=""><div style="margin-top:10px;border-top:1px dashed #e6e9ef;padding-top:9px;"><div style="font-size:11px;font-weight:700;color:#0f835c;margin-bottom:6px;">詳細なデータベース記述</div><div className="chat-md" style="background:#f3faf6;border:1px solid #d3ecdd;border-radius:9px;padding:9px 11px;" dangerouslySetInnerHTML="{{ m.detailHtml }}"></div></div></sc-if>
+                <sc-if value="{{ m.hasSources }}" hint-placeholder-val=""><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;"><span style="font-size:10.5px;color:#8a93a0;font-weight:700;">出典</span><sc-for list="{{ m.sources }}" as="src" hint-placeholder-count="0"><button data-ref="{{ src.ref }}" data-query="{{ src.query }}" onClick="{{ openKbRef }}" title="別タブで出典ページを開く" style="font-size:11px;font-weight:700;color:#0f835c;background:#eaf7f0;border:1px solid #c6ecd8;border-radius:999px;padding:5px 11px;cursor:pointer;">📄 {{ src.label }}</button></sc-for></div></sc-if>
+              </div>
+            </sc-if>
+          </sc-for>
+          <sc-if value="{{ chatLoading }}" hint-placeholder-val=""><div style="align-self:flex-start;background:#fff;border:1px solid #e6e9ef;border-radius:13px;padding:10px 14px;font-size:12.5px;color:#5a626f;display:flex;align-items:center;gap:9px;max-width:88%;"><span style="width:14px;height:14px;border:3px solid #e6e9ef;border-top-color:var(--primary);border-radius:50%;animation:spin .9s linear infinite;flex:none;"></span><span>{{ chatAgentStatus }}</span></div></sc-if>
+        </div>
+        <div style="padding:13px 16px;border-top:1px solid #eef1f5;display:flex;gap:9px;align-items:flex-end;">
+          <textarea value="{{ chatInput }}" onInput="{{ onChatInput }}" placeholder="相談内容を入力…" style="flex:1;min-height:46px;max-height:118px;resize:none;border:1.5px solid #e0e4ec;border-radius:11px;padding:11px 12px;font-size:13px;line-height:1.5;background:#fbfcfe;"></textarea>
+          <button onClick="{{ sendChat }}" disabled="{{ chatSendDisabled }}" style="{{ sendBtnStyle }}">送信</button>
+        </div>
+      </div>
+      <aside style="display:flex;flex-direction:column;gap:12px;min-width:0;">
+        <div style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:14px 15px;"><div style="font-size:11px;font-weight:700;color:#8a93a0;margin-bottom:6px;">保存済みフロー</div><div style="font-size:28px;font-weight:800;line-height:1;color:#1f2733;">{{ wsFlowCount }}</div><div style="font-size:11.5px;color:#8a93a0;margin-top:7px;line-height:1.5;">質問に応じて自動選択</div></div>
+        <div style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:14px 15px;"><div style="font-size:11px;font-weight:700;color:#8a93a0;margin-bottom:6px;">ナレッジDB</div><div style="font-size:28px;font-weight:800;line-height:1;color:#1f2733;">{{ dbCount }}</div><div style="font-size:11.5px;color:#8a93a0;margin-top:7px;line-height:1.5;">PDF {{ kbSrcCount }} ・ {{ kbPageCount }} ページ</div></div>
+      </aside>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- STAGE 1 : INPUT -->
   <sc-if value="{{ isInput }}" hint-placeholder-val="{{ true }}">
   <div style="background:#fff;border:1px solid #e6e9ef;border-radius:18px;box-shadow:0 6px 24px rgba(16,24,40,.06);padding:26px 28px;max-width:800px;margin:36px auto;">
@@ -510,6 +720,15 @@
       <button data-mode="pdf" onClick="{{ pickMode }}" style="{{ modePdfStyle }}">PDF（文書・資料）</button>
       <button data-mode="text" onClick="{{ pickMode }}" style="{{ modeTextStyle }}">テキストを貼り付け</button>
       <button data-mode="csv" onClick="{{ pickMode }}" style="{{ modeCsvStyle }}">CSVで大量入力</button>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;background:#fbfcfe;border:1px solid #e6e9ef;border-radius:12px;padding:11px 13px;margin-bottom:22px;flex-wrap:wrap;">
+      <div style="font-size:12.5px;font-weight:700;color:#5a626f;flex:none;">保存先</div>
+      <select value="{{ dbUploadFolder }}" onChange="{{ dbSetUploadFolder }}" style="flex:1;min-width:210px;border:1.5px solid #e0e4ec;border-radius:9px;padding:8px 10px;font-size:12.5px;background:#fff;">
+        <sc-for list="{{ uploadFolderOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+      </select>
+      <button onClick="{{ toggleDb }}" title="フォルダを管理" style="height:34px;width:34px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dbe2ee;border-radius:9px;color:#5a626f;background:#fff;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path></svg></button>
+      <div style="width:100%;font-size:11px;color:#8a93a0;line-height:1.5;">{{ inputSaveHint }}</div>
     </div>
 
     <!-- TEXT MODE -->
@@ -719,17 +938,6 @@
   <!-- ============================================================== -->
   <sc-if value="{{ isFlow }}" hint-placeholder-val="">
   <div style="height:100vh;display:flex;flex-direction:column;background:#fff;overflow:hidden;">
-    <sc-if value="{{ showTabs }}" hint-placeholder-val="">
-    <div style="display:flex;align-items:stretch;border-bottom:1px solid #eef1f5;background:#f4f6fa;overflow-x:auto;flex:none;padding:0 6px;">
-      <sc-for list="{{ wsTabs }}" as="t" hint-placeholder-count="2">
-        <div data-id="{{ t.id }}" onClick="{{ tabClick }}" style="{{ t.tabStyle }}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;opacity:.65;"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
-          <span style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">{{ t.title }}</span>
-        </div>
-      </sc-for>
-      <button onClick="{{ newFlowDraft }}" title="新しいフロー" style="padding:8px 14px;color:#8a93a0;font-size:16px;flex:none;">＋</button>
-    </div>
-    </sc-if>
     <!-- flow header -->
     <div style="padding:13px 24px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;gap:14px;flex-wrap:wrap;flex:none;">
       <div style="flex:1;min-width:220px;">
@@ -824,10 +1032,27 @@
             </sc-if>
             <sc-if value="{{ m.isAssistant }}" hint-placeholder-val="">
               <div style="align-self:flex-start;max-width:95%;background:#fff;border:1px solid #e6e9ef;border-radius:13px 13px 13px 4px;padding:11px 13px;box-shadow:0 1px 3px rgba(16,24,40,.05);">
-                <div>
-                  <div style="font-size:11px;font-weight:700;color:#4f6ef7;margin-bottom:6px;">最終回答結果</div>
-                  <div style="font-size:13px;line-height:1.6;color:#2b333f;white-space:pre-wrap;">{{ m.answer }}<sc-if value="{{ m.isStreaming }}" hint-placeholder-val=""><span style="display:inline-block;width:7px;height:1.1em;margin-left:2px;background:var(--primary);vertical-align:-2px;animation:blink 1s steps(2,start) infinite;"></span></sc-if></div>
-                </div>
+	                <div>
+	                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+	                    <div style="font-size:11px;font-weight:700;color:#4f6ef7;flex:1;">最終回答結果</div>
+	                    <button data-mi="{{ m.idx }}" onClick="{{ copyAnswerMarkdown }}" title="{{ m.copyTitle }}" style="{{ m.copyStyle }}">
+	                      <sc-if value="{{ m.notCopied }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></sc-if>
+	                      <sc-if value="{{ m.copied }}" hint-placeholder-val=""><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+	                    </button>
+	                  </div>
+	                  <div className="chat-md" dangerouslySetInnerHTML="{{ m.answerHtml }}"></div><sc-if value="{{ m.isStreaming }}" hint-placeholder-val=""><span style="display:inline-block;width:7px;height:1.1em;margin-left:2px;background:var(--primary);vertical-align:-2px;animation:blink 1s steps(2,start) infinite;"></span></sc-if>
+	                </div>
+                <sc-if value="{{ m.hasUsedFlow }}" hint-placeholder-val="">
+                  <div style="margin-top:10px;border:1px solid #d6def6;background:#f6f8ff;border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:9px;">
+                    <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;color:var(--primary);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></span>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:10.5px;font-weight:700;color:#6b7480;">使用したフロー</div>
+                      <div style="font-size:12.5px;font-weight:700;color:#1f2733;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.usedFlowTitle }}</div>
+                      <sc-if value="{{ m.hasUsedFlowPath }}" hint-placeholder-val=""><div style="font-size:10.5px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.usedFlowPath }}</div></sc-if>
+                    </div>
+                    <button data-mi="{{ m.idx }}" onClick="{{ showMessageFlow }}" style="font-size:11.5px;color:var(--primary);font-weight:700;flex:none;">表示・ハイライト</button>
+                  </div>
+                </sc-if>
                 <sc-if value="{{ m.hasOptions }}" hint-placeholder-val="">
                   <div style="margin-top:9px;display:flex;flex-wrap:wrap;gap:7px;">
                     <sc-for list="{{ m.options }}" as="o" hint-placeholder-count="0">
@@ -849,15 +1074,15 @@
                         </div>
                       </sc-for>
                     </div>
-                    <button data-mi="{{ m.idx }}" onClick="{{ highlightMessage }}" style="margin-top:10px;font-size:11.5px;color:var(--primary);font-weight:700;">図でこの経路をハイライト ↗</button>
+                    <button data-mi="{{ m.idx }}" onClick="{{ showMessageFlow }}" style="margin-top:10px;font-size:11.5px;color:var(--primary);font-weight:700;">使用フローを表示して経路をハイライト ↗</button>
                   </div>
                 </sc-if>
-                <sc-if value="{{ m.hasDetail }}" hint-placeholder-val="">
-                  <div style="margin-top:10px;border-top:1px dashed #e6e9ef;padding-top:9px;">
-                    <div style="font-size:11px;font-weight:700;color:#0f835c;margin-bottom:6px;display:flex;align-items:center;gap:5px;">詳細なデータベース記述</div>
-                    <div style="font-size:12.5px;line-height:1.65;color:#2b333f;background:#f3faf6;border:1px solid #d3ecdd;border-radius:9px;padding:9px 11px;white-space:pre-wrap;">{{ m.detail }}</div>
-                  </div>
-                </sc-if>
+	                <sc-if value="{{ m.hasDetail }}" hint-placeholder-val="">
+	                  <div style="margin-top:10px;border-top:1px dashed #e6e9ef;padding-top:9px;">
+	                    <div style="font-size:11px;font-weight:700;color:#0f835c;margin-bottom:6px;display:flex;align-items:center;gap:5px;">詳細なデータベース記述</div>
+	                    <div className="chat-md" style="background:#f3faf6;border:1px solid #d3ecdd;border-radius:9px;padding:9px 11px;" dangerouslySetInnerHTML="{{ m.detailHtml }}"></div>
+	                  </div>
+	                </sc-if>
                 <sc-if value="{{ m.hasSources }}" hint-placeholder-val="">
                   <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;">
                     <span style="font-size:10.5px;color:#8a93a0;font-weight:700;">出典</span>
@@ -1055,7 +1280,7 @@ class Component extends DCLogic {
     const savedApiCfg = this.loadSavedApiCfg();
     this._apiCfgDraft = savedApiCfg;
     this.state = {
-      stage: "input",
+      stage: "home",
       domain: "",
       inputMode: "text",
       csvRows: [],
@@ -1071,13 +1296,16 @@ class Component extends DCLogic {
       progress: { current: 0, total: 0, msg: "" },
       buildLog: [],
       chat: [],
-      chatInput: "",
-      chatAnswerMode: "conditional",
-      activeModel: "",
-      chatLoading: false,
-      chatStreaming: false,
-      chatAgentStatus: "",
-      highlightIds: [],
+	      chatInput: "",
+	      chatAnswerMode: "conditional",
+	      chatSessions: [],
+	      currentChatSessionId: null,
+	      activeModel: "",
+	      chatLoading: false,
+	      chatStreaming: false,
+	      chatAgentStatus: "",
+	      copiedChatIdx: null,
+	      highlightIds: [],
       zoom: 1,
       settingsOpen: false,
       apiCfg: savedApiCfg,
@@ -1089,6 +1317,8 @@ class Component extends DCLogic {
       dbEditDoc: null,
       dbRename: null,
       dbRenameVal: "",
+      flowLibOpen: false,
+      flowLibCurrent: "",
       nodeModalId: null,
       nodeForm: { detail: "", folderId: "", links: [], models: "" },
       search: { open: false, query: "", running: false, steps: [], answer: "", nodeId: null, todos: [] },
@@ -1135,13 +1365,44 @@ class Component extends DCLogic {
     const active = this.loadActiveFlowState();
     let rec = active.curWs === curWs ? savedFlows.find(f => f.id === active.curFlowId && f.wsId === curWs && f.flow && f.flow.nodes) : null;
     const next = { workspaces, curWs, savedFlows, ...this.loadWsData(curWs) };
-    if (rec) Object.assign(next, { flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: rec.id, stage: "flow", view: active.view || "diagram", currentId: rec.flow.root, path: [], chat: (rec.chat || []).slice(), highlightIds: [], nodeModalId: null });
+    if (rec) Object.assign(next, { flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: rec.id, stage: "home", view: active.view || "diagram", currentId: rec.flow.root, path: [], chat: (rec.chat || []).slice(), highlightIds: [], nodeModalId: null });
     this.setState(next);
   }
 
-  makeReg(flow, chatArr) {
+  flowSourceMeta(folderId, sourceIds, docIds) {
+    const fid = folderId || "";
+    return {
+      sourceFolderId: fid,
+      sourceFolderPath: fid ? this.folderPath(fid) : "すべて",
+      sourceIds: Array.isArray(sourceIds) ? sourceIds.filter(Boolean) : [],
+      sourceDocIds: Array.isArray(docIds) ? docIds.filter(Boolean) : [],
+    };
+  }
+  applyFlowSourceMeta(flow, meta) {
+    if (!flow || !meta) return flow;
+    return {
+      ...flow,
+      sourceFolderId: meta.sourceFolderId || "",
+      sourceFolderPath: meta.sourceFolderPath || (meta.sourceFolderId ? this.folderPath(meta.sourceFolderId) : "すべて"),
+      sourceIds: meta.sourceIds || [],
+      sourceDocIds: meta.sourceDocIds || [],
+    };
+  }
+  flowRecordMeta(flow, meta) {
+    const src = meta || flow || {};
+    const fid = src.sourceFolderId || src.folderId || "";
+    return {
+      folderId: fid,
+      sourceFolderPath: src.sourceFolderPath || (fid ? this.folderPath(fid) : "すべて"),
+      sourceIds: Array.isArray(src.sourceIds) ? src.sourceIds : [],
+      sourceDocIds: Array.isArray(src.sourceDocIds) ? src.sourceDocIds : [],
+    };
+  }
+
+  makeReg(flow, chatArr, meta) {
     const id = this.uid("fl_");
-    const sf = this.state.savedFlows.concat([{ id, wsId: this.state.curWs, title: (flow && flow.title) || "無題のフロー", flow, chat: chatArr || [], at: Date.now() }]);
+    const fl = this.applyFlowSourceMeta(flow, meta);
+    const sf = this.state.savedFlows.concat([{ id, wsId: this.state.curWs, title: (fl && fl.title) || "無題のフロー", flow: fl, chat: chatArr || [], at: Date.now(), ...this.flowRecordMeta(fl, meta) }]);
     this.persistFlows(sf);
     this.persistActiveFlow(this.state.curWs, id, this.state.view || "diagram");
     return { savedFlows: sf, curFlowId: id };
@@ -1160,7 +1421,7 @@ class Component extends DCLogic {
     if (this.state.curFlowId && flowChanged) {
       const id = this.state.curFlowId;
       if (this.state.savedFlows.some(f => f.id === id)) {
-        const sf = this.state.savedFlows.map(f => f.id === id ? { ...f, title: (this.state.flow && this.state.flow.title) || f.title, flow: this.state.flow || f.flow, chat: this.state.chat, at: Date.now() } : f);
+        const sf = this.state.savedFlows.map(f => f.id === id ? { ...f, title: (this.state.flow && this.state.flow.title) || f.title, flow: this.state.flow || f.flow, chat: this.state.chat, at: Date.now(), ...this.flowRecordMeta(this.state.flow || f.flow, f) } : f);
         this.persistFlows(sf); this.setState({ savedFlows: sf });
       }
     }
@@ -1172,14 +1433,14 @@ class Component extends DCLogic {
   persistActiveFlow(ws, flowId, view) { try { localStorage.setItem("tpf_active_flow_v1", JSON.stringify({ curWs: ws || this.state.curWs, curFlowId: flowId || null, view: view || this.state.view || "diagram" })); } catch (e) { /* ignore */ } }
 
   toggleWs = () => this.setState({ wsOpen: !this.state.wsOpen });
-  pickWs = (e) => { const id = e.currentTarget.dataset.id; if (id === this.state.curWs) { this.setState({ wsOpen: false }); return; } this.persistWs(this.state.workspaces, id); this.persistActiveFlow(id, null, this.state.view || "diagram"); this.setState({ curWs: id, stage: "input", flow: null, curFlowId: null, chat: [], highlightIds: [], ...this.loadWsData(id), dbCurrent: "", dbEditDoc: null, dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {}, wsOpen: false }); };
-  newWorkspace = () => { const id = this.uid("ws_"); const ws = this.state.workspaces.concat([{ id, name: "ワークスペース" + (this.state.workspaces.length + 1) }]); this.persistWs(ws, id); this.persistActiveFlow(id, null, "diagram"); const empty = { folders: [], docs: [] }; try { localStorage.setItem(this.dbKey(id), JSON.stringify(empty)); localStorage.setItem(this.kbKey(id), "[]"); localStorage.setItem(this.subsKey(id), "[]"); } catch (e) {} this.setState({ workspaces: ws, curWs: id, stage: "input", flow: null, curFlowId: null, chat: [], highlightIds: [], db: empty, kbSources: [], subs: [], dbCurrent: "", dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {} }); };
-  delWorkspace = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; if (this.state.workspaces.length <= 1) return; const ws = this.state.workspaces.filter(w => w.id !== id); const sf = this.state.savedFlows.filter(f => f.wsId !== id); const cur = this.state.curWs === id ? ws[0].id : this.state.curWs; this.persistWs(ws, cur); this.persistFlows(sf); this.persistActiveFlow(cur, null, "diagram"); try { localStorage.removeItem(this.dbKey(id)); localStorage.removeItem(this.kbKey(id)); localStorage.removeItem(this.subsKey(id)); } catch (x) {} this.setState({ workspaces: ws, savedFlows: sf, curWs: cur, stage: "input", flow: null, curFlowId: null, chat: [], highlightIds: [], ...this.loadWsData(cur), dbCurrent: "" }); };
+  pickWs = (e) => { const id = e.currentTarget.dataset.id; if (id === this.state.curWs) { this.setState({ wsOpen: false }); return; } this.persistWs(this.state.workspaces, id); this.persistActiveFlow(id, null, this.state.view || "diagram"); this.setState({ curWs: id, stage: "home", flow: null, curFlowId: null, chat: [], currentChatSessionId: null, highlightIds: [], ...this.loadWsData(id), dbCurrent: "", dbUploadFolder: "", dbEditDoc: null, dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {}, wsOpen: false }); };
+  newWorkspace = () => { const id = this.uid("ws_"); const ws = this.state.workspaces.concat([{ id, name: "ワークスペース" + (this.state.workspaces.length + 1) }]); this.persistWs(ws, id); this.persistActiveFlow(id, null, "diagram"); const empty = { folders: [], docs: [] }; try { localStorage.setItem(this.dbKey(id), JSON.stringify(empty)); localStorage.setItem(this.kbKey(id), "[]"); localStorage.setItem(this.subsKey(id), "[]"); localStorage.setItem(this.chatKey(id), "[]"); } catch (e) {} this.setState({ workspaces: ws, curWs: id, stage: "home", flow: null, curFlowId: null, chat: [], chatSessions: [], currentChatSessionId: null, highlightIds: [], db: empty, kbSources: [], subs: [], dbCurrent: "", dbUploadFolder: "", dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {} }); };
+  delWorkspace = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; if (this.state.workspaces.length <= 1) return; const ws = this.state.workspaces.filter(w => w.id !== id); const sf = this.state.savedFlows.filter(f => f.wsId !== id); const cur = this.state.curWs === id ? ws[0].id : this.state.curWs; this.persistWs(ws, cur); this.persistFlows(sf); this.persistActiveFlow(cur, null, "diagram"); try { localStorage.removeItem(this.dbKey(id)); localStorage.removeItem(this.kbKey(id)); localStorage.removeItem(this.subsKey(id)); localStorage.removeItem(this.chatKey(id)); } catch (x) {} this.setState({ workspaces: ws, savedFlows: sf, curWs: cur, stage: "home", flow: null, curFlowId: null, chat: [], currentChatSessionId: null, highlightIds: [], ...this.loadWsData(cur), dbCurrent: "", dbUploadFolder: "" }); };
   saveCurrentFlow = () => {
     if (!this.state.flow) return;
     let sf = this.state.savedFlows; let id = this.state.curFlowId;
-    if (id && sf.some(f => f.id === id)) sf = sf.map(f => f.id === id ? { ...f, title: this.state.flow.title || f.title, flow: this.state.flow, chat: this.state.chat, at: Date.now() } : f);
-    else { id = this.uid("fl_"); sf = sf.concat([{ id, wsId: this.state.curWs, title: this.state.flow.title || "無題のフロー", flow: this.state.flow, chat: this.state.chat, at: Date.now() }]); }
+    if (id && sf.some(f => f.id === id)) sf = sf.map(f => f.id === id ? { ...f, title: this.state.flow.title || f.title, flow: this.state.flow, chat: this.state.chat, at: Date.now(), ...this.flowRecordMeta(this.state.flow, f) } : f);
+    else { id = this.uid("fl_"); sf = sf.concat([{ id, wsId: this.state.curWs, title: this.state.flow.title || "無題のフロー", flow: this.state.flow, chat: this.state.chat, at: Date.now(), ...this.flowRecordMeta(this.state.flow) }]); }
     this.persistFlows(sf); this.persistActiveFlow(this.state.curWs, id, this.state.view || "diagram"); this.setState({ savedFlows: sf, curFlowId: id });
   };
   loadFlow = (e) => {
@@ -1187,8 +1448,23 @@ class Component extends DCLogic {
     this.persistActiveFlow(rec.wsId || this.state.curWs, id, "diagram");
     this.setState({ flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: id, stage: "flow", view: "diagram", currentId: rec.flow.root, path: [], chat: (rec.chat || []).slice(), highlightIds: [], wsOpen: false, nodeModalId: null });
   };
-  delFlow = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; const sf = this.state.savedFlows.filter(f => f.id !== id); this.persistFlows(sf); if (this.state.curFlowId === id) this.persistActiveFlow(this.state.curWs, null, "diagram"); this.setState({ savedFlows: sf, curFlowId: this.state.curFlowId === id ? null : this.state.curFlowId, flow: this.state.curFlowId === id ? null : this.state.flow, stage: this.state.curFlowId === id ? "input" : this.state.stage }); };
+  delFlow = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; const sf = this.state.savedFlows.filter(f => f.id !== id); this.persistFlows(sf); if (this.state.curFlowId === id) this.persistActiveFlow(this.state.curWs, null, "diagram"); this.setState({ savedFlows: sf, curFlowId: this.state.curFlowId === id ? null : this.state.curFlowId, flow: this.state.curFlowId === id ? null : this.state.flow, stage: this.state.curFlowId === id ? "home" : this.state.stage }); };
+  goHome = () => this.setState({ stage: "home", wsOpen: false, highlightIds: [], nodeModalId: null });
   newFlowDraft = () => { this.persistActiveFlow(this.state.curWs, null, "diagram"); this.setState({ wsOpen: false, stage: "input", flow: null, curFlowId: null, chat: [], highlightIds: [] }); };
+  toggleFlowLib = () => this.setState(st => ({ flowLibOpen: !st.flowLibOpen, flowLibCurrent: st.flowLibCurrent || st.curFlowId || "" }));
+  closeFlowLib = () => this.setState({ flowLibOpen: false });
+  flowLibPick = (e) => this.setState({ flowLibCurrent: e.currentTarget.dataset.id || "" });
+  flowLibOpenFlow = (e) => {
+    const id = e.currentTarget.dataset.id || this.state.flowLibCurrent;
+    if (id === "__cur__" && this.state.flow && this.state.flow.nodes) {
+      this.setState({ stage: "flow", view: "diagram", currentId: this.state.flow.root, path: [], highlightIds: [], nodeModalId: null, flowLibCurrent: "__cur__" });
+      return;
+    }
+    const rec = (this.state.savedFlows || []).find(f => f.id === id && f.wsId === this.state.curWs && f.flow && f.flow.nodes);
+    if (!rec) return;
+    this.persistActiveFlow(rec.wsId || this.state.curWs, rec.id, "diagram");
+    this.setState({ flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: rec.id, stage: "flow", view: "diagram", currentId: rec.flow.root, path: [], highlightIds: [], nodeModalId: null, flowLibCurrent: rec.id });
+  };
 
   uid(p) { return p + Math.random().toString(36).slice(2, 8); }
   defaultApiCfg() { return { provider: "claude", apiKey: "", baseUrl: "", apiVersion: "2024-02-15-preview", model: "" }; }
@@ -1218,9 +1494,11 @@ class Component extends DCLogic {
   dbKey(ws) { return "tpf_db_" + (ws || this.state.curWs); }
   kbKey(ws) { return "tpf_kbsrc_" + (ws || this.state.curWs); }
   subsKey(ws) { return "tpf_subs_" + (ws || this.state.curWs); }
+  chatKey(ws) { return "tpf_chat_sessions_" + (ws || this.state.curWs); }
   persistDb(db) { try { localStorage.setItem(this.dbKey(), JSON.stringify(db)); } catch (e) { /* ignore */ } }
   persistKbSources(arr) { try { localStorage.setItem(this.kbKey(), JSON.stringify(arr)); } catch (e) { /* ignore */ } }
   persistSubs(arr) { try { localStorage.setItem(this.subsKey(), JSON.stringify(arr)); } catch (e) { /* ignore */ } }
+  persistChatSessions(arr, ws) { try { localStorage.setItem(this.chatKey(ws), JSON.stringify(arr || [])); } catch (e) { /* ignore */ } }
   pdfBlobKey(sourceId) { return "pdf:" + (this.state.curWs || "default") + ":" + sourceId; }
   openPdfStore() {
     if (this._pdfStorePromise) return this._pdfStorePromise;
@@ -1259,13 +1537,14 @@ class Component extends DCLogic {
     }
     return source;
   }
-  loadWsData(ws) {
-    let db = JSON.parse(JSON.stringify(this.SAMPLE_DB)), kbSources = [], subs = [];
-    try { const r = localStorage.getItem(this.dbKey(ws)); if (r) { const d = JSON.parse(r); if (d && d.folders && d.docs) db = d; } } catch (e) {}
-    try { const r = localStorage.getItem(this.kbKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) kbSources = a; } } catch (e) {}
-    try { const r = localStorage.getItem(this.subsKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) subs = a; } } catch (e) {}
-    return { db, kbSources, subs };
-  }
+	  loadWsData(ws) {
+	    let db = JSON.parse(JSON.stringify(this.SAMPLE_DB)), kbSources = [], subs = [], chatSessions = [];
+	    try { const r = localStorage.getItem(this.dbKey(ws)); if (r) { const d = JSON.parse(r); if (d && d.folders && d.docs) db = d; } } catch (e) {}
+	    try { const r = localStorage.getItem(this.kbKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) kbSources = a; } } catch (e) {}
+	    try { const r = localStorage.getItem(this.subsKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) subs = a; } } catch (e) {}
+	    try { const r = localStorage.getItem(this.chatKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) chatSessions = a; } } catch (e) {}
+	    return { db, kbSources, subs, chatSessions };
+	  }
   // ---- 公開（フォルダを公開キー付きで共有）・購読 ----
   readPubReg() { try { return JSON.parse(localStorage.getItem("tpf_pub_v1")) || {}; } catch (e) { return {}; } }
   writePubReg(r) { try { localStorage.setItem("tpf_pub_v1", JSON.stringify(r)); } catch (e) {} }
@@ -1303,24 +1582,88 @@ class Component extends DCLogic {
     const lines = Object.keys(nodes).slice(0, 40).map(id => { const n = nodes[id]; return "  [" + id + "] (" + (n.kind || "?") + ") " + (n.text || "") + (n.models && n.models.length ? (" {models:" + n.models.join("/") + "}") : "") + (n.detail ? (" detail:" + String(n.detail).slice(0, 60)) : ""); }).join("\n");
     return "## flowId=" + f.id + " 「" + f.title + "」\n" + lines;
   }
-  buildDiffProposalPrompt(flows, src) {
-    const pages = (src.pages || []).slice(0, 40).map(p => "p" + p.page + ": " + (p.summary || "") + (p.keywords && p.keywords.length ? (" [KW:" + p.keywords.join("、") + "]") : "")).join("\n");
+  buildFlowCurationPrompt(flows, src) {
+    const pages = (src.pages || []).slice(0, 40).map(p => {
+      const ref = "src:" + src.id + ":" + p.page;
+      return "[" + ref + "] p" + p.page + ": " + (p.summary || "") + (p.keywords && p.keywords.length ? (" [KW:" + p.keywords.join("、") + "]") : "") + (p.md ? (" body:" + String(p.md).replace(/\s+/g, " ").slice(0, 260)) : "");
+    }).join("\n");
     return [
-      "あなたは業務フローのメンテナンス担当です。新しく取り込んだ資料を読み、既存フローへの最小限の変更案を提案します。",
+      "あなたは業務フロー体系を増やしすぎないための agentic curation エージェントです。",
+      "新しく登録された資料を読み、既存フロー体系のどこに入れるべきかを判断します。機械的な類似度ではなく、業務目的・判断軸・根拠・例外・ルーティングを意味で評価してください。",
+      "",
+      "# 実行方針",
+      "- 新規フロー作成は最後の手段。新しい業務目的・新しい判断軸・完結した別手順がある場合だけ create_new を提案する。",
+      "- 型番差分、条件値差分、根拠資料、価格表、仕様表、例外ルール、窓口/特約店への引き継ぎは、原則として既存フローへの add_condition / update_detail / attach_evidence に寄せる。",
+      "- 提案前に必ず反証する: 既存ノードの詳細更新で済まないか、根拠リンクだけで済まないか、既存分岐の条件追加で済まないか。",
+      "- 推測で構造変更しない。判断不能なら ask_human を出す。",
+      "- 変更案は承認キューに載る。自動で反映される前提ではなく、人が見て理解できる理由を書く。",
+      "",
+      "# 使える操作",
+      "- attach_evidence: 既存ノードに登録資料の根拠リンクを追加する。仕様表・価格表・根拠資料はまずこれを検討。",
+      "- add_condition: 既存ノードに適用条件タグと条件説明を追加する。型番・特約店・契約種別など。",
+      "- update_detail: 既存ノードの詳細/基準値/例外説明を追記する。",
+      "- create_new: 既存フローに吸収できない新しい業務フロー候補。自動作成はせずレビュー扱い。",
+      "- ask_human: 既存フローへの統合先が曖昧、または業務判断が必要。",
       "",
       "# 出力（JSONのみ。前後の説明やコードフェンス不要）",
-      '{ "proposals":[ { "flowId":"既存flowId", "nodeId":"対象ノードid", "op":"add_models|update_detail|note", "models":["適用条件"], "detail":"update_detailの時の新しい詳細/基準値/例外の文面", "reason":"必要な理由(1文)" } ] }',
-      "- add_models: その手順が特定条件だけのものの時、ノードをその条件専用にする。modelsに適用条件。",
-      "- update_detail: 同じ判断でも条件によって基準値・手順値・対象物・例外が異なる時。detailにその条件の差分を明記（例「条件Aでは上限は70」）。",
-      "- note: 分岐追加など構造変更が必要で自動適用できないもの。reasonに具体策、nodeIdは関連ノード。",
-      "- 本当に必要な変更だけ。無ければ proposals:[] 。推測で増やさない。最大8件。flowId/nodeIdは既存のものだけ。",
+      '{ "source_interpretation":{"kind":"根拠資料|条件差分|例外ルール|業務ルーティング|新規業務|不明","summary":"資料の意味","new_flow_needed":false,"anti_proliferation_check":["既存フローに吸収できる/できない理由"]},"proposals":[{"decision":"attach_evidence|add_condition|update_detail|create_new|ask_human","flowId":"既存flowId または空","nodeId":"対象nodeId または空","models":["適用条件タグ"],"detail":"追記する文面または新規候補の概要","refs":["src:id:page"],"confidence":0.0,"reason":"提案理由と反証結果を1文で"}] }',
+      "- proposals は最大8件。根拠が薄いものは出さない。",
+      "- attach_evidence / add_condition / update_detail は flowId と nodeId を既存のものだけにする。",
+      "- create_new / ask_human は nodeId が空でもよい。",
       "",
-      "# 新しく取り込んだ資料（絞り込み条件: " + (src.name || "不明") + "）",
+      "# 新しく登録された資料",
+      "sourceId: " + src.id,
+      "name: " + (src.name || "不明"),
       pages || "（要約なし）",
       "",
       "# 既存フロー",
       flows.map(f => this._flowRep(f)).join("\n\n"),
     ].join("\n");
+  }
+  proposalSourceRefs(src) {
+    return (src && src.pages || []).slice(0, 6).map(p => "src:" + src.id + ":" + p.page);
+  }
+  normalizeCurationDecision(p) {
+    const d = String((p && (p.decision || p.op || p.action)) || "").trim();
+    const map = {
+      add_models: "add_condition",
+      note: "ask_human",
+      evidence: "attach_evidence",
+      link: "attach_evidence",
+      new_flow: "create_new"
+    };
+    const op = map[d] || d;
+    return ["attach_evidence", "add_condition", "update_detail", "create_new", "ask_human"].indexOf(op) >= 0 ? op : "ask_human";
+  }
+  normalizeCurationProposals(o, flows, src) {
+    const byId = {}; (flows || []).forEach(f => byId[f.id] = f);
+    const fallbackRefs = this.proposalSourceRefs(src);
+    const raw = (o && (o.proposals || o.actions || o.patches)) || [];
+    return raw.map((p, i) => {
+      const op = this.normalizeCurationDecision(p);
+      const f = byId[p.flowId] || null;
+      const nodes = (f && f.flow && f.flow.nodes) || {};
+      const nodeId = String(p.nodeId || p.targetNodeId || "").trim();
+      const node = nodeId ? nodes[nodeId] : null;
+      if (["attach_evidence", "add_condition", "update_detail"].indexOf(op) >= 0 && (!f || !node)) return null;
+      const refs = (Array.isArray(p.refs) ? p.refs : []).map(String).filter(r => /^src:[^:]+:\d+$/.test(r));
+      const models = (Array.isArray(p.models) ? p.models : Array.isArray(p.conditions) ? p.conditions : []).map(String).filter(Boolean).slice(0, 10);
+      const confidence = Math.max(0, Math.min(1, Number(p.confidence == null ? 0.5 : p.confidence) || 0));
+      return {
+        id: "pp" + i,
+        flowId: f ? f.id : "",
+        flowTitle: f ? f.title : "新規/要確認",
+        nodeId,
+        nodeText: node ? (node.text || nodeId) : (op === "create_new" ? "新規フロー候補" : "確認が必要"),
+        op,
+        models,
+        refs: refs.length ? refs : (op === "attach_evidence" ? fallbackRefs : []),
+        detail: String(p.detail || p.patch || p.summary || "").trim(),
+        reason: String(p.reason || "").trim() || "登録資料を既存フロー体系に反映する提案です。",
+        confidence,
+        status: "pending"
+      };
+    }).filter(Boolean).slice(0, 8);
   }
   async runProposals(sourceId) {
     const src = (this.state.kbSources || []).find(s => s.id === sourceId);
@@ -1330,29 +1673,23 @@ class Component extends DCLogic {
     if (!flows.length) { this.setState({ ingestDone: null, proposals: { items: [], empty: true, srcName: src.name } }); return; }
     this.setState({ ingestDone: null, proposals: { running: true, items: [], srcName: src.name } });
     try {
-      const t = await this.llmComplete(this.buildDiffProposalPrompt(flows, src));
+      const t = await this.llmComplete(this.buildFlowCurationPrompt(flows, src));
       const o = this.parseLoose(t) || {};
-      const byId = {}; flows.forEach(f => byId[f.id] = f);
-      const items = (o.proposals || []).map((p, i) => {
-        const f = byId[p.flowId]; if (!f) return null;
-        const node = f.flow.nodes[p.nodeId]; if (!node) return null;
-        const op = ["add_models", "update_detail", "note"].indexOf(p.op) >= 0 ? p.op : "note";
-        return { id: "pp" + i, flowId: p.flowId, flowTitle: f.title, nodeId: p.nodeId, nodeText: node.text || p.nodeId, op, models: Array.isArray(p.models) ? p.models : [], detail: p.detail || "", reason: p.reason || "", status: "pending" };
-      }).filter(Boolean);
-      this.setState({ proposals: { running: false, items, srcName: src.name } });
+      const items = this.normalizeCurationProposals(o, flows, src);
+      this.setState({ proposals: { running: false, items, srcName: src.name, interpretation: o.source_interpretation || null } });
     } catch (e) { this.setState({ proposals: { running: false, items: [], error: "提案の生成に失敗しました：" + ((e && e.message) || "") } }); }
   }
   decideProposal = (e) => {
     const pid = e.currentTarget.dataset.pid; const approve = e.currentTarget.dataset.act === "approve";
     const items = (this.state.proposals.items || []).map(it => it.id === pid ? { ...it, status: approve ? "approved" : "rejected" } : it);
     const item = items.find(it => it.id === pid);
-    if (approve && item && item.op !== "note") this._applyProposalToFlow(item);
+    if (approve && item && ["create_new", "ask_human"].indexOf(item.op) < 0) this._applyProposalToFlow(item);
     this.setState({ proposals: { ...this.state.proposals, items } });
   };
   approveAllProposals = () => {
     const items = (this.state.proposals.items || []).map(it => {
       if (it.status !== "pending") return it;
-      if (it.op !== "note") this._applyProposalToFlow(it);
+      if (["create_new", "ask_human"].indexOf(it.op) < 0) this._applyProposalToFlow(it);
       return { ...it, status: "approved" };
     });
     this.setState({ proposals: { ...this.state.proposals, items } });
@@ -1361,8 +1698,28 @@ class Component extends DCLogic {
     const mutate = (flow) => {
       const n = flow.nodes[item.nodeId]; if (!n) return flow;
       const nn = { ...n };
-      if (item.op === "add_models") { const cur = Array.isArray(nn.models) ? nn.models : []; nn.models = Array.from(new Set(cur.concat(item.models))); }
-      else if (item.op === "update_detail") { const tag = item.models.length ? ("【" + item.models.join("/") + "】") : ""; nn.detail = (nn.detail ? nn.detail + "\n" : "") + tag + item.detail; }
+      if (item.op === "add_condition") {
+        const cur = Array.isArray(nn.models) ? nn.models : [];
+        nn.models = Array.from(new Set(cur.concat(item.models || [])));
+        if (item.detail) {
+          const tag = item.models && item.models.length ? ("【" + item.models.join("/") + "】") : "【条件追加】";
+          nn.detail = (nn.detail ? nn.detail + "\n" : "") + tag + item.detail;
+        }
+      }
+      else if (item.op === "update_detail") { const tag = item.models && item.models.length ? ("【" + item.models.join("/") + "】") : ""; nn.detail = (nn.detail ? nn.detail + "\n" : "") + tag + item.detail; }
+      else if (item.op === "attach_evidence") {
+        const links = Array.isArray(nn.links) ? nn.links.slice() : [];
+        const seen = {}; links.forEach(l => { if (l && l.url) seen[l.url] = 1; });
+        (item.refs || []).forEach(ref => {
+          const url = "kb:" + ref;
+          if (!seen[url]) {
+            const en = this.kbResolve(ref);
+            links.push({ label: en ? en.title : ref, url });
+            seen[url] = 1;
+          }
+        });
+        nn.links = links;
+      }
       return { ...flow, nodes: { ...flow.nodes, [item.nodeId]: nn } };
     };
     if (item.flowId === "__live__" || item.flowId === this.state.curFlowId) { if (this.state.flow) this.setState({ flow: mutate(this.state.flow) }); }
@@ -1445,6 +1802,24 @@ class Component extends DCLogic {
     while (cur && guard < 20) { parts.unshift(cur.name); cur = cur.parent ? by[cur.parent] : null; guard++; }
     return parts.join(" / ");
   }
+  folderLabel(id) { return id ? (this.folderPath(id) || "不明なフォルダ") : "すべて（ルート）"; }
+  currentSaveFolderId() { return this.state.dbUploadFolder || this.state.dbCurrent || ""; }
+  folderDescendantSet(folderId) {
+    const ids = {};
+    const walk = (fid) => { ids[fid || ""] = 1; (this.state.db.folders || []).filter(f => (f.parent || "") === (fid || "")).forEach(f => walk(f.id)); };
+    walk(folderId || "");
+    return ids;
+  }
+  saveHistoryDoc(kind, title, body, folderId) {
+    const text = String(body || "").trim();
+    if (!text) return "";
+    const id = this.uid("d_");
+    const doc = { id, folderId: folderId || "", title: title || "取り込み履歴", body: text, kind: kind || "history", createdAt: Date.now() };
+    const db = { ...this.state.db, docs: (this.state.db.docs || []).concat([doc]) };
+    this.persistDb(db);
+    this.setState({ db });
+    return id;
+  }
   // 階層順に並べたフォルダ（depth付き）
   folderTree() {
     const fs = this.state.db.folders; const out = [];
@@ -1454,7 +1829,7 @@ class Component extends DCLogic {
 
   // ---- DB manager (explorer風) ----
   toggleDb = () => this.setState({ dbOpen: !this.state.dbOpen });
-  dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id; this.setState({ dbCurrent: id || "", dbEditDoc: null, dbRename: null, dbExpanded: { ...this.state.dbExpanded, [id]: true } }); };
+  dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id || ""; this.setState({ dbCurrent: id, dbUploadFolder: id, dbEditDoc: null, dbRename: null, dbExpanded: { ...this.state.dbExpanded, [id]: true } }); };
   dbToggleExpand = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; this.setState({ dbExpanded: { ...this.state.dbExpanded, [id]: !this.state.dbExpanded[id] } }); };
   dbNewFolder = () => {
     const id = this.uid("f_");
@@ -1494,7 +1869,7 @@ class Component extends DCLogic {
     const folders = all.filter(f => !del[f.id]); const docs = this.state.db.docs.filter(d => !del[d.folderId]);
     const db = { folders, docs }; this.persistDb(db);
     const kbSources = (this.state.kbSources || []).filter(s => !del[s.folderId || ""]); this.persistKbSources(kbSources);
-    this.setState({ db, kbSources, dbCurrent: del[this.state.dbCurrent] ? "" : this.state.dbCurrent });
+    this.setState({ db, kbSources, dbCurrent: del[this.state.dbCurrent] ? "" : this.state.dbCurrent, dbUploadFolder: del[this.state.dbUploadFolder] ? "" : this.state.dbUploadFolder });
   };
   delDoc = (e) => {
     e.stopPropagation && e.stopPropagation();
@@ -1642,19 +2017,23 @@ class Component extends DCLogic {
   kbIndex() {
     const idx = [];
     (this.state.kbSources || []).forEach(s => {
+      const folderId = s.folderId || "";
+      const folderPath = this.folderLabel(folderId);
       (s.pages || []).forEach(p => {
         idx.push({ ref: "src:" + s.id + ":" + p.page, srcId: s.id, src: s.name, page: p.page,
-          title: s.name + " p" + p.page, summary: p.summary || "", keywords: p.keywords || [], aliases: p.aliases || [], conditions: p.conditions || [], md: p.md || "" });
+          title: s.name + " p" + p.page, summary: p.summary || "", keywords: p.keywords || [], aliases: p.aliases || [], conditions: p.conditions || [], md: p.md || "", folderId, folderPath });
       });
     });
     (this.state.db.docs || []).forEach(d => {
+      const folderId = d.folderId || "";
+      const folderPath = this.folderLabel(folderId);
       idx.push({ ref: "doc:" + d.id, srcId: "", src: "メモ", page: 0,
-        title: d.title || "メモ", summary: (d.body || "").slice(0, 80), keywords: [], md: d.body || "" });
+        title: d.title || "メモ", summary: (d.body || "").slice(0, 80), keywords: [], md: d.body || "", folderId, folderPath });
     });
     (this.state.subs || []).forEach(key => {
       const p = this.resolvePub(key); if (!p) return;
-      p.sources.forEach(s => (s.pages || []).forEach(pg => idx.push({ ref: "shsrc:" + key + ":" + s.id + ":" + pg.page, srcId: s.id, src: "🌐" + s.name, page: pg.page, title: "🌐" + p.name + "／" + s.name + " p" + pg.page, summary: pg.summary || "", keywords: pg.keywords || [], aliases: pg.aliases || [], conditions: pg.conditions || [], md: pg.md || "" })));
-      p.docs.forEach(d => idx.push({ ref: "shdoc:" + key + ":" + d.id, srcId: "", src: "🌐" + p.name, page: 0, title: "🌐" + p.name + "／" + (d.title || "メモ"), summary: (d.body || "").slice(0, 80), keywords: [], md: d.body || "" }));
+      p.sources.forEach(s => (s.pages || []).forEach(pg => idx.push({ ref: "shsrc:" + key + ":" + s.id + ":" + pg.page, srcId: s.id, src: "🌐" + s.name, page: pg.page, title: "🌐" + p.name + "／" + s.name + " p" + pg.page, summary: pg.summary || "", keywords: pg.keywords || [], aliases: pg.aliases || [], conditions: pg.conditions || [], md: pg.md || "", folderId: s.folderId || "", folderPath: "🌐" + p.name })));
+      p.docs.forEach(d => idx.push({ ref: "shdoc:" + key + ":" + d.id, srcId: "", src: "🌐" + p.name, page: 0, title: "🌐" + p.name + "／" + (d.title || "メモ"), summary: (d.body || "").slice(0, 80), keywords: [], md: d.body || "", folderId: d.folderId || "", folderPath: "🌐" + p.name }));
     });
     return idx;
   }
@@ -1811,10 +2190,19 @@ class Component extends DCLogic {
   // ソース一覧テキスト（PDF1冊＝1行。フォルダ階層の代わり）
   kbSourceListText() {
     const ss = this.state.kbSources || [];
-    let t = ss.map(s => "📘 " + s.name + "（" + (s.pages || []).length + "ページ, id=" + s.id + "）").join("\n") || "（PDFソースなし）";
+    let t = ss.map(s => "📘 " + this.folderLabel(s.folderId || "") + " / " + s.name + "（" + (s.pages || []).length + "ページ, id=" + s.id + "）").join("\n") || "（PDFソースなし）";
     const docs = (this.state.db.docs || []).length;
     if (docs) t += "\n📝 手動メモ " + docs + "件";
     return t;
+  }
+  kbFolderTreeText() {
+    const lines = ["- id=root path=すべて"];
+    this.folderTree().forEach(f => {
+      const srcCount = (this.state.kbSources || []).filter(s => (s.folderId || "") === f.id).length;
+      const docCount = (this.state.db.docs || []).filter(d => (d.folderId || "") === f.id).length;
+      lines.push("- id=" + f.id + " path=" + this.folderPath(f.id) + "（PDF " + srcCount + " / メモ " + docCount + "）");
+    });
+    return lines.join("\n");
   }
   kbShouldAutoRead(q) {
     return /一覧|内訳|構成|内容|詳細|具体|教えて|何|どれ|表|仕様|手順|方法|納入|添付|付属|同梱|構成品|部品|対象範囲/.test(this.kbExpandedQueryText(q));
@@ -1833,10 +2221,15 @@ class Component extends DCLogic {
       "- フロー観測から検索に使ってよいのは、機種名・条件・対象範囲などの具体条件だけ。",
       "- 『特定できない』『該当なし』『確認できない』『見つからない』などの失敗文は検索語に入れない。",
       "- 表記ゆれ・言い換え・上位語/下位語は、あなたが自然に推定して query_variants に含める。",
+      "- 質問が製品名・部門名・資料種別・フォルダ名を含む場合は、DB階層候補を見て folder_hints に関連しそうなパス/名前を入れる。",
+      "- folder_hints は探索優先度の調整用であり、明示的に限定されていない限り他フォルダを完全には除外しない。",
       "- ただし query_variants は検索用であり、回答根拠ではない。根拠は後続のread_page本文だけ。",
       "- 3〜8個の短い検索クエリを作る。日本語文書に載っていそうな語を優先する。",
       "",
-      '# 出力JSONのみ: {"question_rewrite":"検索用に言い換えた質問","answer_needs":["必要な情報"],"entities":["対象名・型式・条件"],"constraints":["フロー等から抽出した検索制約"],"query_variants":["検索語1","検索語2"],"negative_terms_to_ignore":["検索に混ぜない語"],"should_read_fulltext":true,"should_read_neighbors":true}',
+      '# 出力JSONのみ: {"question_rewrite":"検索用に言い換えた質問","answer_needs":["必要な情報"],"entities":["対象名・型式・条件"],"constraints":["フロー等から抽出した検索制約"],"folder_hints":["関連しそうなフォルダ名/パス"],"query_variants":["検索語1","検索語2"],"negative_terms_to_ignore":["検索に混ぜない語"],"should_read_fulltext":true,"should_read_neighbors":true}',
+      "",
+      "# DB階層候補",
+      this.kbFolderTreeText(),
       "",
       "# 入力",
       q
@@ -1852,6 +2245,7 @@ class Component extends DCLogic {
       answer_needs: [],
       entities: [],
       constraints: [],
+      folder_hints: [],
       query_variants: variants,
       negative_terms_to_ignore: ["特定できない", "該当なし", "確認できない", "見つからない", "不明"],
       should_read_fulltext: this.kbShouldAutoRead(base),
@@ -1884,6 +2278,7 @@ class Component extends DCLogic {
       answer_needs: (Array.isArray(src.answer_needs) ? src.answer_needs : fb.answer_needs).map(String).filter(Boolean).slice(0, 8),
       entities: (Array.isArray(src.entities) ? src.entities : fb.entities).map(String).filter(Boolean).slice(0, 8),
       constraints: (Array.isArray(src.constraints) ? src.constraints : fb.constraints).map(String).filter(Boolean).slice(0, 8),
+      folder_hints: (Array.isArray(src.folder_hints) ? src.folder_hints : fb.folder_hints).map(String).filter(Boolean).slice(0, 8),
       query_variants: variants.slice(0, 8),
       negative_terms_to_ignore: negative.slice(0, 8),
       should_read_fulltext: src.should_read_fulltext === false ? false : (src.should_read_fulltext === true || fb.should_read_fulltext || variants.length > 1),
@@ -1902,7 +2297,8 @@ class Component extends DCLogic {
             "rewrite: " + intent.question_rewrite,
             "queries: " + intent.query_variants.join(" / "),
             intent.entities.length ? "entities: " + intent.entities.join("、") : "",
-            intent.constraints.length ? "constraints: " + intent.constraints.join("、") : ""
+            intent.constraints.length ? "constraints: " + intent.constraints.join("、") : "",
+            intent.folder_hints.length ? "folders: " + intent.folder_hints.join("、") : ""
           ].filter(Boolean).join("\n");
           push && push({ kind: "plan", title: "🧭 検索意図を構造化", detail, sub: forSub });
           return intent;
@@ -1921,7 +2317,27 @@ class Component extends DCLogic {
       .concat(intent.answer_needs || [])
       .concat(intent.entities || [])
       .concat(intent.constraints || [])
+      .concat(intent.folder_hints || [])
       .join(" ");
+  }
+  kbFolderBoost(e, intent) {
+    if (!e) return 0;
+    const fp = String(e.folderPath || this.folderLabel(e.folderId || "") || "").toLowerCase();
+    const fn = fp.split("/").map(s => s.trim()).filter(Boolean);
+    const hints = []
+      .concat((intent && intent.folder_hints) || [])
+      .concat((intent && intent.entities) || [])
+      .concat((intent && intent.constraints) || [])
+      .map(s => String(s || "").toLowerCase().trim()).filter(Boolean);
+    let score = 0;
+    hints.forEach(h => {
+      if (!h) return;
+      if (fp && (fp.indexOf(h) >= 0 || h.indexOf(fp) >= 0)) score += 8;
+      fn.forEach(part => { if (part && (h.indexOf(part) >= 0 || part.indexOf(h) >= 0)) score += 3; });
+    });
+    const active = (this.state.activeModel || "").toLowerCase();
+    if (active && fp && fp.indexOf(active) >= 0) score += 4;
+    return Math.min(score, 18);
   }
   kbSearchWithIntent(intent) {
     const variants = (intent && intent.query_variants && intent.query_variants.length) ? intent.query_variants : [this.kbIntentQueryText(intent)];
@@ -1945,7 +2361,7 @@ class Component extends DCLogic {
     });
     return Object.keys(byRef).map(ref => {
       const r = byRef[ref];
-      return { e: r.e, score: r.score, hitKw: r.hitKw || r.queries.slice(0, 2).join(" / "), queries: r.queries, sources: r.sources };
+      return { e: r.e, score: r.score + this.kbFolderBoost(r.e, intent), hitKw: r.hitKw || r.queries.slice(0, 2).join(" / "), queries: r.queries, sources: r.sources };
     }).sort((a, b) => b.score - a.score).slice(0, 15);
   }
   kbNeighborRef(e, delta) {
@@ -2082,9 +2498,12 @@ class Component extends DCLogic {
     const push = opts.push || (() => {});
     const maxSteps = opts.maxSteps || (forSub ? 5 : 16);
     const bindSearch = !forSub && opts.bindSearch !== false; // 検索モーダルのtodos/状態に結びつけるか
-    const searchIntent = await this.kbBuildSearchIntent(q, push, forSub);
+    const flowContext = opts.flowContext || null;
+    const searchQ = flowContext ? this.composeDbQuestionWithFlowContext(q, flowContext) : q;
+    const searchIntent = await this.kbBuildSearchIntent(searchQ, push, forSub);
     const intentQ = this.kbIntentQueryText(searchIntent) || this.kbSearchIntentQuery(q);
-    let obs = [{ label: "登録ソース一覧", text: this.kbSourceListText() }];
+    let obs = [{ label: "DB階層", text: this.kbFolderTreeText() }, { label: "登録ソース一覧", text: this.kbSourceListText() }];
+    if (flowContext) obs.push({ label: "フローハーネス観測", text: this.flowHarnessObservationText(flowContext) });
     obs.push({
       label: "search_intent",
       text: [
@@ -2092,6 +2511,7 @@ class Component extends DCLogic {
         "queries: " + (searchIntent.query_variants || []).join(" / "),
         (searchIntent.entities || []).length ? "entities: " + searchIntent.entities.join("、") : "",
         (searchIntent.constraints || []).length ? "constraints: " + searchIntent.constraints.join("、") : "",
+        (searchIntent.folder_hints || []).length ? "folders: " + searchIntent.folder_hints.join("、") : "",
         "fulltext: " + (searchIntent.should_read_fulltext ? "yes" : "no")
       ].filter(Boolean).join("\n")
     });
@@ -2122,7 +2542,7 @@ class Component extends DCLogic {
       }
       let res, raw = "";
       try {
-        let prompt = this.agentSystemPrompt(q, forSub) + "\n\n" + this.buildObsContext(obs, todos, forSub);
+        let prompt = this.agentSystemPrompt(searchQ, forSub) + "\n\n" + this.buildObsContext(obs, todos, forSub);
         if (correction) prompt += "\n\n# 重要：直前の出力はJSONとして解釈できませんでした。\n説明・前置き・コードフェンス・記号を一切付けず、上記ツール形式の **JSONオブジェクトを1つだけ** 出力してください。最初の文字は { で始め、最後の文字は } で終えること。";
         raw = await this.llmComplete(prompt);
         res = this.parseToolCall(raw);
@@ -2452,13 +2872,169 @@ class Component extends DCLogic {
     this._apiCfgDraft = cfg;
     this.setState({ apiCfg: cfg, settingsOpen: false });
   };
-  newChat = () => this.setState({ chat: [], chatInput: "", highlightIds: [], chatLoading: false, chatStreaming: false, chatAgentStatus: "" });
-  setActiveModel = (e) => this.setState({ activeModel: e.target.value });
-  setChatAgentStatus(text) {
-    const v = text || "フローとナレッジDBを横断しています…";
-    if (this.state.chatAgentStatus !== v) this.setState({ chatAgentStatus: v });
-  }
-  uniqueChatSources(sources) {
+	  chatSessionTitle(chat, fallback) {
+	    const firstUser = (chat || []).find(m => m && m.role === "user" && String(m.text || "").trim());
+	    const s = String((firstUser && firstUser.text) || fallback || "新しい相談").replace(/\s+/g, " ").trim();
+	    return s.length > 34 ? s.slice(0, 34) + "…" : s;
+	  }
+	  chatSessionPreview(chat) {
+	    const last = (chat || []).slice().reverse().find(m => m && ((m.role === "assistant" && m.answer) || (m.role === "user" && m.text)));
+	    const s = String((last && (last.answer || last.text)) || "まだメッセージはありません").replace(/\s+/g, " ").trim();
+	    return s.length > 42 ? s.slice(0, 42) + "…" : s;
+	  }
+	  cleanChatForSession(chat) {
+	    return (chat || []).filter(m => m && (m.role === "user" || m.role === "assistant")).map(m => ({ ...m, isStreaming: false })).slice(-80);
+	  }
+	  chatSessionPatch(st, chatArg, sessionIdArg, titleFallback) {
+	    const chat = this.cleanChatForSession(chatArg);
+	    const sid = sessionIdArg || st.currentChatSessionId || this._pendingChatSessionId;
+	    if (!sid) return { chat };
+	    const sessions = (st.chatSessions || []).slice();
+	    const idx = sessions.findIndex(s => s.id === sid);
+	    const prev = idx >= 0 ? sessions[idx] : { id: sid, wsId: st.curWs, createdAt: Date.now() };
+	    const rec = {
+	      ...prev,
+	      id: sid,
+	      wsId: st.curWs,
+	      title: this.chatSessionTitle(chat, titleFallback || prev.title),
+	      preview: this.chatSessionPreview(chat),
+	      messages: chat,
+	      at: Date.now()
+	    };
+	    const next = [rec].concat(sessions.filter(s => s.id !== sid)).slice(0, 50);
+	    this.persistChatSessions(next, st.curWs);
+	    return { chat, chatSessions: next, currentChatSessionId: sid };
+	  }
+	  ensureChatSession(question) {
+	    const cur = this.state.currentChatSessionId;
+	    if (cur && (this.state.chatSessions || []).some(s => s.id === cur)) return cur;
+	    const id = this.uid("ch_");
+	    const rec = { id, wsId: this.state.curWs, title: this.chatSessionTitle([], question), preview: "送信待ち", messages: [], createdAt: Date.now(), at: Date.now() };
+	    const sessions = [rec].concat(this.state.chatSessions || []).slice(0, 50);
+	    this.persistChatSessions(sessions, this.state.curWs);
+	    this.setState({ chatSessions: sessions, currentChatSessionId: id });
+	    return id;
+	  }
+	  newChat = () => { this._pendingChatSessionId = null; this.setState({ chat: [], chatInput: "", currentChatSessionId: null, highlightIds: [], chatLoading: false, chatStreaming: false, chatAgentStatus: "", copiedChatIdx: null }); };
+	  loadChatSession = (e) => {
+	    const id = e.currentTarget.dataset.id;
+	    const rec = (this.state.chatSessions || []).find(s => s.id === id);
+	    if (!rec) return;
+	    this._pendingChatSessionId = id;
+	    this.setState({ stage: "home", chat: this.cleanChatForSession(rec.messages || []), currentChatSessionId: id, chatInput: "", chatLoading: false, chatStreaming: false, chatAgentStatus: "", copiedChatIdx: null, highlightIds: [], wsOpen: false, nodeModalId: null });
+	  };
+	  setActiveModel = (e) => this.setState({ activeModel: e.target.value });
+	  setChatAgentStatus(text) {
+	    const v = text || "フローとナレッジDBを横断しています…";
+	    if (this.state.chatAgentStatus !== v) this.setState({ chatAgentStatus: v });
+	  }
+	  escapeHtml(s) {
+	    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+	  }
+	  markdownInline(s) {
+	    const codes = [];
+	    let t = this.escapeHtml(s).replace(/`([^`]+)`/g, (_, code) => {
+	      const key = "\u0000CODE" + codes.length + "\u0000";
+	      codes.push("<code>" + code + "</code>");
+	      return key;
+	    });
+	    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+	    t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+	    t = t.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+	    codes.forEach((html, i) => { t = t.split("\u0000CODE" + i + "\u0000").join(html); });
+	    return t;
+	  }
+	  markdownToHtml(md) {
+	    const lines = String(md || "").replace(/\r\n/g, "\n").split("\n");
+	    const html = [], para = [], stack = [];
+	    const flushPara = () => {
+	      if (!para.length) return;
+	      html.push("<p>" + this.markdownInline(para.join(" ")) + "</p>");
+	      para.length = 0;
+	    };
+	    const closeTopLi = () => { const top = stack[stack.length - 1]; if (top && top.liOpen) { html.push("</li>"); top.liOpen = false; } };
+	    const closeLists = (targetIndent) => {
+	      while (stack.length && (targetIndent == null || stack[stack.length - 1].indent > targetIndent)) {
+	        closeTopLi();
+	        html.push("</" + stack.pop().type + ">");
+	      }
+	    };
+	    const closeAllLists = () => closeLists(null);
+	    let inCode = false, code = [];
+	    lines.forEach(line => {
+	      if (/^\s*```/.test(line)) {
+	        flushPara();
+	        if (inCode) {
+	          html.push("<pre><code>" + this.escapeHtml(code.join("\n")) + "</code></pre>");
+	          inCode = false; code = [];
+	        } else {
+	          closeAllLists(); inCode = true; code = [];
+	        }
+	        return;
+	      }
+	      if (inCode) { code.push(line); return; }
+	      if (!line.trim()) { flushPara(); closeAllLists(); return; }
+	      const heading = line.match(/^(#{1,3})\s+(.+)$/);
+	      if (heading) {
+	        flushPara(); closeAllLists();
+	        const level = Math.min(3, heading[1].length) + 2;
+	        html.push("<h" + level + ">" + this.markdownInline(heading[2]) + "</h" + level + ">");
+	        return;
+	      }
+	      const quote = line.match(/^>\s?(.+)$/);
+	      if (quote) { flushPara(); closeAllLists(); html.push("<blockquote>" + this.markdownInline(quote[1]) + "</blockquote>"); return; }
+	      const item = line.match(/^(\s*)([-*+]|\d+\.)\s+(.+)$/);
+	      if (item) {
+	        flushPara();
+	        const indent = item[1].replace(/\t/g, "  ").length;
+	        const type = /\d+\./.test(item[2]) ? "ol" : "ul";
+	        closeLists(indent);
+	        let top = stack[stack.length - 1];
+	        if (!top || top.indent < indent || top.type !== type) {
+	          html.push("<" + type + ">");
+	          top = { type, indent, liOpen: false };
+	          stack.push(top);
+	        } else {
+	          closeTopLi();
+	        }
+	        html.push("<li>" + this.markdownInline(item[3]));
+	        top.liOpen = true;
+	        return;
+	      }
+	      closeAllLists();
+	      para.push(line.trim());
+	    });
+	    flushPara(); closeAllLists();
+	    if (inCode) html.push("<pre><code>" + this.escapeHtml(code.join("\n")) + "</code></pre>");
+	    return html.join("");
+	  }
+	  answerHtmlObj(text) { return { __html: this.markdownToHtml(text) }; }
+	  copyTextFallback(text) {
+	    const ta = document.createElement("textarea");
+	    ta.value = text;
+	    ta.setAttribute("readonly", "");
+	    ta.style.position = "fixed";
+	    ta.style.opacity = "0";
+	    document.body.appendChild(ta);
+	    ta.select();
+	    try { document.execCommand("copy"); } finally { document.body.removeChild(ta); }
+	  }
+	  copyAnswerMarkdown = async (e) => {
+	    const i = parseInt(e.currentTarget.dataset.mi, 10);
+	    const m = this.state.chat[i];
+	    const text = String((m && m.answer) || "");
+	    if (!text) return;
+	    try {
+	      if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(text);
+	      else this.copyTextFallback(text);
+	      this.setState({ copiedChatIdx: i });
+	      clearTimeout(this._copyTimer);
+	      this._copyTimer = setTimeout(() => { if (this.state.copiedChatIdx === i) this.setState({ copiedChatIdx: null }); }, 1600);
+	    } catch (err) {
+	      try { this.copyTextFallback(text); this.setState({ copiedChatIdx: i }); } catch (x) {}
+	    }
+	  };
+	  uniqueChatSources(sources) {
     const out = [], seen = {};
     (sources || []).forEach(s => {
       if (!s) return;
@@ -2473,12 +3049,12 @@ class Component extends DCLogic {
   }
   async finishChatMessage(msg, highlightIds) {
     const fullAnswer = String((msg && msg.answer) || "");
-    const doneMsg = { ...(msg || {}), role: "assistant", answer: fullAnswer, sources: this.uniqueChatSources((msg && msg.sources) || []), isStreaming: false };
-    const hi = highlightIds || doneMsg.path || [];
-    if (!fullAnswer || fullAnswer.length < 12) {
-      this.setState(stt => ({ chat: stt.chat.concat([doneMsg]), chatLoading: false, chatStreaming: false, chatAgentStatus: "", highlightIds: hi }));
-      return;
-    }
+	    const doneMsg = { ...(msg || {}), role: "assistant", answer: fullAnswer, sources: this.uniqueChatSources((msg && msg.sources) || []), isStreaming: false };
+	    const hi = highlightIds || doneMsg.path || [];
+	    if (!fullAnswer || fullAnswer.length < 12) {
+	      this.setState(stt => ({ ...this.chatSessionPatch(stt, stt.chat.concat([doneMsg])), chatLoading: false, chatStreaming: false, chatAgentStatus: "", highlightIds: hi }));
+	      return;
+	    }
     const streamingMsg = { ...doneMsg, answer: "", steps: [], options: [], detail: "", sources: [], trace: [], isStreaming: true };
     this.setState(stt => ({ chat: stt.chat.concat([streamingMsg]), chatLoading: false, chatStreaming: true, chatAgentStatus: "", highlightIds: hi }));
     let shown = "";
@@ -2493,13 +3069,13 @@ class Component extends DCLogic {
       });
       await this.sleep(i < 8 ? 14 : 9);
     }
-    this.setState(stt => {
-      const chat = stt.chat.slice();
-      const idx = chat.length - 1;
-      if (idx >= 0 && chat[idx].role === "assistant") chat[idx] = doneMsg;
-      return { chat, chatStreaming: false, highlightIds: hi };
-    });
-  }
+	    this.setState(stt => {
+	      const chat = stt.chat.slice();
+	      const idx = chat.length - 1;
+	      if (idx >= 0 && chat[idx].role === "assistant") chat[idx] = doneMsg;
+	      return { ...this.chatSessionPatch(stt, chat), chatStreaming: false, highlightIds: hi };
+	    });
+	  }
   // 既知の絞り込み条件候補（KBフォルダ名・PDF名・共有フォルダ名から収集）
   knownModels() {
     const set = {};
@@ -2759,12 +3335,13 @@ class Component extends DCLogic {
   // PDF1冊 = 1つのJSONソースとして登録（ページごとに 要約 / キーワード / 全文md を保持）
   // フォルダは作らない（大量PDFでもフォルダが増殖しない）
   async registerPdfToKb(pages, index) {
-    const { source, pageRef } = this._buildSource(this.state.pdfName, pages, index, this.state.dbUploadFolder || "");
+    const folderId = this.currentSaveFolderId();
+    const { source, pageRef } = this._buildSource(this.state.pdfName, pages, index, folderId);
     await this.attachPdfToSource(source, this._pdfBlob, this._pdfAssetUrl);
     const kbSources = (this.state.kbSources || []).concat([source]);
     this.persistKbSources(kbSources);
     this.setState({ kbSources });
-    return { sourceId: source.id, pageRef, docCount: source.pages.length };
+    return { sourceId: source.id, sourceName: source.name, folderId: source.folderId || "", pageRef, docCount: source.pages.length };
   }
 
   // PDF→ソースJSON（ページごとに 要約 / キーワード / 全文md）を組み立てる共通処理
@@ -2785,7 +3362,7 @@ class Component extends DCLogic {
   }
 
   // 任意のフォルダにPDFを取り込み、ページを並列解析してJSONソースを同一フォルダに保存
-  onIngestPdf = (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const folderId = this.state.dbCurrent || ""; this.ingestPdfToFolder(f, f.name, folderId); e.target.value = ""; };
+  onIngestPdf = (e) => { const f = e.target.files && e.target.files[0]; if (!f) return; const folderId = this.currentSaveFolderId(); this.ingestPdfToFolder(f, f.name, folderId); e.target.value = ""; };
   async ingestPdfToFolder(blob, name, folderId) {
     if (!this.hasLLM()) { this.setState({ dbIngest: { error: "AIが未設定です。右上の「API設定」でキーを入力してください（内蔵Claudeでも可）。" } }); return; }
     this.setState({ dbIngest: { running: true, name, msg: "PDFを読み込み中…", cur: 0, total: 0 } });
@@ -2805,6 +3382,30 @@ class Component extends DCLogic {
       this.setState({ kbSources, dbIngest: null, ingestDone: { sourceId: source.id, name }, dbSrcExpand: { ...this.state.dbSrcExpand, [source.id]: false } });
     } catch (e) { this.setState({ dbIngest: { error: "取り込みに失敗しました：" + ((e && e.message) || "") } }); }
   }
+  sourceKbContext(src) {
+    if (!src) return null;
+    const pageRef = {};
+    (src.pages || []).forEach(p => { pageRef[p.page] = "src:" + src.id + ":" + p.page; });
+    return { sourceId: src.id, sourceName: src.name, folderId: src.folderId || "", pageRef, docCount: (src.pages || []).length };
+  }
+  buildFlowFromDbSource = async (e) => {
+    e.stopPropagation && e.stopPropagation();
+    const id = e.currentTarget.dataset.id;
+    const src = (this.state.kbSources || []).find(s => s.id === id);
+    if (!src) return;
+    if (!this.hasLLM()) { this.setState({ dbIngest: { error: "AIが未設定です。右上の「API設定」でキーを入力してください。" } }); return; }
+    const pages = (src.pages || []).map(p => ({ page: p.page, text: p.md || p.summary || "" }));
+    const index = (src.pages || []).map(p => ({ page: p.page, summary: p.summary || "", keywords: p.keywords || [], aliases: p.aliases || [], conditions: p.conditions || [], category: p.category || "other", md: p.md || "" }));
+    this._pdfKb = this.sourceKbContext(src);
+    this.setState({ dbOpen: false, stage: "extracting", analyzing: true, pdfName: src.pdf || src.name, pdfReady: true, pdfPages: pages, pdfIndex: index, pdfKb: this._pdfKb, pdfPhase: "cluster", progress: { current: 0, total: 1, msg: "保存済みPDFのトピックを抽出しています…" }, error: null, pdfError: null });
+    try {
+      const topics = await this.clusterTopics(index);
+      if (!topics.length) throw new Error("思考プロセスとして抽出できる判断・手順のまとまりが見つかりませんでした。");
+      this.setState({ stage: "topics", analyzing: false, pdfTopics: topics, pdfPhase: "", dbUploadFolder: src.folderId || "" });
+    } catch (err) {
+      this.setState({ stage: "input", analyzing: false, pdfError: (err && err.message) || "保存済みPDFからのフロー生成に失敗しました。" });
+    }
+  };
   async extractDocPages(doc, onProg) {
     const n = doc.numPages; const pages = [];
     for (let i = 1; i <= n; i++) {
@@ -2837,17 +3438,7 @@ class Component extends DCLogic {
   // フローの各ノードを、出典ページ（PDFソースのref）に紐づける
   linkNodesToKb(flow, kb) {
     if (!kb || !kb.pageRef) return flow;
-    const nodes = { ...flow.nodes };
-    Object.keys(nodes).forEach(id => {
-      const n = { ...nodes[id] };
-      if (Array.isArray(n.pages) && n.pages.length) {
-        const links = (n.links || []).slice();
-        n.pages.forEach(pn => { const ref = kb.pageRef[pn]; if (ref && !links.some(l => l.url === "kb:" + ref)) links.push({ label: "p" + pn + " 文書", url: "kb:" + ref }); });
-        if (links.length) n.links = links;
-      }
-      nodes[id] = n;
-    });
-    return { ...flow, nodes };
+    return this.normalizeFlowDbReferences(flow, { kb });
   }
 
   chunkByChars(parts, max) {
@@ -2868,6 +3459,66 @@ class Component extends DCLogic {
     const nodes = { ...flow.nodes };
     ids.forEach(id => { nodes[id] = { ...(nodes[id] || {}), ...up[id] }; });
     return { ...flow, nodes, root: (patch && patch.root && nodes[patch.root]) ? patch.root : flow.root, title: (patch && patch.title) || flow.title };
+  }
+
+  flowDbBoundaryCriteriaText() {
+    return [
+      "# フロー/DBの切り分け基準（厳守）",
+      "- フローは普遍的な判断ロジック・判断順序・次アクションを表す。単なる資料要約や価格表をフロー化しない。",
+      "- DBは根拠資料・事実・仕様値・価格・納期・在庫・一覧・頻繁に変わる値を保持する。",
+      "- 条件によって『行動』が変わる場合だけフロー分岐にする。例: 回答する/特約店へつなぐ/承認へ回す/DBで根拠確認する。",
+      "- 条件によって『参照値』だけが変わる場合は、値そのものをフローに埋め込まず、DB参照アクションや根拠リンクにする。",
+      "- 重要な閾値・仕様値は、フローに固定値として書きすぎない。『DBで基準値を確認』という action と、根拠リンク/ページを持たせる。",
+      "- 既存/入力資料にある根拠ページ・根拠文書へ辿れるよう、各ノードに pages または links/db_refs を付ける。",
+      "- 分岐は、条件により次アクションが大きく異なるときだけ作る。枝を増やしすぎず、普遍ロジックを保つ。"
+    ].join("\n");
+  }
+
+  flowDbSchemaHint(includePages) {
+    const page = includePages ? ',"pages":[40]' : "";
+    return [
+      "# DB参照フィールド",
+      "- links は [{\"label\":\"根拠名\",\"url\":\"kb:docId または kb:src:sourceId:page\"}]。分かる場合だけ付ける。",
+      includePages ? "- PDF由来のノードには pages:[ページ番号] を必ず付ける。後で自動的にDB根拠リンクへ変換される。" : "- 履歴データ由来のノードは、生成後に取り込み履歴DBへ自動リンクされる。",
+      "- db_query は、そのノードでDBから確認すべき値・根拠・仕様がある時の検索質問。例: \"見積価格の根拠と特約店条件を確認\"",
+      "- action ノードでDB確認が必要な場合は text を『DBで○○を確認』のようにし、detail/db_query に何を確認するかを書く。",
+      "- 例:",
+      '  "n5":{"kind":"action","text":"DBで基準値を確認","why":"値は資料改訂で変わるため","detail":"対象条件の基準値・例外をDBで確認する","db_query":"対象条件の基準値と例外"' + page + ',"next":"n6"}'
+    ].join("\n");
+  }
+
+  normalizeFlowDbReferences(flow, opts) {
+    if (!flow || !flow.nodes) return flow;
+    opts = opts || {};
+    const docRefs = (opts.docRefs || []).filter(Boolean);
+    const only = {}; (opts.nodeIds || []).forEach(id => { only[id] = 1; });
+    const hasOnly = Object.keys(only).length > 0;
+    const nodes = {};
+    Object.keys(flow.nodes).forEach(id => {
+      const n0 = flow.nodes[id] || {};
+      const n = { ...n0 };
+      const links = Array.isArray(n.links) ? n.links.slice() : [];
+      const seen = {}; links.forEach(l => { if (l && l.url) seen[l.url] = 1; });
+      const addRef = (ref, label) => {
+        if (!ref) return;
+        const url = String(ref).indexOf("kb:") === 0 ? String(ref) : "kb:" + ref;
+        if (!seen[url]) { links.push({ label: label || ref, url }); seen[url] = 1; }
+      };
+      (Array.isArray(n.db_refs) ? n.db_refs : []).forEach(ref => addRef(ref));
+      (Array.isArray(n.refs) ? n.refs : []).forEach(ref => addRef(ref));
+      if (opts.kb && opts.kb.pageRef && Array.isArray(n.pages)) {
+        n.pages.forEach(pn => {
+          const ref = opts.kb.pageRef[pn];
+          if (ref) addRef(ref, "p" + pn + " 文書");
+        });
+      }
+      if (!opts.kb && docRefs.length && (!hasOnly || only[id]) && ["decision", "choice", "action", "result"].indexOf(n.kind) >= 0) {
+        docRefs.forEach(ref => addRef(ref, "取り込み履歴"));
+      }
+      if (links.length) n.links = links;
+      nodes[id] = n;
+    });
+    return { ...flow, nodes };
   }
 
   validateFlow(flow) {
@@ -2961,7 +3612,9 @@ class Component extends DCLogic {
         flow = this.validateFlow(flow);
         if (!flow.title) flow.title = tp.title;
         flow.sourcePdf = this.state.pdfName;
-        flow = this.linkNodesToKb(flow, this._pdfKb || this.state.pdfKb);
+        const kb = this._pdfKb || this.state.pdfKb;
+        flow = this.linkNodesToKb(flow, kb);
+        flow = this.applyFlowSourceMeta(flow, this.flowSourceMeta((kb && kb.folderId) || this.currentSaveFolderId(), kb && kb.sourceId ? [kb.sourceId] : [], []));
         built.push(flow);
         this.setState({ buildLog: this.state.buildLog.concat([{ batch: i + 1, added: Object.keys(flow.nodes).length, title: tp.title }]) });
       }
@@ -2970,7 +3623,7 @@ class Component extends DCLogic {
     if (!built.length) { this.setState({ stage: "topics", analyzing: false, pdfError: "フローを生成できませんでした。トピックやPDFの内容をご確認ください。" }); return; }
     let firstId = null;
     const sf = this.state.savedFlows.slice();
-    built.forEach((fl, i) => { const id = this.uid("fl_"); if (i === 0) firstId = id; sf.push({ id, wsId: this.state.curWs, title: fl.title || "無題のフロー", flow: fl, chat: [], at: Date.now() + i }); });
+    built.forEach((fl, i) => { const id = this.uid("fl_"); if (i === 0) firstId = id; sf.push({ id, wsId: this.state.curWs, title: fl.title || "無題のフロー", flow: fl, chat: [], at: Date.now() + i, ...this.flowRecordMeta(fl) }); });
     this.persistFlows(sf);
     const first = built[0];
     this.setState({ savedFlows: sf, curFlowId: firstId, flow: first, stage: "flow", analyzing: false, view: "diagram", path: [], currentId: first.root, chat: [], newIds: [], pdfPhase: "" });
@@ -3048,11 +3701,13 @@ class Component extends DCLogic {
       "- ノードは5〜9個。text と why は各40文字以内で簡潔に。",
       "- 各ノードの \"why\" に『なぜ専門家がそこを確認・判断するのか』の根拠を1文。",
       "- 各ノードに、根拠となった文書のページ番号を \"pages\":[番号] で必ず付ける（本文中の [p12] 表記を参照）。",
+      this.flowDbBoundaryCriteriaText(),
+      this.flowDbSchemaHint(true),
       "- スキーマ:",
       '{ "title":"フローの名前", "root":"n1", "nodes":{',
       '  "n1":{"kind":"decision","text":"はい/いいえで答えられる質問?","why":"確認する理由","pages":[40],"yes":"次のid","no":"別のid"},',
       '  "n2":{"kind":"choice","text":"複数から選ぶ質問?","why":"理由","pages":[41],"branches":[{"label":"選択肢A","to":"id"},{"label":"選択肢B","to":"id"}]},',
-      '  "n3":{"kind":"action","text":"作業・確認の内容","why":"理由","pages":[41],"next":"次のid"},',
+      '  "n3":{"kind":"action","text":"DBで基準値を確認","why":"値は資料改訂で変わるため","pages":[41],"db_query":"条件別の基準値と例外","next":"次のid"},',
       '  "n4":{"kind":"result","text":"対処の結論","pages":[42]} } }',
       "- kind は decision / choice / action / result。二択(はい/いいえ)のみ decision。3つ以上に分かれる質問は必ず choice + branches。",
       "- action は next、result は終端。idはn1,n2…の連番、rootは最初のノード。",
@@ -3073,9 +3728,11 @@ class Component extends DCLogic {
       "- 追加本文から読み取れる分岐・確認・結論だけを継ぎ足す。既存ノードは原則そのまま残す。",
       "- 重複・矛盾は避ける。新規ノードのidは既存と重複しない連番（n" + this.nextIdNum(flow) + " 以降）。",
       "- 各ノードに根拠ページを \"pages\":[番号] で付ける（本文の [pN] を参照）。本文に無いことは創作しない。",
+      this.flowDbBoundaryCriteriaText(),
+      this.flowDbSchemaHint(true),
       "",
       "# 出力（JSONのみ。コードフェンスは付けない）",
-      '{ "title":"(変更時のみ)", "root":"(変更時のみ)", "upsert": { "n10":{"kind":"action","text":"...","why":"...","pages":[43],"next":"..."} } }',
+      '{ "title":"(変更時のみ)", "root":"(変更時のみ)", "upsert": { "n10":{"kind":"action","text":"...","why":"...","pages":[43],"db_query":"必要ならDB検索質問","next":"..."} } }',
       "- upsert には新規／変更したノードだけを入れる。",
       "",
       "# 既存フロー",
@@ -3142,6 +3799,9 @@ class Component extends DCLogic {
   async analyzeCsv() {
     const recs = this.state.csvRows;
     const batches = this.chunkRecords(recs);
+    const folderId = this.currentSaveFolderId();
+    const docTitle = (this.state.csvName || "CSV履歴データ").replace(/\.[^.]+$/, "") + "（取り込み履歴）";
+    const docId = this.saveHistoryDoc("csv", docTitle, recs.join("\n"), folderId);
     this.setState({ stage: "extracting", analyzing: true, flow: null, newIds: [], buildLog: [], error: null, currentId: null, path: [], progress: { current: 0, total: batches.length, msg: "CSVを読み込んでいます…" } });
     await this.sleep(450);
     try {
@@ -3174,7 +3834,9 @@ class Component extends DCLogic {
         await this.sleep(520);
       }
       if (!flow) throw new Error("フローを生成できませんでした。CSVの内容や形式（ヘッダー行＋データ行）をご確認のうえ、もう一度お試しください。");
-      this.setState({ stage: "flow", analyzing: false, view: "diagram", path: [], ...this.makeReg(flow, []) });
+      flow = this.normalizeFlowDbReferences(flow, { docRefs: docId ? ["doc:" + docId] : [] });
+      flow = this.applyFlowSourceMeta(flow, this.flowSourceMeta(folderId, [], docId ? [docId] : []));
+      this.setState({ stage: "flow", analyzing: false, view: "diagram", path: [], ...this.makeReg(flow, [], this.flowSourceMeta(folderId, [], docId ? [docId] : [])) });
     } catch (err) {
       this.setState({ stage: "input", analyzing: false, error: (err && err.message) || "分析に失敗しました。" });
     }
@@ -3300,6 +3962,22 @@ class Component extends DCLogic {
     const m = this.state.chat[i];
     if (m && m.path) this.setState({ highlightIds: m.path });
   };
+  showMessageFlow = (e) => {
+    const i = parseInt(e.currentTarget.dataset.mi, 10);
+    const m = this.state.chat[i];
+    if (!m) return;
+    const path = (m.path || []).slice();
+    const fid = m.flowId || (m.usedFlow && m.usedFlow.id) || "";
+    if (fid && fid !== "__cur__") {
+      const rec = this.state.savedFlows.find(f => f.id === fid && f.wsId === this.state.curWs && f.flow && f.flow.nodes);
+      if (rec) {
+        this.persistActiveFlow(rec.wsId || this.state.curWs, rec.id, "diagram");
+        this.setState({ flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: rec.id, stage: "flow", view: "diagram", currentId: rec.flow.root, path: [], highlightIds: path, nodeModalId: null });
+        return;
+      }
+    }
+    if (path.length) this.setState({ stage: this.state.flow ? "flow" : this.state.stage, view: "diagram", highlightIds: path });
+  };
 
   buildChatPrompt(q, flowArg, historyArg, answerModeArg) {
     const flow = flowArg || this.state.flow;
@@ -3391,37 +4069,210 @@ class Component extends DCLogic {
     return { path, answer: last.text ? ("フローに沿うと、回答は「" + last.text + "」です。（AI未接続のため代表的な経路を表示しています）") : "フローを辿れませんでした。", steps: [] };
   }
 
-  candidateFlows() {
-    const saved = this.state.savedFlows.filter(f => f.wsId === this.state.curWs).map(f => ({ id: f.id, title: f.title || "無題のフロー", flow: f.flow, chat: f.chat }));
-    if (this.state.flow && !this.state.curFlowId) saved.unshift({ id: "__cur__", title: this.state.flow.title || "現在のフロー", flow: this.state.flow, chat: this.state.chat });
-    return saved.filter(c => c.flow && c.flow.nodes);
-  }
-  flowKeywordSearch(query) {
-    const qSet = Array.from(new Set(this.kbTokenize(query)));
-    if (!qSet.length) return [];
-    return this.candidateFlows().map(c => {
-      const nodes = c.flow.nodes || {};
-      const text = [c.title, c.flow.title].concat(Object.keys(nodes).map(id => {
-        const n = nodes[id] || {};
-        return [n.text, n.detail, n.why, (n.models || []).join(" ")].filter(Boolean).join(" ");
-      })).join(" ");
-      const toks = this.kbTokenize(text);
-      const score = qSet.reduce((n, t) => n + toks.filter(x => x === t).length, 0);
-      return { flow: c, score };
-    }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
-  }
+	  candidateFlows() {
+	    const saved = this.state.savedFlows.filter(f => f.wsId === this.state.curWs).map(f => ({ id: f.id, title: f.title || "無題のフロー", flow: f.flow, chat: f.chat, folderId: f.folderId || (f.flow && f.flow.sourceFolderId) || "", folderPath: f.sourceFolderPath || (f.flow && f.flow.sourceFolderPath) || this.folderLabel(f.folderId || "") }));
+	    if (this.state.flow && !this.state.curFlowId) saved.unshift({ id: "__cur__", title: this.state.flow.title || "現在のフロー", flow: this.state.flow, chat: this.state.chat, folderId: this.state.flow.sourceFolderId || "", folderPath: this.state.flow.sourceFolderPath || this.folderLabel(this.state.flow.sourceFolderId || "") });
+	    return saved.filter(c => c.flow && c.flow.nodes);
+	  }
+	  flowFolderTreeText(cands) {
+	    const list = cands || this.candidateFlows();
+	    const counts = {};
+	    list.forEach(c => { const k = c.folderId || ""; counts[k] = (counts[k] || 0) + 1; });
+	    const lines = ["- id=root path=すべて（フロー " + (counts[""] || 0) + "）"];
+	    this.folderTree().forEach(f => lines.push("- id=" + f.id + " path=" + this.folderPath(f.id) + "（フロー " + (counts[f.id] || 0) + "）"));
+	    return lines.join("\n");
+	  }
+	  flowListText(cands, hits) {
+	    const list = hits && hits.length ? hits.map(h => h.flow || h).filter(Boolean) : (cands || this.candidateFlows());
+	    if (!list.length) return "（利用可能なフローなし）";
+	    return list.map((c, i) => {
+	      const n = (c.flow && c.flow.nodes) || {};
+	      const root = n[c.flow.root] || {};
+	      const nodes = Object.keys(n).slice(0, 9).map(id => {
+	        const nd = n[id] || {};
+	        return "[" + id + "] " + (nd.text || "") + (nd.detail ? " detail:" + String(nd.detail).slice(0, 40) : "");
+	      }).join(" / ");
+	      const score = hits && hits[i] && hits[i].score ? (" score=" + Math.round(hits[i].score * 10) / 10) : "";
+	      return "- flowId:" + c.id + score + " path:" + (c.folderPath || this.folderLabel(c.folderId || "")) + " title:「" + c.title + "」 起点:" + (root.text || "") + " 内容:" + nodes;
+	    }).join("\n");
+	  }
+	  buildFlowSearchIntentPrompt(q, cands) {
+	    return [
+	      "あなたはagentic searchの検索計画を作るアシスタントです。回答はまだ作らず、保存済みフロー探索の意図だけをJSON化してください。",
+	      "目的は、ユーザー質問に合う業務フローを、フォルダ階層とフロー候補から優先探索することです。",
+	      "",
+	      "# 重要ルール",
+	      "- 質問に含まれる業務領域・製品名・資料種別・フォルダ名を見て folder_hints に関連しそうなパス/名前を入れる。",
+	      "- 特定の手順名・判断名・症状・業務フロー名は flow_hints に入れる。",
+	      "- folder_hints / flow_hints は探索優先度の調整用であり、明示的に限定されていない限り他候補を完全には除外しない。",
+	      "- 表記ゆれ・上位語/下位語は query_variants に含める。3〜8個の短い検索クエリを作る。",
+	      "",
+	      '# 出力JSONのみ: {"question_rewrite":"フロー探索用に言い換えた質問","answer_needs":["必要な判断/手順"],"entities":["対象名・型式・条件"],"constraints":["制約条件"],"folder_hints":["関連しそうなフォルダ名/パス"],"flow_hints":["関連しそうなフロー名/手順名/症状"],"query_variants":["検索語1","検索語2"],"negative_terms_to_ignore":["検索に混ぜない語"]}',
+	      "",
+	      "# フロー階層候補",
+	      this.flowFolderTreeText(cands),
+	      "",
+	      "# 保存済みフロー候補",
+	      this.flowListText(cands),
+	      "",
+	      "# 入力",
+	      q
+	    ].join("\n");
+	  }
+	  flowDefaultSearchIntent(q) {
+	    const base = this.kbSearchIntentQuery(q);
+	    const phrases = this.kbKeyPhrases(base).filter(p => p.length >= 2).slice(0, 6);
+	    const variants = [base];
+	    if (phrases.length) variants.push(phrases.join(" "));
+	    return {
+	      question_rewrite: base,
+	      answer_needs: [],
+	      entities: [],
+	      constraints: [],
+	      folder_hints: [],
+	      flow_hints: [],
+	      query_variants: variants,
+	      negative_terms_to_ignore: ["特定できない", "該当なし", "確認できない", "見つからない", "不明"],
+	      fallback: true
+	    };
+	  }
+	  flowNormalizeSearchIntent(o, q) {
+	    const fb = this.flowDefaultSearchIntent(q);
+	    const src = (o && typeof o === "object") ? o : {};
+	    const negative = Array.isArray(src.negative_terms_to_ignore) ? src.negative_terms_to_ignore.map(String).filter(Boolean) : fb.negative_terms_to_ignore;
+	    const variants = [];
+	    const add = (s) => {
+	      const v = this.kbCleanQueryVariant(s, negative);
+	      if (v && variants.indexOf(v) < 0) variants.push(v);
+	    };
+	    add(src.question_rewrite || fb.question_rewrite);
+	    (Array.isArray(src.query_variants) ? src.query_variants : []).forEach(add);
+	    add(fb.question_rewrite);
+	    if (Array.isArray(src.entities) && src.entities.length) add(src.entities.join(" "));
+	    if (Array.isArray(src.constraints) && src.constraints.length) add(src.constraints.join(" "));
+	    if (Array.isArray(src.flow_hints) && src.flow_hints.length) add(src.flow_hints.join(" "));
+	    return {
+	      question_rewrite: this.kbCleanQueryVariant(src.question_rewrite || fb.question_rewrite, negative),
+	      answer_needs: (Array.isArray(src.answer_needs) ? src.answer_needs : fb.answer_needs).map(String).filter(Boolean).slice(0, 8),
+	      entities: (Array.isArray(src.entities) ? src.entities : fb.entities).map(String).filter(Boolean).slice(0, 8),
+	      constraints: (Array.isArray(src.constraints) ? src.constraints : fb.constraints).map(String).filter(Boolean).slice(0, 8),
+	      folder_hints: (Array.isArray(src.folder_hints) ? src.folder_hints : fb.folder_hints).map(String).filter(Boolean).slice(0, 8),
+	      flow_hints: (Array.isArray(src.flow_hints) ? src.flow_hints : fb.flow_hints).map(String).filter(Boolean).slice(0, 8),
+	      query_variants: variants.slice(0, 8),
+	      negative_terms_to_ignore: negative.slice(0, 8),
+	      fallback: !!src.fallback
+	    };
+	  }
+	  async flowBuildSearchIntent(q, cands, trace) {
+	    if (this.hasLLM()) {
+	      try {
+	        const raw = await this.llmComplete(this.buildFlowSearchIntentPrompt(q, cands));
+	        const o = this.parseLoose(raw) || this.parseToolCall(raw) || {};
+	        const intent = this.flowNormalizeSearchIntent(o, q);
+	        if (intent.query_variants.length) {
+	          trace && trace.push({ title: "🧭 フロー探索意図: " + intent.query_variants.join(" / ") + (intent.folder_hints.length ? " / folders: " + intent.folder_hints.join("、") : ""), sub: false });
+	          return intent;
+	        }
+	      } catch (e) { /* fallback below */ }
+	    }
+	    const intent = this.flowNormalizeSearchIntent(this.flowDefaultSearchIntent(q), q);
+	    trace && trace.push({ title: "🧭 フロー探索意図（ローカル）: " + intent.query_variants.join(" / "), sub: false });
+	    return intent;
+	  }
+	  flowIntentQueryText(intent) {
+	    if (!intent) return "";
+	    return []
+	      .concat(intent.question_rewrite || [])
+	      .concat(intent.query_variants || [])
+	      .concat(intent.answer_needs || [])
+	      .concat(intent.entities || [])
+	      .concat(intent.constraints || [])
+	      .concat(intent.folder_hints || [])
+	      .concat(intent.flow_hints || [])
+	      .join(" ");
+	  }
+	  flowFolderBoost(c, intent) {
+	    if (!c) return 0;
+	    const fp = String(c.folderPath || this.folderLabel(c.folderId || "") || "").toLowerCase();
+	    const fn = fp.split("/").map(s => s.trim()).filter(Boolean);
+	    const hints = []
+	      .concat((intent && intent.folder_hints) || [])
+	      .concat((intent && intent.entities) || [])
+	      .concat((intent && intent.constraints) || [])
+	      .map(s => String(s || "").toLowerCase().trim()).filter(Boolean);
+	    let score = 0;
+	    hints.forEach(h => {
+	      if (!h) return;
+	      if (fp && (fp.indexOf(h) >= 0 || h.indexOf(fp) >= 0)) score += 10;
+	      fn.forEach(part => { if (part && (h.indexOf(part) >= 0 || part.indexOf(h) >= 0)) score += 4; });
+	    });
+	    return Math.min(score, 22);
+	  }
+	  flowHintBoost(c, intent) {
+	    if (!c) return 0;
+	    const nodes = (c.flow && c.flow.nodes) || {};
+	    const hay = [c.title, c.flow && c.flow.title, c.folderPath].concat(Object.keys(nodes).map(id => {
+	      const n = nodes[id] || {};
+	      return [n.text, n.detail, n.why, (n.models || []).join(" ")].filter(Boolean).join(" ");
+	    })).join(" ").toLowerCase();
+	    const hints = []
+	      .concat((intent && intent.flow_hints) || [])
+	      .concat((intent && intent.answer_needs) || [])
+	      .map(s => String(s || "").toLowerCase().trim()).filter(Boolean);
+	    let score = 0;
+	    hints.forEach(h => { if (h && hay.indexOf(h) >= 0) score += Math.min(12, 4 + h.length * 0.6); });
+	    return Math.min(score, 24);
+	  }
+	  flowKeywordSearch(query, cands, intent) {
+	    const qSet = Array.from(new Set(this.kbTokenize(query)));
+	    if (!qSet.length) return [];
+	    return (cands || this.candidateFlows()).map(c => {
+	      const nodes = c.flow.nodes || {};
+	      const text = [c.title, c.flow.title, c.folderPath, c.folderId].concat(Object.keys(nodes).map(id => {
+	        const n = nodes[id] || {};
+	        return [n.text, n.detail, n.why, n.folderId ? this.folderLabel(n.folderId) : "", (n.models || []).join(" ")].filter(Boolean).join(" ");
+	      })).join(" ");
+	      const toks = this.kbTokenize(text);
+	      let score = qSet.reduce((n, t) => n + toks.filter(x => x === t).length, 0);
+	      const fp = String(c.folderPath || "").toLowerCase();
+	      if (fp && qSet.some(t => fp.indexOf(t) >= 0)) score += 3;
+	      score += this.flowFolderBoost(c, intent) + this.flowHintBoost(c, intent);
+	      return { flow: c, score };
+	    }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 5);
+	  }
+	  flowSearchWithIntent(intent, cands) {
+	    const list = cands || this.candidateFlows();
+	    const variants = (intent && intent.query_variants && intent.query_variants.length) ? intent.query_variants : [this.flowIntentQueryText(intent)];
+	    const byId = {};
+	    const addHit = (h, rank, query, weight) => {
+	      if (!h || !h.flow || !h.flow.id) return;
+	      const id = h.flow.id;
+	      if (!byId[id]) byId[id] = { flow: h.flow, score: 0, queries: [] };
+	      byId[id].score += (weight || 1) * (100 / (60 + rank)) + (Number(h.score) || 0);
+	      if (query && byId[id].queries.indexOf(query) < 0) byId[id].queries.push(query);
+	    };
+	    variants.forEach(q => this.flowKeywordSearch(q, list, intent).slice(0, 8).forEach((h, i) => addHit(h, i + 1, q, 1)));
+	    return Object.keys(byId).map(id => {
+	      const r = byId[id];
+	      return { flow: r.flow, score: r.score + this.flowFolderBoost(r.flow, intent) + this.flowHintBoost(r.flow, intent), queries: r.queries };
+	    }).sort((a, b) => b.score - a.score).slice(0, 8);
+	  }
 
-  flowById(id, cands, query) {
-    const list = cands || this.candidateFlows();
-    if (id) {
-      const hit = list.find(c => c.id === id);
-      if (hit) return hit;
-    }
-    if (query) {
-      const kw = this.flowKeywordSearch(query).map(h => h.flow);
-      const hit = kw.find(f => list.some(c => c.id === f.id));
-      if (hit) return hit;
-    }
+	  flowById(id, cands, query, intent) {
+	    const list = cands || this.candidateFlows();
+	    if (id) {
+	      const hit = list.find(c => c.id === id);
+	      if (hit) return hit;
+	    }
+	    if (intent) {
+	      const hit = this.flowSearchWithIntent(intent, list)[0];
+	      if (hit && hit.flow) return hit.flow;
+	    }
+	    if (query) {
+	      const kw = (intent ? this.flowSearchWithIntent(intent, list) : this.flowKeywordSearch(query, list)).map(h => h.flow);
+	      const hit = kw.find(f => list.some(c => c.id === f.id));
+	      if (hit) return hit;
+	    }
     const cur = list.find(c => c.id === this.state.curFlowId) || list.find(c => c.id === "__cur__");
     return cur || list[0] || null;
   }
@@ -3446,13 +4297,17 @@ class Component extends DCLogic {
       res = { path: [], answer: txt || "（フロー回答を生成できませんでした）", steps: [] };
     }
     const path = (res.path || []).filter(id => flow.nodes[id]);
-    return {
-      answer: (flowRec.title ? "「" + flowRec.title + "」のフロー: " : "") + (res.answer || "（回答を生成できませんでした）"),
+    const out = {
+      answer: res.answer || "（回答を生成できませんでした）",
       steps: this.buildSteps(path, res.steps, flow),
       path,
       flowId: flowRec.id,
-      flowTitle: flowRec.title || flow.title || "フロー"
+      flowTitle: flowRec.title || flow.title || "フロー",
+      flowPath: flowRec.folderPath || flowRec.sourceFolderPath || (flow && flow.sourceFolderPath) || "",
+      flowNodeCount: Object.keys(flow.nodes || {}).length
     };
+    out.harness = this.buildFlowHarnessContext(q, flowRec, out);
+    return out;
   }
 
   chatAnswerPolicyText(answerMode) {
@@ -3461,29 +4316,96 @@ class Component extends DCLogic {
       : "回答方針は『まとめて回答』。なるべく質問返しで止めず、不足条件は『未確定』として明示し、条件A/Bの場合の判断・次アクションを分けて提示する。";
   }
 
-  buildChatHarnessPrompt(q, cands, obs, todos, allowDb, answerMode) {
-    const flowList = (cands || []).map(c => {
-      const n = (c.flow && c.flow.nodes) || {};
-      const root = n[c.flow.root] || {};
-      const nodes = Object.keys(n).slice(0, 9).map(id => {
-        const nd = n[id] || {};
-        return "[" + id + "] " + (nd.text || "") + (nd.detail ? " detail:" + String(nd.detail).slice(0, 40) : "");
-      }).join(" / ");
-      return "- flowId:" + c.id + " 「" + c.title + "」 起点:" + (root.text || "") + " 内容:" + nodes;
-    }).join("\n") || "（利用可能なフローなし）";
-    const obsText = (obs || []).length ? obs.map(o => "● " + o.label + "\n" + o.text).join("\n\n") : "（まだツール実行なし）";
-    const todoText = (todos || []).length ? todos.map((t, i) => (t.status === "done" ? "[x] " : t.status === "doing" ? "[~] " : "[ ] ") + (i + 1) + ". " + t.text).join("\n") : "（未作成）";
+  flowHarnessActionSignal(text) {
+    const s = String(text || "");
+    if (/特約店|代理店|販売店|ディーラー|商社|取次|つなぐ|繋ぐ|引き継|引継|連絡|問い合わせ|問合せ|窓口|担当者|営業担当|カスタマー|サポート|エスカレ|上長|承認|見積.{0,12}(依頼|相談|作成|提出)/.test(s)) return "route";
+    if (/DB|資料|仕様|型番|価格|納期|在庫|一覧|明細|根拠|ページ|マニュアル|説明書|手順書/.test(s)) return "evidence";
+    return "";
+  }
+  questionNeedsDbEvidence(q) {
+    return /仕様|型番|価格|単価|納期|在庫|数量|一覧|内訳|明細|根拠|ページ|資料|マニュアル|説明書|同梱|添付|付属|寸法|条件値|基準値|具体|詳細|どれ|何が|いくら|いつ/.test(String(q || ""));
+  }
+  buildFlowHarnessContext(q, flowRec, flowResult) {
+    const flow = (flowRec && flowRec.flow) || {};
+    const nodes = flow.nodes || {};
+    const path = (flowResult && flowResult.path) || [];
+      const nodeTexts = path.map(id => {
+      const n = nodes[id] || {};
+      const kids = this.childrenOf(n);
+      const next = path[path.indexOf(id) + 1];
+      const edge = kids.find(k => k[1] === next);
+      return [n.text || id, n.detail || "", n.db_query ? ("DB確認:" + n.db_query) : "", n.why || "", edge && edge[0] ? ("選択:" + edge[0]) : ""].filter(Boolean).join(" / ");
+    }).filter(Boolean);
+    const answer = (flowResult && flowResult.answer) || "";
+    const hay = [flowRec && flowRec.title, flow && flow.title, flowResult && flowResult.flowPath, answer].concat(nodeTexts).join("\n");
+    const signal = this.flowHarnessActionSignal(hay);
+    const needsDb = this.questionNeedsDbEvidence(q) || signal === "evidence";
+    const routeOnly = signal === "route" && !needsDb;
+    const searchContext = nodeTexts.concat([answer]).filter(Boolean).join(" / ").slice(0, 700);
+    return {
+      signal,
+      routeOnly,
+      needsDb,
+      reason: routeOnly ? "フローが業務上の取り回し（引き継ぎ・窓口案内）を示しており、質問は具体仕様や根拠確認ではないため。" : "",
+      flowId: flowResult && flowResult.flowId,
+      flowTitle: (flowResult && flowResult.flowTitle) || (flowRec && flowRec.title) || "",
+      flowPath: (flowResult && flowResult.flowPath) || "",
+      path,
+      nodeTexts,
+      searchContext
+    };
+  }
+  flowHarnessShouldSkipDb(q, flowResult) {
+    const h = flowResult && (flowResult.harness || this.buildFlowHarnessContext(q, flowResult, flowResult));
+    return !!(h && h.signal === "route" && !this.questionNeedsDbEvidence(q));
+  }
+  flowHarnessObservationText(h) {
+    if (!h) return "";
     return [
-      "あなたは業務相談を完遂するエージェントです。固定のif文ではなく、必要なツールを選び、観測を集め、最後に統合回答します。",
-      "複合質問は必ず意図に分解してください。業務判断・手順に関わる論点はフロー、根拠資料・具体値・一覧・仕様に関わる論点はDB検索を別々に実行してから統合します。",
-      this.chatAnswerPolicyText(answerMode),
+      "flow: " + (h.flowTitle || h.flowId || "不明"),
+      h.flowPath ? ("path: " + h.flowPath) : "",
+      h.signal ? ("signal: " + h.signal) : "",
+      h.routeOnly ? ("db_policy: skip_db_allowed / " + h.reason) : "db_policy: use_db_when_needed",
+      h.nodeTexts && h.nodeTexts.length ? ("nodes:\n" + h.nodeTexts.map(t => "- " + t).join("\n")) : "",
+      h.searchContext ? ("context: " + h.searchContext) : ""
+    ].filter(Boolean).join("\n");
+  }
+  composeDbQuestionWithFlowContext(q, h) {
+    if (!h || !h.searchContext) return q;
+    return [
+      q,
+      "",
+      "フロー観測:",
+      this.flowHarnessObservationText(h),
+      "",
+      "DB検索では、上記フロー観測を固定ルールではなく検索文脈として扱う。具体仕様・根拠・例外が必要な部分だけ確認する。"
+    ].join("\n");
+  }
+
+	  buildChatHarnessPrompt(q, cands, obs, todos, allowDb, answerMode, flowIntent, flowHits) {
+	    const flowList = this.flowListText(cands, flowHits);
+	    const obsText = (obs || []).length ? obs.map(o => "● " + o.label + "\n" + o.text).join("\n\n") : "（まだツール実行なし）";
+	    const todoText = (todos || []).length ? todos.map((t, i) => (t.status === "done" ? "[x] " : t.status === "doing" ? "[~] " : "[ ] ") + (i + 1) + ". " + t.text).join("\n") : "（未作成）";
+	    const flowIntentText = flowIntent ? [
+	      "rewrite: " + (flowIntent.question_rewrite || ""),
+	      "queries: " + (flowIntent.query_variants || []).join(" / "),
+	      (flowIntent.entities || []).length ? "entities: " + flowIntent.entities.join("、") : "",
+	      (flowIntent.constraints || []).length ? "constraints: " + flowIntent.constraints.join("、") : "",
+	      (flowIntent.folder_hints || []).length ? "folder_hints: " + flowIntent.folder_hints.join("、") : "",
+	      (flowIntent.flow_hints || []).length ? "flow_hints: " + flowIntent.flow_hints.join("、") : ""
+	    ].filter(Boolean).join("\n") : "（未作成）";
+	    return [
+	      "あなたは業務相談を完遂するエージェントです。固定のif文ではなく、必要なツールを選び、観測を集め、最後に統合回答します。",
+	      "複合質問は必ず意図に分解してください。業務判断・手順に関わる論点はフロー、根拠資料・具体値・一覧・仕様に関わる論点はDB検索を別々に実行してから統合します。",
+	      this.chatAnswerPolicyText(answerMode),
       "",
       "# 重要な優先順位",
-      "- use_flow は、業務方針・手順・診断・分岐判断を観測するためのツールです。",
-      "- search_db は、原典資料・仕様・同梱物・条件値・文書根拠を観測するためのツールです。",
-      "- まず質問の意図を計画し、フローだけで回答を確定しない。フローを使った後も、根拠・具体物・仕様・例外・詳細が必要ならDBを確認します。",
-      "- DBが利用可能なときは、明らかにフローの次アクション提示だけで完結する場合を除き、answerの前にsearch_dbも実行してください。",
-      "- フローだけで十分だと判断する場合は answer ではなく先に skip_db を呼び、なぜDB確認が不要かを短く説明してください。",
+	      "- use_flow は、業務方針・手順・診断・分岐判断を観測するためのツールです。",
+	      "- search_db は、原典資料・仕様・同梱物・条件値・文書根拠を観測するためのツールです。",
+	      "- use_flow の flowId は、まず # フロー探索意図 と # 優先候補フロー を見て選ぶ。フォルダ階層が示す業務領域を優先し、必要なら空flowIdで候補選定を委ねる。",
+	      "- まず質問の意図を計画し、フローだけで回答を確定しない。フローを使った後も、根拠・具体物・仕様・例外・詳細が必要ならDBを確認します。",
+	      "- DBが利用可能なときは、明らかにフローの次アクション提示だけで完結する場合を除き、answerの前にsearch_dbも実行してください。",
+	      "- フローだけで十分だと判断する場合は answer ではなく先に skip_db を呼び、なぜDB確認が不要かを短く説明してください。",
       "- 根拠や観測が足りないまま answer しない。最低1つのツールを使う。ただし利用できるフロー/DBが無い場合はその制約を答える。",
       "",
       "# 使えるツール（毎ターンJSONを1つだけ返す。説明やコードフェンスは禁止）",
@@ -3493,14 +4415,21 @@ class Component extends DCLogic {
       allowDb ? '- DB省略: {"tool":"skip_db","reason":"フローだけで十分な理由"}' : '- DB省略: DB利用不可のため不要',
       '- 最終回答: {"tool":"answer","answer":"観測に基づく日本語の統合回答"}',
       "",
-      "# 現在のTODO",
-      todoText,
-      "",
-      "# 利用可能なフロー",
-      flowList,
-      "",
-      "# DB",
-      allowDb ? this.kbSourceListText() : "（DB登録なし）",
+	      "# 現在のTODO",
+	      todoText,
+	      "",
+	      "# フロー階層",
+	      this.flowFolderTreeText(cands),
+	      "",
+	      "# フロー探索意図",
+	      flowIntentText,
+	      "",
+	      "# 優先候補フロー",
+	      flowList,
+	      (flowHits && flowHits.length) ? "\n# 利用可能な全フロー（参考）\n" + this.flowListText(cands) : "",
+	      "",
+	      "# DB",
+	      allowDb ? this.kbSourceListText() : "（DB登録なし）",
       "",
       "# これまでの観測",
       obsText,
@@ -3534,23 +4463,45 @@ class Component extends DCLogic {
     });
   }
 
-  async chatHarnessLoop(q, baseChat, cands, answerMode, onStatus) {
-    const allowDb = this.kbIndex().length > 0;
-    const obs = [];
-    const outputs = [];
-    const trace = [];
-    let todos = [];
-    let finalAnswer = "";
-    let dbSkipped = false;
-    let finalSteps = [], finalPath = [], finalSources = [], finalOptions = [];
-    for (let i = 0; i < 8; i++) {
-      let call = null;
-      try {
-        const raw = await this.llmComplete(this.buildChatHarnessPrompt(q, cands, obs, todos, allowDb, answerMode));
-        call = this.parseToolCall(raw);
-      } catch (e) {
-        trace.push({ title: "ハーネス応答の解釈に失敗: " + ((e && e.message) || e), sub: false });
-      }
+	  async chatHarnessLoop(q, baseChat, cands, answerMode, onStatus) {
+	    const allowDb = this.kbIndex().length > 0;
+	    const obs = [];
+	    const outputs = [];
+	    const trace = [];
+	    let todos = [];
+	    let finalAnswer = "";
+	    let dbSkipped = false;
+	    let finalSteps = [], finalPath = [], finalSources = [], finalOptions = [], finalFlow = null;
+	    if (onStatus) onStatus("フロー階層から候補を絞り込んでいます…");
+	    const flowIntent = await this.flowBuildSearchIntent(q, cands, trace);
+	    let flowHits = this.flowSearchWithIntent(flowIntent, cands);
+	    obs.push({ label: "フロー階層", text: this.flowFolderTreeText(cands) });
+	    obs.push({
+	      label: "flow_search_intent",
+	      text: [
+	        "rewrite: " + (flowIntent.question_rewrite || ""),
+	        "queries: " + (flowIntent.query_variants || []).join(" / "),
+	        (flowIntent.entities || []).length ? "entities: " + flowIntent.entities.join("、") : "",
+	        (flowIntent.constraints || []).length ? "constraints: " + flowIntent.constraints.join("、") : "",
+	        (flowIntent.folder_hints || []).length ? "folder_hints: " + flowIntent.folder_hints.join("、") : "",
+	        (flowIntent.flow_hints || []).length ? "flow_hints: " + flowIntent.flow_hints.join("、") : ""
+	      ].filter(Boolean).join("\n")
+	    });
+	    if (flowHits.length) {
+	      const txt = this.flowListText(cands, flowHits.slice(0, 5));
+	      obs.push({ label: "candidate_flows（階層・意図で優先）", text: txt });
+	      trace.push({ title: "🧭 候補フローを優先付け: " + flowHits.slice(0, 3).map(h => "「" + h.flow.title + "」").join(" / "), sub: false });
+	    } else if ((cands || []).length) {
+	      obs.push({ label: "candidate_flows（一致なし）", text: "意図検索では強い候補がありません。必要なら利用可能フロー全体から選びます。\n" + this.flowListText(cands) });
+	    }
+	    for (let i = 0; i < 8; i++) {
+	      let call = null;
+	      try {
+	        const raw = await this.llmComplete(this.buildChatHarnessPrompt(q, cands, obs, todos, allowDb, answerMode, flowIntent, flowHits));
+	        call = this.parseToolCall(raw);
+	      } catch (e) {
+	        trace.push({ title: "ハーネス応答の解釈に失敗: " + ((e && e.message) || e), sub: false });
+	      }
       if (!call || typeof call !== "object") {
         if (outputs.length) break;
         continue;
@@ -3564,7 +4515,7 @@ class Component extends DCLogic {
         trace.push({ title: "📋 相談を分解: " + todos.map(t => t.text).join(" / "), sub: false });
         obs.push({ label: "todo", text: todos.map(t => "- " + t.status + ": " + t.text).join("\n") || "（空）" });
       } else if (tool === "use_flow") {
-        const rec = this.flowById(call.flowId || call.id, cands, call.question || q);
+        const rec = this.flowById(call.flowId || call.id, cands, call.question || q, flowIntent) || (flowHits[0] && flowHits[0].flow);
         if (!rec) {
           obs.push({ label: "use_flow", text: "利用可能なフローがありません。" });
           trace.push({ title: "フロー実行をスキップ（フローなし）", sub: false });
@@ -3577,10 +4528,31 @@ class Component extends DCLogic {
             outputs.push({ kind: "flow", ...r });
             finalSteps = r.steps || finalSteps;
             finalPath = r.path || finalPath;
+            finalFlow = { id: r.flowId, title: r.flowTitle, path: r.flowPath || "", nodes: r.flowNodeCount || 0 };
             obs.push({ label: "use_flow " + (r.flowTitle || ""), text: this.summarizeFlowToolResult(r, r.flowTitle) });
           }
         }
       } else if (tool === "search_db") {
+        if (!hasFlowOutput() && flowHits.length) {
+          const rec = flowHits[0].flow;
+          const question = call.question || q;
+          if (onStatus) onStatus("DB照合の前に候補フローを辿っています…");
+          trace.push({ title: "🧭 DB照合前にフロー実行「" + (rec.title || "無題のフロー") + "」", sub: false });
+          const r = await this.runFlowToolAnswer(question, rec, baseChat, answerMode);
+          if (r) {
+            outputs.push({ kind: "flow", ...r });
+            finalSteps = r.steps || finalSteps;
+            finalPath = r.path || finalPath;
+            finalFlow = { id: r.flowId, title: r.flowTitle, path: r.flowPath || "", nodes: r.flowNodeCount || 0 };
+            obs.push({ label: "use_flow " + (r.flowTitle || ""), text: this.summarizeFlowToolResult(r, r.flowTitle) });
+            if (this.flowHarnessShouldSkipDb(q, r)) {
+              dbSkipped = true;
+              obs.push({ label: "skip_db", text: (r.harness && r.harness.reason) || "フローが業務上の取り回しを示しているためDB確認を省略。" });
+              trace.push({ title: "DB確認を省略: " + ((r.harness && r.harness.reason) || "フローの業務ルーティングを優先"), sub: false });
+              continue;
+            }
+          }
+        }
         if (!allowDb) {
           obs.push({ label: "search_db", text: "DB登録がありません。" });
           trace.push({ title: "DB検索をスキップ（DBなし）", sub: false });
@@ -3588,7 +4560,8 @@ class Component extends DCLogic {
           const question = call.question || q;
           if (onStatus) onStatus("ナレッジDBから根拠資料を探しています…");
           trace.push({ title: "🔎 DB検索: " + question, sub: false });
-          const msg = await this.buildDbChatMessage(question, "ナレッジDBを検索しました。", onStatus);
+          const flowCtx = (outputs.slice().reverse().find(o => o.kind === "flow" && o.harness) || {}).harness || null;
+          const msg = await this.buildDbChatMessage(question, "ナレッジDBを検索しました。", onStatus, flowCtx);
           outputs.push({ kind: "db", answer: msg.answer || "", detail: msg.detail || "", sources: msg.sources || [] });
           (msg.sources || []).forEach(s => { if (!finalSources.some(x => x.ref === s.ref)) finalSources.push(s); });
           (msg.trace || []).forEach(s => trace.push(s));
@@ -3608,10 +4581,17 @@ class Component extends DCLogic {
           continue;
         }
         if (finalAnswer && allowDb && hasFlowOutput() && !hasDbOutput() && !dbSkipped) {
-          obs.push({ label: "answer_rejected", text: "フロー観測だけで最終回答しようとしています。DBを確認するか、明らかに不要なら skip_db を先に呼んでください。" });
-          trace.push({ title: "最終回答を保留（DB未確認）", sub: false });
-          finalAnswer = "";
-          continue;
+          const routeOnly = outputs.find(o => o.kind === "flow" && this.flowHarnessShouldSkipDb(q, o));
+          if (routeOnly) {
+            dbSkipped = true;
+            obs.push({ label: "skip_db", text: (routeOnly.harness && routeOnly.harness.reason) || "フローが業務上の取り回しを示しているためDB確認を省略。" });
+            trace.push({ title: "DB確認を省略: " + ((routeOnly.harness && routeOnly.harness.reason) || "フローの業務ルーティングを優先"), sub: false });
+          } else {
+            obs.push({ label: "answer_rejected", text: "フロー観測だけで最終回答しようとしています。DBを確認するか、明らかに不要なら skip_db を先に呼んでください。" });
+            trace.push({ title: "最終回答を保留（DB未確認）", sub: false });
+            finalAnswer = "";
+            continue;
+          }
         }
         if (finalAnswer) break;
       } else {
@@ -3622,9 +4602,18 @@ class Component extends DCLogic {
     const hasDbOutputAfterLoop = outputs.some(o => o.kind === "db");
     const hasFlowOutputAfterLoop = outputs.some(o => o.kind === "flow");
     if (allowDb && hasFlowOutputAfterLoop && !hasDbOutputAfterLoop && !dbSkipped) {
+      const routeOnly = outputs.find(o => o.kind === "flow" && this.flowHarnessShouldSkipDb(q, o));
+      if (routeOnly) {
+        dbSkipped = true;
+        obs.push({ label: "skip_db", text: (routeOnly.harness && routeOnly.harness.reason) || "フローが業務上の取り回しを示しているためDB確認を省略。" });
+        trace.push({ title: "DB確認を省略: " + ((routeOnly.harness && routeOnly.harness.reason) || "フローの業務ルーティングを優先"), sub: false });
+      }
+    }
+    if (allowDb && hasFlowOutputAfterLoop && !hasDbOutputAfterLoop && !dbSkipped) {
       if (onStatus) onStatus("フロー結果の根拠をDBで確認しています…");
       trace.push({ title: "🔎 DB検索へ補正（フロー回答の根拠確認）", sub: false });
-      const msg = await this.buildDbChatMessage(q, "ナレッジDBも確認しました。", onStatus);
+      const flowCtx = (outputs.slice().reverse().find(o => o.kind === "flow" && o.harness) || {}).harness || null;
+      const msg = await this.buildDbChatMessage(q, "ナレッジDBも確認しました。", onStatus, flowCtx);
       outputs.push({ kind: "db", answer: msg.answer || "", detail: msg.detail || "", sources: msg.sources || [] });
       (msg.sources || []).forEach(s => { if (!finalSources.some(x => x.ref === s.ref)) finalSources.push(s); });
       (msg.trace || []).forEach(s => trace.push(s));
@@ -3670,16 +4659,21 @@ class Component extends DCLogic {
       options: finalOptions,
       detail: dbDetails.length ? dbDetails.join("\n\n") : "",
       sources: finalSources,
-      trace
+      trace,
+      flowId: finalFlow && finalFlow.id,
+      flowTitle: finalFlow && finalFlow.title,
+      flowPath: finalFlow && finalFlow.path,
+      flowNodeCount: finalFlow && finalFlow.nodes
     };
   }
 
-  async buildDbChatMessage(q, prefix, onStatus) {
+  async buildDbChatMessage(q, prefix, onStatus, flowContext) {
     const trace = [];
-    const dbQ = this.kbSearchIntentQuery(q);
-    const flowHits = this.flowKeywordSearch(dbQ);
+    const dbQ = this.kbSearchIntentQuery(flowContext ? this.composeDbQuestionWithFlowContext(q, flowContext) : q);
+    const flowIntent = this.flowNormalizeSearchIntent(this.flowDefaultSearchIntent(dbQ), dbQ);
+    const flowHits = this.flowSearchWithIntent(flowIntent, this.candidateFlows());
     if (onStatus) onStatus("ナレッジDBの資料候補を探しています…");
-    const r = await this.agentLoop(q, { forSub: false, bindSearch: false, maxSteps: 12, push: s => { trace.push(s); if (onStatus && s && s.title) onStatus(String(s.title).replace(/^[^\wぁ-んァ-ヶ一-龠]+/, "")); } });
+    const r = await this.agentLoop(q, { forSub: false, bindSearch: false, maxSteps: 12, flowContext, push: s => { trace.push(s); if (onStatus && s && s.title) onStatus(String(s.title).replace(/^[^\wぁ-んァ-ヶ一-龠]+/, "")); } });
     const refs = (r.readRefs || []).map(ref => this.kbResolve(ref)).filter(Boolean);
     const usedRefs = this.kbRefsMentionedInAnswer(r.answer, refs);
     const flowNote = flowHits.length ? "\n\n関連しそうなフロー: " + flowHits.map(h => "「" + (h.flow.title || "無題のフロー") + "」").join("、") : "";
@@ -3694,14 +4688,16 @@ class Component extends DCLogic {
     };
   }
 
-  async sendChat(textArg, opts) {
-    opts = opts || {};
-    const q = (typeof textArg === "string" ? textArg : this.state.chatInput).trim();
-    if (!q || this.state.chatLoading || this.state.chatStreaming || !this.state.flow) return;
-    const cands = this.candidateFlows();
-    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容を読み取り、調査計画を立てています…" });
+	  async sendChat(textArg, opts) {
+	    opts = opts || {};
+	    const q = (typeof textArg === "string" ? textArg : this.state.chatInput).trim();
+	    if (!q || this.state.chatLoading || this.state.chatStreaming) return;
+	    const chatSessionId = this.ensureChatSession(q);
+	    this._pendingChatSessionId = chatSessionId;
+	    const cands = this.candidateFlows();
+	    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容を読み取り、調査計画を立てています…" });
     try {
-      let target = { id: this.state.curFlowId, flow: this.state.flow, chat: this.state.chat, title: null };
+      let target = { id: this.state.curFlowId, flow: this.state.flow, chat: this.state.chat, title: this.state.flow && this.state.flow.title };
       let switched = false;
       const scope = opts.forceScope || "auto";
       const answerMode = opts.forceAnswerMode || this.state.chatAnswerMode || "conditional";
@@ -3718,6 +4714,24 @@ class Component extends DCLogic {
         } catch (e) {
           this.setState({ chat: baseChat });
         }
+      }
+      if (!target.flow && cands.length) {
+        const rec = this.flowById(null, cands, q);
+        if (rec) {
+          target = { id: rec.id, flow: rec.flow, chat: (rec.chat || []).slice(), title: rec.title };
+          switched = rec.id !== "__cur__";
+        }
+      }
+      if (!target.flow) {
+        const baseChat = this.state.chat.slice();
+        this.setState({ chat: baseChat.concat([{ role: "user", text: q }]) });
+        if (this.hasLLM() && this.kbIndex().length > 0) {
+          const msg = await this.buildDbChatMessage(q, "ナレッジDBを対象に検索しました。", s => this.setChatAgentStatus(s));
+          await this.finishChatMessage(msg, []);
+        } else {
+          await this.finishChatMessage({ role: "assistant", answer: "相談に使える保存済みフローまたはナレッジDBがまだありません。先に「フロー生成」または「DB管理」から資料を登録してください。", steps: [], path: [] }, []);
+        }
+        return;
       }
       let pickId = null;
       if (scope === "auto" && this.hasLLM()) {
@@ -3740,10 +4754,14 @@ class Component extends DCLogic {
         }
         if (this.kbIndex().length > 0) {
           try {
-            const dbMsg = await this.buildDbChatMessage(q, "ナレッジDBも確認しました。", s => this.setChatAgentStatus(s));
-            outputs.push({ kind: "db", answer: dbMsg.answer || "", detail: dbMsg.detail || "", sources: dbMsg.sources || [] });
-            (dbMsg.sources || []).forEach(s => { if (!srcList.some(x => x.ref === s.ref)) srcList.push(s); });
-            (dbMsg.trace || []).forEach(s => trace.push(s));
+            if (flowMsg && this.flowHarnessShouldSkipDb(q, flowMsg)) {
+              trace.push({ title: "DB確認を省略: " + ((flowMsg.harness && flowMsg.harness.reason) || "フローの業務ルーティングを優先"), sub: false });
+            } else {
+              const dbMsg = await this.buildDbChatMessage(q, "ナレッジDBも確認しました。", s => this.setChatAgentStatus(s), flowMsg && flowMsg.harness);
+              outputs.push({ kind: "db", answer: dbMsg.answer || "", detail: dbMsg.detail || "", sources: dbMsg.sources || [] });
+              (dbMsg.sources || []).forEach(s => { if (!srcList.some(x => x.ref === s.ref)) srcList.push(s); });
+              (dbMsg.trace || []).forEach(s => trace.push(s));
+            }
           } catch (e) {
             trace.push({ title: "DB検索を継続できませんでした", sub: false });
           }
@@ -3772,14 +4790,14 @@ class Component extends DCLogic {
           answer = "利用可能なフローとDBのどちらからも、回答に使える観測を取得できませんでした。";
         }
         const detail = outputs.filter(o => o.kind === "db").map(o => o.detail || "").filter(Boolean).join("\n\n");
-        const msg = { role: "assistant", answer, steps: (flowMsg && flowMsg.steps) || [], path: (flowMsg && flowMsg.path) || [], detail, sources: srcList, trace };
+        const msg = { role: "assistant", answer, steps: (flowMsg && flowMsg.steps) || [], path: (flowMsg && flowMsg.path) || [], flowId: flowMsg && flowMsg.flowId, flowTitle: flowMsg && flowMsg.flowTitle, flowPath: flowMsg && flowMsg.flowPath, flowNodeCount: flowMsg && flowMsg.flowNodeCount, detail, sources: srcList, trace };
         await this.finishChatMessage(msg, msg.path || []);
         return;
       }
       if (scope === "db" && this.hasLLM() && this.kbIndex().length > 0) {
         pickId = "__db__";
       } else if (this.hasLLM() && cands.length > 1) {
-        const kw = this.flowKeywordSearch(q);
+        const kw = this.flowSearchWithIntent(this.flowNormalizeSearchIntent(this.flowDefaultSearchIntent(q), q), cands);
         pickId = kw.length ? kw[0].flow.id : null;
       }
       if (pickId === "__db__") {
@@ -3814,7 +4832,7 @@ class Component extends DCLogic {
         return;
       }
       const steps = this.buildSteps(path, res.steps, flow);
-      const answer = (switched && target.title ? ("「" + target.title + "」のフローを選んで辿りました。\n") : "") + (res.answer || "（回答を生成できませんでした）");
+      const answer = res.answer || "（回答を生成できませんでした）";
       // アシスタントが分岐で聞いている場合は、その選択肢をワンタップ回答チップとして提示
       let options = [];
       const lastId = path[path.length - 1]; const lastNode = lastId && flow.nodes[lastId];
@@ -3825,7 +4843,10 @@ class Component extends DCLogic {
         const linkedRefs = [];
         path.forEach(id => { ((flow.nodes[id] || {}).links || []).forEach(l => { if ((l.url || "").indexOf("kb:") === 0) linkedRefs.push(l.url.slice(3)); }); });
         const model = this.state.activeModel || "";
-        const focusText = lastNode ? (lastNode.text || "") : "";
+        const focusText = path.map(id => {
+          const n = flow.nodes[id] || {};
+          return [n.text, n.detail, n.db_query].filter(Boolean).join(" ");
+        }).filter(Boolean).join(" / ") || (lastNode ? (lastNode.text || "") : "");
         const hits = this.kbKeywordSearch((model + " " + q + " " + focusText).trim()).map(h => h.e.ref);
         const refOrder = []; const seen = {};
         linkedRefs.concat(hits).forEach(r => { if (r && !seen[r]) { seen[r] = 1; refOrder.push(r); } });
@@ -3847,7 +4868,8 @@ class Component extends DCLogic {
           // Claude Code式のフルハーネス（計画立案・必要に応じてsubagent委任）でDB全体を調査。検索パネルの状態は触らない。
           this.setChatAgentStatus("DB全体を横断して追加根拠を探しています…");
           const trace = [];
-          const r2 = await this.agentLoop((model ? ("絞り込み条件: " + model + "。") : "") + (focusText ? (focusText + " について、回答に必要な根拠・詳細を。") : "") + q, { forSub: false, bindSearch: false, maxSteps: 10, push: s => { trace.push(s); if (s && s.title) this.setChatAgentStatus(String(s.title).replace(/^[^\wぁ-んァ-ヶ一-龠]+/, "")); } });
+          const flowCtx = this.buildFlowHarnessContext(q, target, { answer, path, flowId: target.id || this.state.curFlowId || "__cur__", flowTitle: target.title || (flow && flow.title) || "現在のフロー", flowPath: (flow && flow.sourceFolderPath) || "" });
+          const r2 = await this.agentLoop((model ? ("絞り込み条件: " + model + "。") : "") + (focusText ? (focusText + " について、回答に必要な根拠・詳細を。") : "") + q, { forSub: false, bindSearch: false, maxSteps: 10, flowContext: flowCtx, push: s => { trace.push(s); if (s && s.title) this.setChatAgentStatus(String(s.title).replace(/^[^\wぁ-んァ-ヶ一-龠]+/, "")); } });
           if (r2 && r2.answer && !/該当情報なし|該当する情報はありませ|DBに該当/.test(r2.answer)) {
             detail = "【他の参考文献を横断調査】" + r2.answer;
             agentTrace = trace.filter(s => ["plan", "grep", "doc", "folder", "subagent", "subdone", "compact"].indexOf(s.kind) >= 0).map(s => ({ title: s.title, sub: !!s.sub }));
@@ -3855,7 +4877,7 @@ class Component extends DCLogic {
           }
         }
       } catch (e) { /* DB連携の失敗は本体回答に影響させない */ }
-      await this.finishChatMessage({ role: "assistant", answer, steps, path, options, detail, sources: srcList, trace: agentTrace }, path);
+      await this.finishChatMessage({ role: "assistant", answer, steps, path, options, detail, sources: srcList, trace: agentTrace, flowId: target.id || this.state.curFlowId || "__cur__", flowTitle: target.title || (flow && flow.title) || "現在のフロー", flowPath: (flow && flow.sourceFolderPath) || "", flowNodeCount: flow && flow.nodes ? Object.keys(flow.nodes).length : 0 }, path);
     } catch (err) {
       if (this.hasLLM() && this.kbIndex().length > 0) {
         try {
@@ -3913,9 +4935,11 @@ class Component extends DCLogic {
       "- 新しい履歴から読み取れる分岐・確認・結論を、既存フローに継ぎ足す。",
       "- 既存ノードは原則そのまま残す。必要なら、空いていた分岐に新ノードを接続したり、yes/no/next のつなぎ替えを行う。",
       "- 重複や矛盾は避ける。",
+      this.flowDbBoundaryCriteriaText(),
+      this.flowDbSchemaHint(false),
       "",
       "# 出力（JSONのみ。前後の説明やコードフェンス``` は付けない）",
-      '{ "title":"(変更があれば新タイトル、無ければ省略可)", "root":"(変更があれば)", "upsert": { "n10":{"kind":"decision","text":"...","why":"...","yes":"...","no":"..."}, "n11":{"kind":"choice","text":"種類・領域はどれ?","why":"...","branches":[{"label":"A","to":"id"},{"label":"B","to":"id"}]} } }',
+      '{ "title":"(変更があれば新タイトル、無ければ省略可)", "root":"(変更があれば)", "upsert": { "n10":{"kind":"decision","text":"...","why":"...","yes":"...","no":"..."}, "n11":{"kind":"action","text":"DBで根拠を確認","why":"値や根拠はDB管理するため","db_query":"確認すべき根拠・値","next":"id"} } }',
       "- upsert には『新規ノード』と『内容を変更したノード』だけを入れる。変えないノードは入れない。",
       "- 新規ノードのidは既存と重複しない連番（n" + this.nextIdNum(flow) + " 以降）。",
       "- kindの規則: decision=yes/no（二択のみ）, choice=branches配列（3つ以上の選択・分類の質問）, action=next, result=終端。各ノードの why に専門家の判断の根拠を1文。",
@@ -3936,6 +4960,8 @@ class Component extends DCLogic {
     this.setState({ merging: true, mergeError: null });
     try {
       if (!this.hasLLM()) throw new Error("AIが未設定です。右上の「API設定」からキーを入力してください。");
+      const folderId = this.currentSaveFolderId();
+      const docId = this.saveHistoryDoc("text", ((this.state.flow && this.state.flow.title) || "フロー") + "（追加履歴）", nd, folderId);
       const txt = await this.llmComplete(this.buildMergePrompt(nd));
       const patch = this.parseFlow(txt);
       const upsert = (patch && (patch.upsert || patch.nodes)) || {};
@@ -3945,7 +4971,8 @@ class Component extends DCLogic {
       ids.forEach(id => { nodes[id] = { ...(nodes[id] || {}), ...upsert[id] }; });
       const root = (patch.root && nodes[patch.root]) ? patch.root : this.state.flow.root;
       const title = patch.title || this.state.flow.title;
-      this.setState({ flow: { ...this.state.flow, nodes, root, title }, newIds: ids, addOpen: false, addText: "", merging: false, view: "diagram" });
+      const nextFlow = this.normalizeFlowDbReferences({ ...this.state.flow, nodes, root, title }, { docRefs: docId ? ["doc:" + docId] : [], nodeIds: ids });
+      this.setState({ flow: nextFlow, newIds: ids, addOpen: false, addText: "", merging: false, view: "diagram" });
     } catch (err) {
       this.setState({ merging: false, mergeError: (err && err.message) || "継ぎ足しに失敗しました。" });
     }
@@ -3978,11 +5005,13 @@ class Component extends DCLogic {
       "- すべて日本語。",
       "- ノードは6〜9個に収める。text と why は各40文字以内で簡潔に（途中で切れないよう短く）。",
       "- 各ノードの \"why\" には『なぜ専門家がそこを確認・判断するのか』という根拠（暗黙知）を1文で書く。",
+      this.flowDbBoundaryCriteriaText(),
+      this.flowDbSchemaHint(false),
       "- スキーマ:",
       '{ "title":"フローの名前", "root":"n1", "nodes":{',
       '  "n1":{"kind":"decision","text":"はい/いいえで答えられる質問?","why":"確認する理由","yes":"次のid","no":"別のid"},',
       '  "n2":{"kind":"choice","text":"複数から選ぶ質問（例：種類・領域はどれ?）","why":"理由","branches":[{"label":"選択肢A","to":"id"},{"label":"選択肢B","to":"id"}]},',
-      '  "n3":{"kind":"action","text":"作業・確認の内容","why":"理由","next":"次のid"},',
+      '  "n3":{"kind":"action","text":"DBで根拠を確認","why":"値や根拠はDB管理するため","db_query":"確認すべき根拠・値","next":"次のid"},',
       '  "n4":{"kind":"result","text":"対処の結論"} } }',
       "- kind は decision / choice / action / result のいずれか。",
       "- 二択（はい/いいえ）で答えられる判断だけ decision を使う。『どこ/どれ/どの種類/いずれ』のように3つ以上に分かれる質問は、yes/no で無理に表現せず、必ず kind:\"choice\" と branches（各 label と to）を使うこと。",
@@ -4030,6 +5059,9 @@ class Component extends DCLogic {
 
   async extract() {
     if (!this.state.dataText.trim()) { this.setState({ error: "履歴データを入力してください。" }); return; }
+    const folderId = this.currentSaveFolderId();
+    const titleBase = (this.state.domain || "貼り付け履歴データ").trim();
+    const docId = this.saveHistoryDoc("text", titleBase + "（取り込み履歴）", this.state.dataText, folderId);
     this.setState({ stage: "extracting", error: null });
     const msgs = ["履歴を読み込んでいます…", "判断の分かれ目を抽出中…", "フローを組み立てています…"];
     let i = 0; this.setState({ loadingMsg: msgs[0] });
@@ -4039,8 +5071,11 @@ class Component extends DCLogic {
       const txt = await this.llmComplete(this.buildPrompt());
       const flow = this.parseFlow(txt);
       if (!flow || !flow.nodes || !flow.root || !flow.nodes[flow.root]) throw new Error("抽出結果の構造を解釈できませんでした。もう一度お試しください。");
+      const meta = this.flowSourceMeta(folderId, [], docId ? [docId] : []);
+      const flowWithRefs = this.normalizeFlowDbReferences(flow, { docRefs: docId ? ["doc:" + docId] : [] });
+      const flowWithMeta = this.applyFlowSourceMeta(flowWithRefs, meta);
       clearInterval(this._iv); this._iv = null;
-      this.setState({ flow, stage: "flow", view: "diagram", currentId: flow.root, path: [], newIds: [], addOpen: false, addText: "", chat: [], ...this.makeReg(flow, []) });
+      this.setState({ flow: flowWithMeta, stage: "flow", view: "diagram", currentId: flowWithMeta.root, path: [], newIds: [], addOpen: false, addText: "", chat: [], ...this.makeReg(flowWithMeta, [], meta) });
     } catch (err) {
       clearInterval(this._iv); this._iv = null;
       this.setState({ stage: "input", error: (err && err.message) || "抽出に失敗しました。" });
@@ -4048,8 +5083,8 @@ class Component extends DCLogic {
   }
 
   // ---- diagram flatten ----
-  buildRows(flow) {
-    const rows = [], nodes = flow.nodes;
+	  buildRows(flow) {
+	    const rows = [], nodes = flow.nodes;
     const KIND = {
       decision: { color: "#7c5cff", chipBg: "#f1eeff", chipTx: "#5d3fe0", label: "判断" },
       action: { color: "#2f9bdb", chipBg: "#e8f4fb", chipTx: "#1b6fa8", label: "作業・確認" },
@@ -4093,10 +5128,177 @@ class Component extends DCLogic {
         why: r.why,
         whyStyle: { marginTop: "8px", fontSize: "12.5px", color: "#6b7480", lineHeight: 1.5, background: "#f7f8fa", padding: "7px 10px", borderRadius: "9px" },
       };
-    });
-  }
+	    });
+	  }
+	  chatMessageVals(m, i, st) {
+	    const srcs = this.uniqueChatSources(m.sources || []);
+	    const usedTitle = m.flowTitle || (m.usedFlow && m.usedFlow.title) || "";
+	    const usedPath = m.flowPath || (m.usedFlow && m.usedFlow.path) || "";
+	    const copied = st.copiedChatIdx === i;
+	    const copyDisabled = !String(m.answer || "").trim();
+	    return {
+	      idx: i,
+	      isUser: m.role === "user",
+	      isAssistant: m.role === "assistant",
+	      isStreaming: !!m.isStreaming,
+	      text: m.text || "",
+	      answer: m.answer || "",
+	      answerHtml: this.answerHtmlObj(m.answer || ""),
+	      copied,
+	      notCopied: !copied,
+	      copyTitle: copied ? "Markdownをコピーしました" : "Markdown原文をコピー",
+	      copyStyle: {
+	        width: "30px", height: "30px", borderRadius: "8px", border: "1px solid " + (copied ? "#c6ecd8" : "#e0e4ec"),
+	        background: copied ? "#eaf7f0" : "#fbfcfe", color: copied ? "#0f835c" : "#6b7480",
+	        display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none",
+	        opacity: copyDisabled ? 0.45 : 1, cursor: copyDisabled ? "not-allowed" : "pointer"
+	      },
+	      steps: m.steps || [],
+	      hasSteps: (m.steps || []).length > 0,
+	      detail: m.detail || "",
+	      detailHtml: this.answerHtmlObj(m.detail || ""),
+	      hasDetail: !!m.detail,
+	      hasUsedFlow: !!usedTitle && !m.isStreaming,
+	      usedFlowTitle: usedTitle,
+	      usedFlowPath: usedPath,
+	      hasUsedFlowPath: !!usedPath,
+	      sources: srcs.map(s => ({ label: s.label, ref: s.ref, query: this.chatQuestionFor(i, st.chat) })),
+	      hasSources: srcs.length > 0,
+	      trace: (m.trace || []).map((s, k) => ({ key: "tr" + k, title: s.title, rowStyle: { fontSize: "11px", lineHeight: 1.5, paddingLeft: s.sub ? "14px" : "0", color: s.sub ? "#aab1bc" : "#8a93a0" } })),
+	      hasTrace: (m.trace || []).length > 0,
+	      options: (m.options || []).map(o => ({ label: o })),
+	      hasOptions: m.role === "assistant" && !st.chatLoading && !st.chatStreaming && (m.options || []).length > 0 && i === (st.chat || []).reduce((li, mm, j) => mm.role === "assistant" ? j : li, -1)
+	    };
+	  }
+	  chatTimeLabel(at) {
+	    const t = Number(at || 0);
+	    if (!t) return "";
+	    const diff = Date.now() - t;
+	    const min = Math.floor(diff / 60000);
+	    if (min < 1) return "今";
+	    if (min < 60) return min + "分";
+	    const hr = Math.floor(min / 60);
+	    if (hr < 24) return hr + "時間";
+	    const d = Math.floor(hr / 24);
+	    if (d < 7) return d + "日";
+	    const dt = new Date(t);
+	    return (dt.getMonth() + 1) + "/" + dt.getDate();
+	  }
+	  chatSessionNavVals(st) {
+	    const primary = "#4f6ef7";
+	    return (st.chatSessions || []).slice().sort((a, b) => (b.at || 0) - (a.at || 0)).map(s => {
+	      const active = s.id === st.currentChatSessionId;
+	      return {
+	        id: s.id,
+	        title: s.title || "新しい相談",
+	        preview: s.preview || this.chatSessionPreview(s.messages || []),
+	        time: this.chatTimeLabel(s.at || s.createdAt),
+	        rowStyle: {
+	          display: "flex", alignItems: "center", gap: "8px", width: "100%", minHeight: "48px",
+	          borderRadius: "10px", padding: "7px 8px", textAlign: "left",
+	          background: active ? "#eef1ff" : "transparent", border: "1px solid " + (active ? "#d6def6" : "transparent"),
+	          color: active ? primary : "#3a414c", cursor: "pointer"
+	        }
+	      };
+	    });
+	  }
+	  flowKindLabel(k) {
+	    return k === "decision" ? "判断" : k === "choice" ? "選択" : k === "action" ? "作業/確認" : k === "result" ? "結論" : "ノード";
+	  }
+	  flowLibraryRecords(st) {
+	    const rows = (st.savedFlows || []).filter(f => f.wsId === st.curWs && f.flow && f.flow.nodes).map(f => ({
+	      id: f.id,
+	      title: f.title || (f.flow && f.flow.title) || "無題のフロー",
+	      flow: f.flow,
+	      folderPath: f.sourceFolderPath || (f.flow && f.flow.sourceFolderPath) || this.folderLabel(f.folderId || ""),
+	      at: f.at || 0,
+	      current: f.id === st.curFlowId
+	    }));
+	    if (st.flow && st.flow.nodes && !st.curFlowId) {
+	      rows.unshift({ id: "__cur__", title: st.flow.title || "未保存のフロー", flow: st.flow, folderPath: st.flow.sourceFolderPath || this.folderLabel(st.flow.sourceFolderId || ""), at: Date.now(), current: true });
+	    }
+	    return rows;
+	  }
+	  flowLibraryVals(st) {
+	    const primary = "#4f6ef7";
+	    const recs = this.flowLibraryRecords(st);
+	    const selectedId = st.flowLibCurrent && recs.some(r => r.id === st.flowLibCurrent) ? st.flowLibCurrent : ((recs.find(r => r.current) || recs[0] || {}).id || "");
+	    const sel = recs.find(r => r.id === selectedId) || null;
+	    const flow = sel && sel.flow;
+	    const nodes = (flow && flow.nodes) || {};
+	    const nodeIds = Object.keys(nodes);
+	    const dbLinks = [];
+	    const nodeRows = nodeIds.map((id, i) => {
+	      const n = nodes[id] || {};
+	      const kids = this.childrenOf(n);
+	      const links = (n.links || []).filter(l => l && l.url);
+	      links.forEach(l => { if ((l.url || "").indexOf("kb:") === 0) dbLinks.push({ nodeId: id, label: l.label || l.url, ref: l.url.slice(3) }); });
+	      return {
+	        id,
+	        n: i + 1,
+	        text: n.text || id,
+	        kindLabel: this.flowKindLabel(n.kind),
+	        why: n.why || "",
+	        hasWhy: !!n.why,
+	        detail: n.detail || "",
+	        hasDetail: !!n.detail,
+	        dbQuery: n.db_query || "",
+	        hasDbQuery: !!n.db_query,
+	        models: (n.models || []).join("、"),
+	        hasModels: !!(n.models && n.models.length),
+	        links: links.map(l => ({ label: l.label || l.url, url: l.url })),
+	        hasLinks: links.length > 0,
+	        pages: (n.pages || []).join(", "),
+	        hasPages: !!(n.pages && n.pages.length),
+	        branches: kids.map(k => ({ label: k[0] || "次へ", to: k[1] || "" })),
+	        hasBranches: kids.length > 0,
+	        rowStyle: {
+	          border: "1px solid #e6e9ef", borderRadius: "11px", padding: "10px 12px", marginBottom: "8px",
+	          background: id === (flow && flow.root) ? "#f6f8ff" : "#fff"
+	        }
+	      };
+	    });
+	    return {
+	      flowLibOpen: !!st.flowLibOpen,
+	      flowLibEmpty: recs.length === 0,
+	      flowLibCount: recs.length,
+	      flowLibNodeCount: nodeIds.length,
+	      flowLibDbRefCount: dbLinks.length,
+	      flowLibSelected: !!sel,
+	      flowLibNoSelection: !sel,
+	      flowLibTitle: sel ? sel.title : "",
+	      flowLibPath: sel ? sel.folderPath : "",
+	      flowLibCurrentId: selectedId,
+	      flowLibRows: recs.map(r => {
+	        const active = r.id === selectedId;
+	        const ns = r.flow && r.flow.nodes ? Object.keys(r.flow.nodes) : [];
+	        let refs = 0; ns.forEach(id => { refs += ((r.flow.nodes[id] || {}).links || []).filter(l => (l.url || "").indexOf("kb:") === 0).length; });
+	        return {
+	          id: r.id,
+	          title: r.title,
+	          folderPath: r.folderPath,
+	          nodeCount: ns.length,
+	          dbRefCount: refs,
+	          current: r.current,
+	          rowStyle: {
+	            display: "flex", alignItems: "center", gap: "9px", padding: "9px 10px", borderRadius: "10px", cursor: "pointer",
+	            background: active ? "#eef1ff" : "#fff", border: "1px solid " + (active ? "#cfd9ff" : "#eef1f5"),
+	            color: active ? primary : "#2b333f", marginBottom: "7px"
+	          }
+	        };
+	      }),
+	      flowLibNodes: nodeRows,
+	      flowLibDbRefs: dbLinks.slice(0, 80),
+	      hasFlowLibDbRefs: dbLinks.length > 0,
+	      hasNoFlowLibDbRefs: dbLinks.length === 0,
+	      toggleFlowLib: this.toggleFlowLib,
+	      closeFlowLib: this.closeFlowLib,
+	      flowLibPick: this.flowLibPick,
+	      flowLibOpenFlow: this.flowLibOpenFlow
+	    };
+	  }
 
-  renderVals() {
+	  renderVals() {
     const st = this.state;
     const primMap = { "インディゴ": "#4f6ef7", "ブルー": "#2f6df0", "ティール": "#0fa3a3", "バイオレット": "#7c5cff" };
     const primary = primMap[this.props.accent] ?? "#4f6ef7";
@@ -4104,7 +5306,7 @@ class Component extends DCLogic {
 
     const rootStyle = { display: "flex", height: "100vh", width: "100%", overflow: "hidden", "--primary": primary };
 
-    const si = st.stage === "input" ? 1 : (st.stage === "extracting" || st.stage === "topics") ? 2 : 3;
+    const si = (st.stage === "home" || st.stage === "input") ? 1 : (st.stage === "extracting" || st.stage === "topics") ? 2 : 3;
     const on = "#1f2733", off = "#cfd5de", onT = "#1f2733", offT = "#aab1bc";
     const step = {
       c1: si >= 1 ? primary : off, c2: si >= 2 ? primary : off, c3: si >= 3 ? primary : off,
@@ -4133,7 +5335,7 @@ class Component extends DCLogic {
 
     const out = {
       rootStyle, step,
-      isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
+      isHome: st.stage === "home", isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
       isDiagram: st.view === "diagram", isDiagnose: st.view === "diagnose",
       domain: st.domain,
       domainMfgStyle: st.domain === "設備点検" ? segOn : segOff,
@@ -4144,9 +5346,9 @@ class Component extends DCLogic {
       extractDisabled, extractBtnStyle,
       pickDomain: this.pickDomain, onInput: this.onInput, onDomainInput: this.onDomainInput, toggleSource: this.toggleSource,
       extract: () => this.extract(), loadDemo: this.loadDemo,
-      restart: this.restart, pickView: this.pickView, fcScrollRef: this.fcScrollRef,
+      restart: this.restart, pickView: this.pickView, fcScrollRef: this.fcScrollRef, goHome: this.goHome,
       settingsOpen: st.settingsOpen, cfg: st.apiCfg,
-      toggleSettings: this.toggleSettings, onCfgField: this.onCfgField, pickProvider: this.pickProvider, saveSettings: this.saveSettings, newChat: this.newChat,
+      toggleSettings: this.toggleSettings, onCfgField: this.onCfgField, pickProvider: this.pickProvider, saveSettings: this.saveSettings, newChat: this.newChat, loadChatSession: this.loadChatSession,
       isClaude: st.apiCfg.provider === "claude", isOpenai: st.apiCfg.provider === "openai", isAzure: st.apiCfg.provider === "azure",
       showApiFields: st.apiCfg.provider !== "claude",
       provClaudeStyle: st.apiCfg.provider === "claude" ? segOn : segOff,
@@ -4155,16 +5357,33 @@ class Component extends DCLogic {
       providerLabel: st.apiCfg.provider === "openai" ? "OpenAI" : st.apiCfg.provider === "azure" ? "Azure OpenAI" : "内蔵Claude",
       baseUrlPlaceholder: st.apiCfg.provider === "azure" ? "https://<リソース名>.openai.azure.com または .../openai/v1" : "https://api.openai.com/v1",
       dbOpen: st.dbOpen, dbCount: st.db.docs.length, dbFolderCount: st.db.folders.length, toggleDb: this.toggleDb,
+      ...this.flowLibraryVals(st),
+      homeNavStyle: { margin: "10px 14px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", border: "1px solid " + (st.stage === "home" ? "#cfd9ff" : "#e0e4ec"), background: st.stage === "home" ? "#f3f6ff" : "#fff", color: st.stage === "home" ? primary : "#5a626f", borderRadius: "11px", padding: "10px 11px", fontWeight: 700, fontSize: "13px" },
+      inputSaveHint: "取り込んだPDF・履歴データ・生成フローは「" + this.folderLabel(this.currentSaveFolderId()) + "」に紐づけて保存されます。",
       dbOpenFolder: this.dbOpenFolder, dbToggleExpand: this.dbToggleExpand, dbNewFolder: this.dbNewFolder, dbNewDoc: this.dbNewDoc,
       dbOpenDoc: this.dbOpenDoc, dbCloseDoc: this.dbCloseDoc, dbDocField: this.dbDocField,
       dbToggleSrc: this.dbToggleSrc, dbToggleSrcPage: this.dbToggleSrcPage, delKbSource: this.delKbSource,
       dndStart: this.dndStart, dndOver: this.dndOver, dndEnter: this.dndEnter, dndDrop: this.dndDrop, dndEnd: this.dndEnd, dbSetUploadFolder: this.dbSetUploadFolder,
       publishFolder: this.publishFolder, unpublishFolder: this.unpublishFolder, closePubNotice: this.closePubNotice, onPubInput: this.onPubInput, addSubscription: this.addSubscription, removeSubscription: this.removeSubscription,
       onIngestPdf: this.onIngestPdf, clearIngestErr: this.clearIngestErr, ingestRunning: !!(st.dbIngest && st.dbIngest.running), ingestMsg: (st.dbIngest && st.dbIngest.msg) || "", ingestName: (st.dbIngest && st.dbIngest.name) || "", ingestErr: (st.dbIngest && st.dbIngest.error) || "", hasIngestErr: !!(st.dbIngest && st.dbIngest.error),
-      hasIngestDone: !!st.ingestDone, ingestDoneName: (st.ingestDone && st.ingestDone.name) || "", runProposalsFromDone: this.runProposalsFromDone, closeIngestDone: this.closeIngestDone, runProposalsForSource: this.runProposalsForSource,
+      hasIngestDone: !!st.ingestDone, ingestDoneName: (st.ingestDone && st.ingestDone.name) || "", runProposalsFromDone: this.runProposalsFromDone, closeIngestDone: this.closeIngestDone, runProposalsForSource: this.runProposalsForSource, buildFlowFromDbSource: this.buildFlowFromDbSource,
       proposalsOpen: !!st.proposals, proposalsRunning: !!(st.proposals && st.proposals.running), proposalsErr: (st.proposals && st.proposals.error) || "", hasProposalsErr: !!(st.proposals && st.proposals.error), proposalsEmpty: !!(st.proposals && st.proposals.empty), proposalsSrcName: (st.proposals && st.proposals.srcName) || "", closeProposals: this.closeProposals, decideProposal: this.decideProposal, approveAllProposals: this.approveAllProposals,
       proposalNone: !!(st.proposals && !st.proposals.running && !st.proposals.error && !st.proposals.empty && (st.proposals.items || []).length === 0),
-      proposalItems: (st.proposals && st.proposals.items || []).map(it => ({ id: it.id, flowTitle: it.flowTitle, nodeText: it.nodeText, reason: it.reason, models: it.models.join("、"), hasModels: it.models.length > 0, detail: it.detail, hasDetail: !!it.detail, isNote: it.op === "note", isPending: it.status === "pending", isApproved: it.status === "approved", isRejected: it.status === "rejected", opLabel: it.op === "add_models" ? "適用条件を追加" : it.op === "update_detail" ? "詳細/基準値を更新" : "要手動対応（構造変更）", opStyle: { fontSize: "10.5px", fontWeight: 700, padding: "2px 9px", borderRadius: "999px", flex: "none", background: it.op === "note" ? "#fff3e0" : "#eef1ff", color: it.op === "note" ? "#b26a00" : "#3b54c4" }, cardStyle: { border: "1px solid " + (it.status === "approved" ? "#c6ecd8" : it.status === "rejected" ? "#eee" : "#e6e9ef"), borderRadius: "11px", padding: "12px 14px", marginBottom: "10px", background: it.status === "rejected" ? "#fafafa" : "#fff", opacity: it.status === "rejected" ? 0.6 : 1 } })),
+      proposalItems: (st.proposals && st.proposals.items || []).map(it => {
+        const labels = { attach_evidence: "根拠リンク追加", add_condition: "条件を追加", update_detail: "詳細/基準値を更新", create_new: "新規フロー候補", ask_human: "要レビュー" };
+        const noteLike = it.op === "create_new" || it.op === "ask_human";
+        return {
+          id: it.id, flowTitle: it.flowTitle, nodeText: it.nodeText, reason: it.reason,
+          models: (it.models || []).join("、"), hasModels: (it.models || []).length > 0,
+          refs: (it.refs || []).join("、"), hasRefs: (it.refs || []).length > 0,
+          confidencePct: Math.round((Number(it.confidence) || 0) * 100), hasConfidence: it.confidence != null,
+          detail: it.detail, hasDetail: !!it.detail, isNote: noteLike,
+          isPending: it.status === "pending", isApproved: it.status === "approved", isRejected: it.status === "rejected",
+          opLabel: labels[it.op] || "要レビュー",
+          opStyle: { fontSize: "10.5px", fontWeight: 700, padding: "2px 9px", borderRadius: "999px", flex: "none", background: noteLike ? "#fff3e0" : (it.op === "attach_evidence" ? "#e3f6ef" : "#eef1ff"), color: noteLike ? "#b26a00" : (it.op === "attach_evidence" ? "#0f835c" : "#3b54c4") },
+          cardStyle: { border: "1px solid " + (it.status === "approved" ? "#c6ecd8" : it.status === "rejected" ? "#eee" : "#e6e9ef"), borderRadius: "11px", padding: "12px 14px", marginBottom: "10px", background: it.status === "rejected" ? "#fafafa" : "#fff", opacity: it.status === "rejected" ? 0.6 : 1 }
+        };
+      }),
       pubInput: st.pubInput || "", hasPubNotice: !!st.pubNotice, pubNoticeKey: st.pubNotice ? st.pubNotice.key : "", pubNoticeName: (st.pubNotice && st.pubNotice.name) || "", pubNoticeError: (st.pubNotice && st.pubNotice.error) || "", pubNoticeOk: !!(st.pubNotice && !st.pubNotice.error),
       dbStartRename: this.dbStartRename, dbRenameInput: this.dbRenameInput, dbCommitRename: this.dbCommitRename, dbRenameKey: this.dbRenameKey,
       delFolder: this.delFolder, delDoc: this.delDoc, dbRenameVal: st.dbRenameVal,
@@ -4178,8 +5397,11 @@ class Component extends DCLogic {
       wsOpen: st.wsOpen, toggleWs: this.toggleWs, pickWs: this.pickWs, newWorkspace: this.newWorkspace, delWorkspace: this.delWorkspace,
       saveCurrentFlow: this.saveCurrentFlow, loadFlow: this.loadFlow, delFlow: this.delFlow, newFlowDraft: this.newFlowDraft,
       curWsName: (st.workspaces.find(w => w.id === st.curWs) || {}).name || "ワークスペース",
+      wsFlowCount: st.savedFlows.filter(f => f.wsId === st.curWs).length,
+      chatSessionNav: this.chatSessionNavVals(st),
+      chatSessionsEmpty: !(st.chatSessions || []).length,
       wsList: st.workspaces.map(w => ({ id: w.id, name: w.name, count: st.savedFlows.filter(f => f.wsId === w.id).length, rowStyle: { display: "flex", alignItems: "center", gap: "8px", padding: "8px 11px", borderRadius: "9px", cursor: "pointer", fontSize: "13px", fontWeight: w.id === st.curWs ? 700 : 500, background: w.id === st.curWs ? "#eef1ff" : "#f6f8fb", color: w.id === st.curWs ? "#3b54c4" : "#5a626f" } })),
-      wsFlows: st.savedFlows.filter(f => f.wsId === st.curWs).map(f => ({ id: f.id, title: f.title || "無題のフロー", nodes: f.flow && f.flow.nodes ? Object.keys(f.flow.nodes).length : 0, current: f.id === st.curFlowId, navStyle: { display: "flex", alignItems: "center", gap: "9px", padding: "8px 9px", borderRadius: "9px", cursor: "pointer", marginBottom: "2px", background: f.id === st.curFlowId ? "#eef1ff" : "transparent", color: f.id === st.curFlowId ? "#3b54c4" : "#3a414c" } })),
+      wsFlows: st.savedFlows.filter(f => f.wsId === st.curWs).map(f => ({ id: f.id, title: f.title || "無題のフロー", nodes: f.flow && f.flow.nodes ? Object.keys(f.flow.nodes).length : 0, current: f.id === st.curFlowId, folderPath: f.sourceFolderPath || (f.flow && f.flow.sourceFolderPath) || this.folderLabel(f.folderId || ""), navStyle: { display: "flex", alignItems: "center", gap: "9px", padding: "8px 9px", borderRadius: "9px", cursor: "pointer", marginBottom: "2px", background: f.id === st.curFlowId ? "#eef1ff" : "transparent", color: f.id === st.curFlowId ? "#3b54c4" : "#3a414c" } })),
       wsFlowsEmpty: st.savedFlows.filter(f => f.wsId === st.curWs).length === 0,
       flowSaved: !!st.curFlowId && st.savedFlows.some(f => f.id === st.curFlowId),
       saveLabel: (!!st.curFlowId && st.savedFlows.some(f => f.id === st.curFlowId)) ? "保存済み（自動同期）" : "ワークスペースに保存",
@@ -4238,7 +5460,7 @@ class Component extends DCLogic {
       hasLiveFlow: !!(st.flow && Object.keys(st.flow.nodes || {}).length),
       noLiveFlow: !(st.flow && Object.keys(st.flow.nodes || {}).length),
       buildLog: st.buildLog || [], hasLog: (st.buildLog || []).length > 0,
-      onChatInput: this.onChatInput, sendChat: () => this.sendChat(), clearHighlight: this.clearHighlight, highlightMessage: this.highlightMessage, pickAnswerMode: this.pickAnswerMode,
+      onChatInput: this.onChatInput, sendChat: () => this.sendChat(), clearHighlight: this.clearHighlight, highlightMessage: this.highlightMessage, showMessageFlow: this.showMessageFlow, copyAnswerMarkdown: this.copyAnswerMarkdown, pickAnswerMode: this.pickAnswerMode,
       chatInput: st.chatInput, chatLoading: st.chatLoading, chatAgentStatus: st.chatAgentStatus || "フローとナレッジDBを横断しています…",
       answerModeConditionalStyle: (st.chatAnswerMode || "conditional") === "conditional" ? { ...segOn, fontSize: "11px", padding: "4px 8px", borderRadius: "7px" } : { ...segOff, fontSize: "11px", padding: "4px 8px", borderRadius: "7px" },
       answerModeConfirmStyle: st.chatAnswerMode === "confirm" ? { ...segOn, fontSize: "11px", padding: "4px 8px", borderRadius: "7px" } : { ...segOff, fontSize: "11px", padding: "4px 8px", borderRadius: "7px" },
@@ -4248,7 +5470,7 @@ class Component extends DCLogic {
       chatSendDisabled: !st.chatInput.trim() || st.chatLoading || st.chatStreaming,
       sendBtnStyle: (function () { const dis = !st.chatInput.trim() || st.chatLoading || st.chatStreaming; return { fontSize: "13px", fontWeight: 700, padding: "10px 16px", borderRadius: "10px", color: "#fff", background: dis ? "#bcc4d1" : primary, cursor: dis ? "not-allowed" : "pointer", flex: "none" }; })(),
       quickReply: this.quickReply, openKbRef: this.openKbRef,
-      chatMsgs: (st.chat || []).map((m, i) => { const srcs = this.uniqueChatSources(m.sources || []); return { idx: i, isUser: m.role === "user", isAssistant: m.role === "assistant", isStreaming: !!m.isStreaming, text: m.text || "", answer: m.answer || "", steps: m.steps || [], hasSteps: (m.steps || []).length > 0, detail: m.detail || "", hasDetail: !!m.detail, sources: srcs.map(s => ({ label: s.label, ref: s.ref, query: this.chatQuestionFor(i, st.chat) })), hasSources: srcs.length > 0, trace: (m.trace || []).map((s, k) => ({ key: "tr" + k, title: s.title, rowStyle: { fontSize: "11px", lineHeight: 1.5, paddingLeft: s.sub ? "14px" : "0", color: s.sub ? "#aab1bc" : "#8a93a0" } })), hasTrace: (m.trace || []).length > 0, options: (m.options || []).map(o => ({ label: o })), hasOptions: m.role === "assistant" && !st.chatLoading && !st.chatStreaming && (m.options || []).length > 0 && i === (st.chat || []).reduce((li, mm, j) => mm.role === "assistant" ? j : li, -1) }; }),
+      chatMsgs: (st.chat || []).map((m, i) => this.chatMessageVals(m, i, st)),
     };
 
     if (st.flow) {
