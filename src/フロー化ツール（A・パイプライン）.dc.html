@@ -60,6 +60,7 @@
     <button onClick="{{ newFlowDraft }}" style="margin:8px 14px 8px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--primary);color:#fff;border-radius:11px;padding:11px;font-weight:700;font-size:13px;box-shadow:0 5px 14px rgba(79,110,247,.32);">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>フロー生成
     </button>
+    <sc-if value="{{ showChatSidebar }}" hint-placeholder-val="{{ true }}">
     <div style="flex:1;overflow:auto;padding:12px 10px 10px;">
       <div style="padding:0 4px 8px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
@@ -89,12 +90,64 @@
       </div>
       <div style="padding:9px 8px 0;font-size:10.5px;color:#aab1bc;">保存済みフロー {{ wsFlowCount }} 件</div>
     </div>
+    </sc-if>
+    <sc-if value="{{ showDbSidebar }}" hint-placeholder-val="">
+    <div style="flex:1;overflow:auto;padding:12px 10px 10px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:0 4px 8px;">
+        <div style="font-size:10.5px;font-weight:800;color:#aab1bc;letter-spacing:.5px;flex:1;">DBフォルダ</div>
+        <button onClick="{{ dbNewFolder }}" title="新規フォルダ" style="width:28px;height:28px;border-radius:8px;border:1px solid #e0e4ec;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--primary);flex:none;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path><path d="M12 10v6M9 13h6"></path></svg>
+        </button>
+      </div>
+      <button data-id="" data-folder="" onClick="{{ dbOpenFolder }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ dbSidebarRootStyle }}">すべて</button>
+      <div style="display:flex;flex-direction:column;gap:2px;margin-top:3px;">
+        <sc-for list="{{ dbTreeRows }}" as="t" hint-placeholder-count="0">
+          <button data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbOpenFolder }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.sideRowStyle }}">
+            <span data-id="{{ t.id }}" onClick="{{ dbToggleExpand }}" style="width:15px;text-align:center;color:#8a93a0;font-size:10px;flex:none;">{{ t.chevron }}</span>
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;">{{ t.name }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="padding:12px 8px 0;font-size:10.5px;color:#aab1bc;line-height:1.55;">PDF {{ kbSrcCount }} 件 ・ {{ kbPageCount }} ページ<br>メモ {{ dbCount }} 件</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ showFlowSidebar }}" hint-placeholder-val="">
+    <div style="flex:1;overflow:auto;padding:12px 10px 10px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:0 4px 8px;">
+        <div style="font-size:10.5px;font-weight:800;color:#aab1bc;letter-spacing:.5px;flex:1;">思考プロセス</div>
+        <button onClick="{{ newFlowDraft }}" title="新規フロー" style="width:28px;height:28px;border-radius:8px;border:1px solid #e0e4ec;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--primary);flex:none;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+        </button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <sc-for list="{{ flowLibRows }}" as="f" hint-placeholder-count="0">
+          <button data-id="{{ f.id }}" onClick="{{ flowLibPick }}" title="{{ f.title }}" style="{{ f.sideRowStyle }}">
+            <div style="flex:1;min-width:0;text-align:left;">
+              <div style="font-size:12.3px;font-weight:800;color:#2b333f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.title }}</div>
+              <div style="font-size:10.5px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px;">{{ f.folderPath }}</div>
+            </div>
+            <span style="font-size:9.5px;color:#aab1bc;flex:none;">{{ f.nodeCount }}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ flowLibEmpty }}" hint-placeholder-val="">
+          <div style="border:1px dashed #dde3ec;background:#fbfcfe;border-radius:10px;padding:10px 11px;margin:2px 4px 0;font-size:11.5px;color:#8a93a0;line-height:1.55;">保存済みの思考プロセスはまだありません。</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ showGenericSidebar }}" hint-placeholder-val="">
+    <div style="flex:1;overflow:auto;padding:12px 10px 10px;">
+      <div style="padding:0 4px 8px;font-size:10.5px;font-weight:800;color:#aab1bc;letter-spacing:.5px;">作業中</div>
+      <div style="border:1px solid #eef1f5;background:#fbfcfe;border-radius:10px;padding:11px 12px;font-size:11.5px;color:#6b7480;line-height:1.6;">現在のフロー作成・編集に集中するため、相談履歴はAIに相談画面でのみ表示します。</div>
+      <div style="padding:12px 8px 0;font-size:10.5px;color:#aab1bc;">保存済みフロー {{ wsFlowCount }} 件</div>
+    </div>
+    </sc-if>
     <div style="border-top:1px solid #f1f3f8;padding:8px 10px;display:flex;flex-direction:column;gap:2px;">
-      <button onClick="{{ toggleDb }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
+      <button onClick="{{ goDb }}" style="{{ dbNavStyle }}">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
         <span style="flex:1;">ナレッジデータベース</span><span style="font-size:10.5px;color:#aab1bc;">{{ dbCount }}</span>
       </button>
-      <button onClick="{{ toggleFlowLib }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
+      <button onClick="{{ goFlowLib }}" style="{{ flowNavStyle }}">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
         <span style="flex:1;">思考プロセス</span><span style="font-size:10.5px;color:#aab1bc;">{{ flowLibCount }}</span>
       </button>
@@ -285,8 +338,7 @@
                   <div data-id="{{ s.id }}" onClick="{{ dbToggleSrc }}" style="display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:grab;background:#fbfcfe;">
                     <span style="font-size:16px;flex:none;">📘</span>
                     <div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.name }}</div><div style="font-size:11px;color:#8a93a0;">{{ s.pageCount }} ページ</div></div>
-                    <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" title="このPDFから新しいフローを生成" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
-                    <button data-id="{{ s.id }}" onClick="{{ runProposalsForSource }}" title="このPDFから既存フローへの差分を提案" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#4f6ef7;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg></button>
+                    <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" title="このPDFから思考プロセスを抽出" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
                     <button data-id="{{ s.id }}" onClick="{{ delKbSource }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
                     <span style="color:#aab1bc;font-size:11px;flex:none;">{{ s.chevron }}</span>
                   </div>
@@ -459,10 +511,9 @@
   <sc-if value="{{ hasIngestDone }}" hint-placeholder-val="">
   <div style="position:fixed;inset:0;background:rgba(20,26,38,.45);z-index:65;display:flex;align-items:center;justify-content:center;padding:20px;">
     <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(16,24,40,.3);overflow:hidden;">
-      <div style="padding:18px 20px;"><div style="font-size:15px;font-weight:700;margin-bottom:6px;">📘 取り込み完了</div><div style="font-size:13px;color:#5a626f;line-height:1.6;">「{{ ingestDoneName }}」をナレッジDBに登録しました。<br>この資料をもとに、<b>既存フローへの変更案</b>（適用条件の追加・基準値差など）をAIに提案させますか？</div></div>
+      <div style="padding:18px 20px;"><div style="font-size:15px;font-weight:700;margin-bottom:6px;">📘 取り込み完了</div><div style="font-size:13px;color:#5a626f;line-height:1.6;">「{{ ingestDoneName }}」をナレッジDBに登録しました。<br>必要な場合は、資料一覧の抽出ボタンから明示的に思考プロセスを作成できます。</div></div>
       <div style="padding:12px 20px;border-top:1px solid #eef1f5;display:flex;justify-content:flex-end;gap:10px;">
-        <button onClick="{{ closeIngestDone }}" style="font-size:13px;color:#6b7480;padding:9px 14px;">後で</button>
-        <button onClick="{{ runProposalsFromDone }}" style="font-size:13px;font-weight:700;color:#fff;background:var(--primary);padding:9px 18px;border-radius:9px;">差分を提案</button>
+        <button onClick="{{ closeIngestDone }}" style="font-size:13px;font-weight:700;color:#fff;background:var(--primary);padding:9px 18px;border-radius:9px;">閉じる</button>
       </div>
     </div>
   </div>
@@ -480,6 +531,7 @@
         <sc-if value="{{ proposalsRunning }}" hint-placeholder-val=""><div style="display:flex;align-items:center;gap:9px;color:#8a93a0;font-size:13px;padding:20px 0;"><span style="width:18px;height:18px;border:3px solid #e6e9ef;border-top-color:var(--primary);border-radius:50%;animation:spin .9s linear infinite;"></span>既存フローと照合し、変更案を作成中…</div></sc-if>
         <sc-if value="{{ hasProposalsErr }}" hint-placeholder-val=""><div style="font-size:13px;color:#c0392b;line-height:1.6;">{{ proposalsErr }}</div></sc-if>
         <sc-if value="{{ proposalsEmpty }}" hint-placeholder-val=""><div style="font-size:13px;color:#6b7480;line-height:1.6;">対象ワークスペースに既存フローがありません。先にフローを作成してください。</div></sc-if>
+        <sc-if value="{{ proposalAlreadyFlowed }}" hint-placeholder-val=""><div style="font-size:13px;color:#3b54c4;line-height:1.6;background:#f6f8ff;border:1px solid #d6def6;border-radius:10px;padding:13px;">このPDFはすでに思考プロセスの生成元として登録されています。同じ資料からの差分提案は重複になるため表示しません。</div></sc-if>
         <sc-if value="{{ proposalNone }}" hint-placeholder-val=""><div style="font-size:13px;color:#0f835c;line-height:1.6;background:#f3faf6;border:1px solid #d3ecdd;border-radius:10px;padding:13px;">この資料による既存フローへの変更は不要と判断されました（差分なし）。</div></sc-if>
         <sc-for list="{{ proposalItems }}" as="p" hint-placeholder-count="0">
           <div style="{{ p.cardStyle }}">
@@ -624,6 +676,268 @@
 
   <!-- ===== MAIN ===== -->
   <main style="flex:1;min-width:0;height:100vh;overflow:auto;background:#f4f6fa;">
+
+  <!-- KNOWLEDGE DATABASE -->
+  <sc-if value="{{ isDbMain }}" hint-placeholder-val="">
+  <div style="height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f4f6fa;">
+    <div style="padding:22px 28px 14px;border-bottom:1px solid #e6e9ef;background:#fff;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px;">
+          <span style="width:28px;height:28px;border-radius:8px;background:#eaf7f0;display:flex;align-items:center;justify-content:center;color:#0f835c;flex:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
+          </span>
+          <h1 style="font-size:20px;font-weight:800;margin:0;color:#1f2733;">ナレッジデータベース</h1>
+        </div>
+        <div style="font-size:13px;color:#6b7480;line-height:1.6;">資料・メモ・共有DBを管理します。フロー内のDB確認ノードやAI相談は、この内容を参照して分岐後の根拠を補強します。</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onClick="{{ dbNewFolder }}" style="display:flex;align-items:center;gap:7px;border:1px solid #dbe2ee;background:#fff;color:#5a626f;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"></path><path d="M12 10v6M9 13h6"></path></svg>フォルダ
+        </button>
+        <label style="display:flex;align-items:center;gap:7px;background:#16a875;color:#fff;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;cursor:pointer;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 18v-6M9 15l3-3 3 3"></path></svg>PDF取り込み
+          <input type="file" accept="application/pdf" onChange="{{ onIngestPdf }}" style="display:none;" />
+        </label>
+        <button onClick="{{ dbNewDoc }}" style="display:flex;align-items:center;gap:7px;background:var(--primary);color:#fff;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;box-shadow:0 4px 12px rgba(79,110,247,.25);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 12v6M9 15h6"></path></svg>メモ
+        </button>
+      </div>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid #e6e9ef;background:#fbfcfe;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:240px;">
+        <sc-for list="{{ dbCrumbs }}" as="c" hint-placeholder-count="0">
+          <button data-id="{{ c.id }}" data-folder="{{ c.id }}" onClick="{{ dbOpenFolder }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="font-size:12.5px;color:#5a626f;font-weight:800;">{{ c.name }}</button>
+          <span style="color:#cbd2dd;">/</span>
+        </sc-for>
+      </div>
+      <span style="font-size:11px;color:#8a93a0;font-weight:700;flex:none;">保存先</span>
+      <select value="{{ dbUploadFolder }}" onChange="{{ dbSetUploadFolder }}" style="min-width:220px;border:1.5px solid #e0e4ec;border-radius:8px;padding:7px 9px;font-size:12px;background:#fff;">
+        <sc-for list="{{ uploadFolderOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
+      </select>
+      <input value="{{ pubInput }}" onInput="{{ onPubInput }}" placeholder="公開キー pub_..." style="width:190px;border:1.5px solid #d3ecdd;border-radius:8px;padding:7px 9px;font-size:12px;background:#fbfffc;" />
+      <button onClick="{{ addSubscription }}" title="共有を追加" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:#16a875;border-radius:8px;flex:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;flex:1;min-height:0;padding:18px;">
+      <section style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+        <sc-if value="{{ dbEditOpen }}" hint-placeholder-val="">
+          <div style="flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:11px;">
+            <button onClick="{{ dbCloseDoc }}" style="align-self:flex-start;font-size:12.5px;color:#6b7480;font-weight:800;">← 一覧に戻る</button>
+            <input value="{{ dbEditTitle }}" data-field="title" onInput="{{ dbDocField }}" placeholder="タイトル" style="border:1.5px solid #e0e4ec;border-radius:9px;padding:10px 12px;font-size:15px;font-weight:800;" />
+            <textarea value="{{ dbEditBody }}" data-field="body" onInput="{{ dbDocField }}" placeholder="内容・手順・判断基準など" style="flex:1;min-height:320px;resize:vertical;border:1.5px solid #e0e4ec;border-radius:9px;padding:11px 13px;font-size:13px;line-height:1.7;background:#fbfcfe;"></textarea>
+            <span style="font-size:11px;color:#aab1bc;">入力は自動保存されます</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{ dbListOpen }}" hint-placeholder-val="{{ true }}">
+          <div data-folder="{{ dbCurId }}" onDragOver="{{ dndOver }}" onDrop="{{ dndDrop }}" style="flex:1;overflow:auto;padding:10px;">
+            <sc-if value="{{ showShared }}" hint-placeholder-val="">
+              <div style="font-size:10.5px;font-weight:800;color:#0f835c;letter-spacing:.5px;padding:7px 9px;">共有データベース</div>
+              <sc-for list="{{ sharedDbs }}" as="sd" hint-placeholder-count="0">
+                <div style="border:1px solid #d3ecdd;border-radius:10px;margin:2px 0 8px;overflow:hidden;background:#fbfffc;">
+                  <div style="display:flex;align-items:center;gap:9px;padding:9px 12px;background:#f3faf6;">
+                    <span style="font-size:15px;flex:none;">🌐</span>
+                    <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:800;color:#0f835c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ sd.name }}</div><div style="font-size:10px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ sd.key }}</div></div>
+                    <button data-key="{{ sd.key }}" onClick="{{ removeSubscription }}" title="共有を解除" style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+                  </div>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-for list="{{ dbCurFolders }}" as="f" hint-placeholder-count="0">
+              <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onDoubleClick="{{ dbOpenFolder }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
+                <span style="font-size:18px;flex:none;">📁</span>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.name }}</div>
+                  <div style="font-size:11px;color:#8a93a0;">{{ f.subCount }} フォルダ ・ 📘{{ f.srcCount }} ・ 📄{{ f.docCount }}</div>
+                </div>
+                <button data-type="folder" data-id="{{ f.id }}" data-name="{{ f.name }}" onClick="{{ dbStartRename }}" title="名前変更" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#6b7480;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
+                <button data-id="{{ f.id }}" onClick="{{ delFolder }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
+              </div>
+            </sc-for>
+            <sc-for list="{{ dbCurSources }}" as="s" hint-placeholder-count="0">
+              <div data-dndtype="source" data-dndid="{{ s.id }}" draggable="true" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" style="border:1px solid #eef1f5;border-radius:10px;margin:2px 0 8px;overflow:hidden;">
+                <div data-id="{{ s.id }}" onClick="{{ dbToggleSrc }}" style="display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:grab;background:#fbfcfe;">
+                  <span style="font-size:16px;flex:none;">📘</span>
+                  <div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.name }}</div><div style="font-size:11px;color:#8a93a0;">{{ s.pageCount }} ページ</div></div>
+                  <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" title="このPDFから思考プロセスを抽出" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
+                  <button data-id="{{ s.id }}" onClick="{{ delKbSource }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
+                  <span style="color:#aab1bc;font-size:11px;flex:none;">{{ s.chevron }}</span>
+                </div>
+                <sc-if value="{{ s.expanded }}" hint-placeholder-val="">
+                  <div style="border-top:1px solid #f2f4f8;">
+                    <sc-for list="{{ s.pages }}" as="p" hint-placeholder-count="0">
+                      <div style="border-bottom:1px solid #f5f7fa;">
+                        <div data-ref="{{ p.ref }}" onClick="{{ dbToggleSrcPage }}" style="display:flex;align-items:flex-start;gap:8px;padding:8px 12px 8px 16px;cursor:pointer;">
+                          <span style="font-size:11px;color:#8a93a0;font-weight:800;flex:none;margin-top:1px;">p{{ p.page }}</span>
+                          <div style="flex:1;min-width:0;"><div style="font-size:12.5px;color:#2b333f;line-height:1.5;">{{ p.summary }}</div><sc-if value="{{ p.hasKw }}" hint-placeholder-val=""><div style="font-size:10.5px;color:#3b6ef6;margin-top:3px;line-height:1.5;">{{ p.kw }}</div></sc-if></div>
+                          <span style="color:#aab1bc;font-size:10px;flex:none;margin-top:2px;">{{ p.chevron }}</span>
+                        </div>
+                        <sc-if value="{{ p.expanded }}" hint-placeholder-val=""><div style="font-size:12px;color:#5a626f;line-height:1.7;background:#f7f8fa;border-radius:8px;padding:10px 12px;margin:0 12px 10px 16px;white-space:pre-wrap;">{{ p.md }}</div></sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <sc-for list="{{ dbCurDocs }}" as="d" hint-placeholder-count="0">
+              <div data-id="{{ d.id }}" data-dndtype="doc" data-dndid="{{ d.id }}" draggable="true" onDoubleClick="{{ dbOpenDoc }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;cursor:grab;" style-hover="background:#f5f7fb;">
+                <span style="font-size:17px;flex:none;">📄</span>
+                <div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ d.title }}</div><div style="font-size:11px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ d.snippet }}</div></div>
+                <button data-id="{{ d.id }}" onClick="{{ dbOpenDoc }}" title="開く" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#4f6ef7;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></button>
+                <button data-type="doc" data-id="{{ d.id }}" data-name="{{ d.title }}" onClick="{{ dbStartRename }}" title="名前変更" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#6b7480;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
+                <button data-id="{{ d.id }}" onClick="{{ delDoc }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
+              </div>
+            </sc-for>
+            <sc-if value="{{ dbCurEmpty }}" hint-placeholder-val="">
+              <div style="text-align:center;color:#aab1bc;font-size:13px;padding:58px 0;line-height:1.7;">このフォルダは空です。<br>上部のボタンで追加、または左のフォルダへドラッグして移動できます。</div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </section>
+      <aside style="display:flex;flex-direction:column;gap:12px;min-width:0;">
+        <div style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:14px 15px;"><div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:6px;">PDF</div><div style="font-size:28px;font-weight:900;line-height:1;color:#1f2733;">{{ kbSrcCount }}</div><div style="font-size:11.5px;color:#8a93a0;margin-top:7px;line-height:1.5;">{{ kbPageCount }} ページ</div></div>
+        <div style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:14px 15px;"><div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:6px;">メモ</div><div style="font-size:28px;font-weight:900;line-height:1;color:#1f2733;">{{ dbCount }}</div><div style="font-size:11.5px;color:#8a93a0;margin-top:7px;line-height:1.5;">フォルダ {{ dbFolderCount }} 件</div></div>
+        <div style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:14px 15px;"><div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:8px;">フロー連携</div><div style="font-size:12px;color:#5a626f;line-height:1.65;">分岐で参照が必要な条件は、フローのDB確認ノードからこのDBへ検索文脈として渡されます。</div></div>
+      </aside>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- THINKING PROCESS LIBRARY -->
+  <sc-if value="{{ isFlowLibMain }}" hint-placeholder-val="">
+  <div style="height:100vh;display:flex;flex-direction:column;overflow:hidden;background:#f4f6fa;">
+    <div style="padding:22px 28px 14px;border-bottom:1px solid #e6e9ef;background:#fff;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px;">
+          <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;display:flex;align-items:center;justify-content:center;color:var(--primary);flex:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
+          </span>
+          <h1 style="font-size:20px;font-weight:800;margin:0;color:#1f2733;">思考プロセス</h1>
+        </div>
+        <div style="font-size:13px;color:#6b7480;line-height:1.6;">保存済みフローを一覧し、判断・分岐・DB参照の構造を確認します。右側のAI相談で、選択中の思考プロセスやナレッジDBを横断して確認できます。</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onClick="{{ newFlowDraft }}" style="display:flex;align-items:center;gap:7px;background:var(--primary);color:#fff;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;box-shadow:0 4px 12px rgba(79,110,247,.25);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>フロー生成
+        </button>
+        <button data-id="{{ flowLibCurrentId }}" onClick="{{ flowLibOpenFlow }}" disabled="{{ flowLibNoSelection }}" style="{{ flowLibOpenBtnStyle }}">フロー図で開く</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:16px;flex:1;min-height:0;padding:18px;">
+      <section style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+        <sc-if value="{{ flowLibSelected }}" hint-placeholder-val="">
+          <div style="padding:16px 18px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:220px;">
+              <div style="font-size:16px;font-weight:900;color:#1f2733;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ flowLibTitle }}</div>
+              <div style="font-size:11.5px;color:#8a93a0;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ flowLibPath }}</div>
+            </div>
+            <span style="font-size:11px;font-weight:800;color:#5a626f;background:#f1f3f8;border-radius:999px;padding:5px 10px;">{{ flowLibNodeCount }} ノード</span>
+            <span style="font-size:11px;font-weight:800;color:#0f835c;background:#eaf7f0;border-radius:999px;padding:5px 10px;">DB参照 {{ flowLibDbRefCount }}</span>
+          </div>
+          <div style="flex:1;min-height:0;background:#fbfcfe;display:flex;flex-direction:column;position:relative;">
+            <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;padding:11px 14px;border-bottom:1px solid #eef1f5;font-size:11.5px;color:#6b7480;background:#fff;">
+              <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:3px;background:#7c5cff;"></span>判断</span>
+              <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:3px;background:#2f9bdb;"></span>作業・確認</span>
+              <span style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:3px;background:#16a875;"></span>結論</span>
+              <span style="display:flex;align-items:center;gap:6px;">💡 判断理由</span>
+              <span style="display:flex;align-items:center;gap:6px;">📎 DB参照</span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:auto;border-top:1px solid #fff;background:#fff;background-image:radial-gradient(#e9edf3 1.2px,transparent 1.2px);background-size:22px 22px;">
+              <sc-if value="{{ flowLibGraph.hasNodes }}" hint-placeholder-val="{{ true }}">
+                <div style="padding:44px 46px;width:max-content;box-sizing:content-box;">
+                  <div style="{{ flowLibGraph.canvasStyle }}">
+                    <svg style="{{ flowLibGraph.svgStyle }}">
+                      <defs>
+                        <marker id="fcArrow" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#b8c0cc"></path></marker>
+                        <marker id="fcArrowHL" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#4f6ef7"></path></marker>
+                      </defs>
+                      <sc-for list="{{ flowLibGraph.edges }}" as="e" hint-placeholder-count="0"><path d="{{ e.d }}" style="{{ e.pathStyle }}"></path></sc-for>
+                    </svg>
+                    <sc-for list="{{ flowLibGraph.nodes }}" as="nd" hint-placeholder-count="0">
+                      <div style="{{ nd.boxStyle }}" title="{{ nd.why }}">
+                        <div style="display:flex;align-items:center;gap:5px;">
+                          <span style="{{ nd.kindStyle }}">{{ nd.kindLabel }}</span>
+                          <sc-if value="{{ nd.hasWhy }}" hint-placeholder-val=""><span style="font-size:11px;line-height:1;">💡</span></sc-if>
+                          <sc-if value="{{ nd.hasPages }}" hint-placeholder-val=""><span title="出典ページ" style="font-size:9.5px;font-weight:700;color:#5a626f;background:#eef1f5;border-radius:5px;padding:1px 5px;line-height:1.4;">{{ nd.srcPages }}</span></sc-if>
+                          <sc-if value="{{ nd.hasMeta }}" hint-placeholder-val=""><span title="資料・リンクあり" style="margin-left:auto;font-size:11px;line-height:1;">📎</span></sc-if>
+                        </div>
+                        <div style="{{ nd.textStyle }}">{{ nd.text }}</div>
+                      </div>
+                    </sc-for>
+                    <sc-for list="{{ flowLibGraph.labels }}" as="lb" hint-placeholder-count="0"><span style="{{ lb.style }}">{{ lb.text }}</span></sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ flowLibGraphEmpty }}" hint-placeholder-val="">
+                <div style="height:100%;min-height:280px;display:flex;align-items:center;justify-content:center;color:#aab1bc;font-size:13px;">この思考プロセスには表示できるフロー構造がありません。</div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ flowLibNoSelection }}" hint-placeholder-val="">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;color:#aab1bc;font-size:13px;">表示する思考プロセスがありません。</div>
+        </sc-if>
+      </section>
+      <aside data-pane="flow-lib-ai-chat" style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;">
+        <div style="padding:14px 16px;border-bottom:1px solid #eef1f5;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;flex:1;"><span style="width:22px;height:22px;border-radius:6px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;">AI</span>AIに相談</div>
+            <button onClick="{{ newChat }}" title="新規チャット" style="width:32px;height:32px;border-radius:9px;border:1px solid #e0e4ec;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </button>
+          </div>
+          <div style="font-size:11.5px;color:#8a93a0;margin-top:5px;line-height:1.5;">質問に応じて、保存済み思考プロセスとDB根拠を横断します。回答から使用フローを表示・ハイライトできます。</div>
+          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:700;color:#6b7480;flex:none;">回答方針</span>
+            <div style="display:inline-flex;background:#f1f3f8;border:1px solid #e6e9ef;border-radius:9px;padding:3px;gap:3px;">
+              <button data-mode="conditional" onClick="{{ pickAnswerMode }}" style="{{ answerModeConditionalStyle }}">まとめて回答</button>
+              <button data-mode="confirm" onClick="{{ pickAnswerMode }}" style="{{ answerModeConfirmStyle }}">確認しながら</button>
+            </div>
+          </div>
+          <div style="margin-top:9px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;font-weight:700;color:#6b7480;flex:none;">絞り込み</span>
+            <input list="kb-models-flowlib" value="{{ activeModel }}" onInput="{{ setActiveModel }}" placeholder="製品名/型式/契約種別など" style="flex:1;min-width:0;border:1.5px solid #e0e4ec;border-radius:8px;padding:6px 9px;font-size:12px;background:#fbfcfe;" />
+            <datalist id="kb-models-flowlib"><sc-for list="{{ modelOpts }}" as="m" hint-placeholder-count="0"><option value="{{ m }}"></option></sc-for></datalist>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;min-height:0;background:#fbfcfe;">
+          <sc-if value="{{ chatEmpty }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:12.5px;color:#7a8390;line-height:1.65;background:#fff;border:1px dashed #dde3ec;border-radius:11px;padding:13px;">この思考プロセスについて質問できます。<br>例：「この判断の根拠も含めて説明して」「この条件ならどの経路？」</div>
+          </sc-if>
+          <sc-for list="{{ chatMsgs }}" as="m" hint-placeholder-count="0">
+            <sc-if value="{{ m.isUser }}" hint-placeholder-val=""><div style="align-self:flex-end;max-width:88%;background:var(--primary);color:#fff;border-radius:13px 13px 4px 13px;padding:9px 12px;font-size:13px;line-height:1.55;">{{ m.text }}</div></sc-if>
+            <sc-if value="{{ m.isAssistant }}" hint-placeholder-val="">
+              <div style="align-self:flex-start;max-width:95%;background:#fff;border:1px solid #e6e9ef;border-radius:13px 13px 13px 4px;padding:11px 13px;box-shadow:0 1px 3px rgba(16,24,40,.05);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">
+                  <div style="font-size:11px;font-weight:700;color:#4f6ef7;flex:1;">最終回答結果</div>
+                  <button data-mi="{{ m.idx }}" onClick="{{ copyAnswerMarkdown }}" title="{{ m.copyTitle }}" style="{{ m.copyStyle }}">
+                    <sc-if value="{{ m.notCopied }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></sc-if>
+                    <sc-if value="{{ m.copied }}" hint-placeholder-val=""><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></sc-if>
+                  </button>
+                </div>
+                <div className="chat-md" dangerouslySetInnerHTML="{{ m.answerHtml }}"></div><sc-if value="{{ m.isStreaming }}" hint-placeholder-val=""><span style="display:inline-block;width:7px;height:1.1em;margin-left:2px;background:var(--primary);vertical-align:-2px;animation:blink 1s steps(2,start) infinite;"></span></sc-if>
+                <sc-if value="{{ m.hasUsedFlow }}" hint-placeholder-val="">
+                  <div style="margin-top:10px;border:1px solid #d6def6;background:#f6f8ff;border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:9px;">
+                    <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;color:var(--primary);display:flex;align-items:center;justify-content:center;flex:none;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></span>
+                    <div style="flex:1;min-width:0;"><div style="font-size:10.5px;font-weight:700;color:#6b7480;">使用したフロー</div><div style="font-size:12.5px;font-weight:700;color:#1f2733;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.usedFlowTitle }}</div><sc-if value="{{ m.hasUsedFlowPath }}" hint-placeholder-val=""><div style="font-size:10.5px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ m.usedFlowPath }}</div></sc-if></div>
+                    <button data-mi="{{ m.idx }}" onClick="{{ showMessageFlow }}" style="font-size:11.5px;color:var(--primary);font-weight:700;flex:none;">表示</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ m.hasDetail }}" hint-placeholder-val=""><div style="margin-top:10px;border-top:1px dashed #e6e9ef;padding-top:9px;"><div style="font-size:11px;font-weight:700;color:#0f835c;margin-bottom:6px;">詳細なデータベース記述</div><div className="chat-md" style="background:#f3faf6;border:1px solid #d3ecdd;border-radius:9px;padding:9px 11px;" dangerouslySetInnerHTML="{{ m.detailHtml }}"></div></div></sc-if>
+                <sc-if value="{{ m.hasSources }}" hint-placeholder-val=""><div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;"><span style="font-size:10.5px;color:#8a93a0;font-weight:700;">出典</span><sc-for list="{{ m.sources }}" as="src" hint-placeholder-count="0"><button data-ref="{{ src.ref }}" data-query="{{ src.query }}" onClick="{{ openKbRef }}" title="別タブで出典ページを開く" style="font-size:11px;font-weight:700;color:#0f835c;background:#eaf7f0;border:1px solid #c6ecd8;border-radius:999px;padding:5px 11px;cursor:pointer;">📄 {{ src.label }}</button></sc-for></div></sc-if>
+              </div>
+            </sc-if>
+          </sc-for>
+          <sc-if value="{{ chatLoading }}" hint-placeholder-val=""><div style="align-self:flex-start;background:#fff;border:1px solid #e6e9ef;border-radius:13px;padding:10px 14px;font-size:12.5px;color:#5a626f;display:flex;align-items:center;gap:9px;max-width:95%;"><span style="width:14px;height:14px;border:3px solid #e6e9ef;border-top-color:var(--primary);border-radius:50%;animation:spin .9s linear infinite;flex:none;"></span><span>{{ chatAgentStatus }}</span></div></sc-if>
+        </div>
+        <div style="padding:12px 14px;border-top:1px solid #eef1f5;display:flex;gap:8px;align-items:flex-end;background:#fff;">
+          <textarea value="{{ chatInput }}" onInput="{{ onChatInput }}" placeholder="思考プロセスについて相談…" style="flex:1;min-height:42px;max-height:96px;resize:none;border:1.5px solid #e0e4ec;border-radius:10px;padding:10px 11px;font-size:13px;line-height:1.5;background:#fbfcfe;"></textarea>
+          <button onClick="{{ sendChat }}" disabled="{{ chatSendDisabled }}" style="{{ sendBtnStyle }}">送信</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+  </sc-if>
 
   <!-- HOME : AI CONSULTATION -->
   <sc-if value="{{ isHome }}" hint-placeholder-val="">
@@ -861,7 +1175,7 @@
       <sc-if value="{{ hasLog }}" hint-placeholder-val="">
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;">
           <sc-for list="{{ buildLog }}" as="b" hint-placeholder-count="0">
-            <span style="display:inline-flex;align-items:center;gap:5px;background:#eaf7f0;border:1px solid #c6ecd8;border-radius:999px;padding:3px 11px;font-size:11.5px;color:#0f835c;">✓ バッチ{{ b.batch }}　＋{{ b.added }} ノード</span>
+            <span style="display:inline-flex;align-items:center;gap:5px;background:#eaf7f0;border:1px solid #c6ecd8;border-radius:999px;padding:3px 11px;font-size:11.5px;color:#0f835c;">✓ {{ b.label }}　{{ b.addedLabel }}</span>
           </sc-for>
         </div>
       </sc-if>
@@ -874,6 +1188,9 @@
               <defs>
                 <marker id="fcArrow" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#b8c0cc"></path></marker>
                 <marker id="fcArrowHL" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#4f6ef7"></path></marker>
+                <marker id="fcArrowYes" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#16a875"></path></marker>
+                <marker id="fcArrowNo" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#e06a5f"></path></marker>
+                <marker id="fcArrowChoice" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#9b5de0"></path></marker>
               </defs>
               <sc-for list="{{ graph.edges }}" as="e" hint-placeholder-count="0"><path d="{{ e.d }}" style="{{ e.pathStyle }}"></path></sc-for>
             </svg>
@@ -976,8 +1293,11 @@
           <div style="{{ zoomWrapStyle }}"><div style="{{ canvasStyle }}">
             <svg style="{{ graph.svgStyle }}">
               <defs>
-                <marker id="fcArrow" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#b8c0cc"></path></marker>
-                <marker id="fcArrowHL" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#4f6ef7"></path></marker>
+                        <marker id="fcArrow" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#b8c0cc"></path></marker>
+                        <marker id="fcArrowHL" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#4f6ef7"></path></marker>
+                        <marker id="fcArrowYes" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#16a875"></path></marker>
+                        <marker id="fcArrowNo" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#e06a5f"></path></marker>
+                        <marker id="fcArrowChoice" markerWidth="10" markerHeight="10" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 Z" fill="#9b5de0"></path></marker>
               </defs>
               <sc-for list="{{ graph.edges }}" as="e" hint-placeholder-count="0"><path d="{{ e.d }}" style="{{ e.pathStyle }}"></path></sc-for>
             </svg>
@@ -1286,7 +1606,7 @@ class Component extends DCLogic {
       csvRows: [],
       csvName: "",
       pdfName: "", pdfNumPages: 0, pdfReady: false, pdfLoading: false,
-      pdfPages: [], pdfIndex: [], pdfTopics: [], pdfVision: false, pdfPhase: "", pdfError: null, pdfKb: null,
+      pdfPages: [], pdfIndex: [], pdfTopics: [], pdfVision: false, pdfPhase: "", pdfError: null, pdfKb: null, pdfCoverage: null,
       kbSources: [], dbSrcExpand: {}, dbSrcPageExpand: {},
       dnd: null, dndOverId: null, dbUploadFolder: "",
       subs: [], pubInput: "", pubNotice: null, sharedExpand: {},
@@ -1449,9 +1769,11 @@ class Component extends DCLogic {
     this.setState({ flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: id, stage: "flow", view: "diagram", currentId: rec.flow.root, path: [], chat: (rec.chat || []).slice(), highlightIds: [], wsOpen: false, nodeModalId: null });
   };
   delFlow = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; const sf = this.state.savedFlows.filter(f => f.id !== id); this.persistFlows(sf); if (this.state.curFlowId === id) this.persistActiveFlow(this.state.curWs, null, "diagram"); this.setState({ savedFlows: sf, curFlowId: this.state.curFlowId === id ? null : this.state.curFlowId, flow: this.state.curFlowId === id ? null : this.state.flow, stage: this.state.curFlowId === id ? "home" : this.state.stage }); };
-  goHome = () => this.setState({ stage: "home", wsOpen: false, highlightIds: [], nodeModalId: null });
+  goHome = () => this.setState({ stage: "home", wsOpen: false, dbOpen: false, flowLibOpen: false, highlightIds: [], nodeModalId: null });
+  goDb = () => this.setState({ stage: "db", wsOpen: false, dbOpen: false, flowLibOpen: false, highlightIds: [], nodeModalId: null });
+  goFlowLib = () => this.setState(st => ({ stage: "flowlib", wsOpen: false, dbOpen: false, flowLibOpen: false, highlightIds: [], nodeModalId: null, flowLibCurrent: st.flowLibCurrent || st.curFlowId || "" }));
   newFlowDraft = () => { this.persistActiveFlow(this.state.curWs, null, "diagram"); this.setState({ wsOpen: false, stage: "input", flow: null, curFlowId: null, chat: [], highlightIds: [] }); };
-  toggleFlowLib = () => this.setState(st => ({ flowLibOpen: !st.flowLibOpen, flowLibCurrent: st.flowLibCurrent || st.curFlowId || "" }));
+  toggleFlowLib = () => this.goFlowLib();
   closeFlowLib = () => this.setState({ flowLibOpen: false });
   flowLibPick = (e) => this.setState({ flowLibCurrent: e.currentTarget.dataset.id || "" });
   flowLibOpenFlow = (e) => {
@@ -1577,6 +1899,34 @@ class Component extends DCLogic {
     if (this.state.flow && this.state.flow.nodes && !this.state.curFlowId) out.unshift({ id: "__live__", title: this.state.flow.title || "現在のフロー", flow: this.state.flow });
     return out;
   }
+  flowUsesSource(flow, sourceId) {
+    if (!flow || !sourceId) return false;
+    if (Array.isArray(flow.sourceIds) && flow.sourceIds.indexOf(sourceId) >= 0) return true;
+    const prefix = "kb:src:" + sourceId + ":";
+    const nodes = flow.nodes || {};
+    return Object.keys(nodes).some(id => ((nodes[id] || {}).links || []).some(l => l && String(l.url || "").indexOf(prefix) === 0));
+  }
+  proposalAlreadyInFlow(item, flow) {
+    if (!item || !flow || !flow.nodes) return false;
+    const n = flow.nodes[item.nodeId];
+    if (!n) return false;
+    if (item.op === "attach_evidence") {
+      const urls = {};
+      (n.links || []).forEach(l => { if (l && l.url) urls[String(l.url)] = 1; });
+      return (item.refs || []).length > 0 && (item.refs || []).every(ref => urls["kb:" + ref]);
+    }
+    if (item.op === "add_condition") {
+      const cur = Array.isArray(n.models) ? n.models.map(String) : [];
+      const modelsApplied = !(item.models || []).length || (item.models || []).every(m => cur.indexOf(String(m)) >= 0);
+      const detail = String(item.detail || "").trim();
+      return modelsApplied && (!detail || String(n.detail || "").indexOf(detail) >= 0);
+    }
+    if (item.op === "update_detail") {
+      const detail = String(item.detail || "").trim();
+      return !!detail && String(n.detail || "").indexOf(detail) >= 0;
+    }
+    return false;
+  }
   _flowRep(f) {
     const nodes = f.flow.nodes || {};
     const lines = Object.keys(nodes).slice(0, 40).map(id => { const n = nodes[id]; return "  [" + id + "] (" + (n.kind || "?") + ") " + (n.text || "") + (n.models && n.models.length ? (" {models:" + n.models.join("/") + "}") : "") + (n.detail ? (" detail:" + String(n.detail).slice(0, 60)) : ""); }).join("\n");
@@ -1597,6 +1947,7 @@ class Component extends DCLogic {
       "- 提案前に必ず反証する: 既存ノードの詳細更新で済まないか、根拠リンクだけで済まないか、既存分岐の条件追加で済まないか。",
       "- 推測で構造変更しない。判断不能なら ask_human を出す。",
       "- 変更案は承認キューに載る。自動で反映される前提ではなく、人が見て理解できる理由を書く。",
+      this.flowGranularityPolicyText(),
       "",
       "# 使える操作",
       "- attach_evidence: 既存ノードに登録資料の根拠リンクを追加する。仕様表・価格表・根拠資料はまずこれを検討。",
@@ -1649,7 +2000,7 @@ class Component extends DCLogic {
       const refs = (Array.isArray(p.refs) ? p.refs : []).map(String).filter(r => /^src:[^:]+:\d+$/.test(r));
       const models = (Array.isArray(p.models) ? p.models : Array.isArray(p.conditions) ? p.conditions : []).map(String).filter(Boolean).slice(0, 10);
       const confidence = Math.max(0, Math.min(1, Number(p.confidence == null ? 0.5 : p.confidence) || 0));
-      return {
+      const item = {
         id: "pp" + i,
         flowId: f ? f.id : "",
         flowTitle: f ? f.title : "新規/要確認",
@@ -1663,6 +2014,8 @@ class Component extends DCLogic {
         confidence,
         status: "pending"
       };
+      if (f && this.proposalAlreadyInFlow(item, f.flow)) return null;
+      return item;
     }).filter(Boolean).slice(0, 8);
   }
   async runProposals(sourceId) {
@@ -1671,6 +2024,10 @@ class Component extends DCLogic {
     if (!this.hasLLM()) { this.setState({ ingestDone: null, proposals: { items: [], error: "AIが未設定です。右上の「API設定」でキーを入力してください。" } }); return; }
     const flows = this.flowsForProposal();
     if (!flows.length) { this.setState({ ingestDone: null, proposals: { items: [], empty: true, srcName: src.name } }); return; }
+    if (flows.some(f => this.flowUsesSource(f.flow, src.id))) {
+      this.setState({ ingestDone: null, proposals: { running: false, items: [], srcName: src.name, alreadyFlowed: true } });
+      return;
+    }
     this.setState({ ingestDone: null, proposals: { running: true, items: [], srcName: src.name } });
     try {
       const t = await this.llmComplete(this.buildFlowCurationPrompt(flows, src));
@@ -1828,7 +2185,7 @@ class Component extends DCLogic {
   }
 
   // ---- DB manager (explorer風) ----
-  toggleDb = () => this.setState({ dbOpen: !this.state.dbOpen });
+  toggleDb = () => this.goDb();
   dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id || ""; this.setState({ dbCurrent: id, dbUploadFolder: id, dbEditDoc: null, dbRename: null, dbExpanded: { ...this.state.dbExpanded, [id]: true } }); };
   dbToggleExpand = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; this.setState({ dbExpanded: { ...this.state.dbExpanded, [id]: !this.state.dbExpanded[id] } }); };
   dbNewFolder = () => {
@@ -1891,6 +2248,7 @@ class Component extends DCLogic {
           id: f.id, name: f.name, hasChildren, chevron: hasChildren ? (exp[f.id] ? "▾" : "▸") : "",
           selected: f.id === cur,
           rowStyle: { display: "flex", alignItems: "center", gap: "2px", padding: "5px 8px", paddingLeft: (8 + depth * 15) + "px", borderRadius: "7px", cursor: "pointer", fontSize: "13px", background: over === f.id ? "#dbe6ff" : (f.id === cur ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : "none", color: f.id === cur ? "#3b54c4" : "#2b333f", fontWeight: f.id === cur ? 700 : 500 },
+          sideRowStyle: { width: "100%", display: "flex", alignItems: "center", gap: "5px", padding: "6px 8px", paddingLeft: (8 + depth * 12) + "px", borderRadius: "8px", cursor: "pointer", fontSize: "12.5px", background: over === f.id ? "#dbe6ff" : (f.id === cur ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : "none", color: f.id === cur ? "#3b54c4" : "#2b333f", fontWeight: f.id === cur ? 800 : 600 },
           renaming: !!(ren && ren.type === "folder" && ren.id === f.id),
           notRenaming: !(ren && ren.type === "folder" && ren.id === f.id),
         });
@@ -1907,6 +2265,7 @@ class Component extends DCLogic {
     const editDoc = st.dbEditDoc ? docs.find(d => d.id === st.dbEditDoc) : null;
     return {
       dbTreeRows: tree, dbCrumbs: crumbs, dbRootSelected: cur === "", dbRootBg: cur === "" ? "#eef1ff" : "transparent",
+      dbSidebarRootStyle: { width: "100%", display: "flex", alignItems: "center", gap: "7px", padding: "7px 9px", borderRadius: "8px", cursor: "pointer", fontSize: "12.5px", fontWeight: cur === "" ? 800 : 600, color: cur === "" ? "#3b54c4" : "#2b333f", background: over === "__root__" ? "#dbe6ff" : (cur === "" ? "#eef1ff" : "transparent"), textAlign: "left" },
       dbCurFolders: curFolders, dbCurDocs: curDocs,
       dbCurEmpty: curFolders.length === 0 && curDocs.length === 0 && curSources.length === 0,
       dbCurName: cur ? (byF[cur] ? byF[cur].name : "") : "すべて",
@@ -3236,7 +3595,7 @@ class Component extends DCLogic {
     this.ingestPdf(f, f.name);
     e.target.value = "";
   };
-  clearPdf = () => { this._pdfDoc = null; this._pdfBlob = null; this._pdfAssetUrl = ""; this.setState({ pdfName: "", pdfNumPages: 0, pdfReady: false, pdfPages: [], pdfIndex: [], pdfTopics: [], pdfError: null }); };
+  clearPdf = () => { this._pdfDoc = null; this._pdfBlob = null; this._pdfAssetUrl = ""; this.setState({ pdfName: "", pdfNumPages: 0, pdfReady: false, pdfPages: [], pdfIndex: [], pdfTopics: [], pdfError: null, pdfCoverage: null }); };
   toggleVision = () => { if (!this.visionCapable()) return; this.setState({ pdfVision: !this.state.pdfVision }); };
   loadSamplePdf = async () => {
     this.setState({ pdfError: null, pdfLoading: true });
@@ -3257,7 +3616,7 @@ class Component extends DCLogic {
       this._pdfDoc = doc;
       this._pdfBlob = blob;
       this._pdfAssetUrl = (opts && opts.assetUrl) || "";
-      this.setState({ inputMode: "pdf", pdfName: name || "manual.pdf", pdfNumPages: doc.numPages, pdfReady: true, pdfLoading: false, pdfPages: [], pdfIndex: [], pdfTopics: [], pdfVision: this.visionCapable() ? this.state.pdfVision : false, error: null });
+      this.setState({ inputMode: "pdf", pdfName: name || "manual.pdf", pdfNumPages: doc.numPages, pdfReady: true, pdfLoading: false, pdfPages: [], pdfIndex: [], pdfTopics: [], pdfVision: this.visionCapable() ? this.state.pdfVision : false, error: null, pdfCoverage: null });
     } catch (e) {
       this.setState({ pdfError: "PDFの読み込みに失敗しました：" + ((e && e.message) || ""), pdfLoading: false });
     }
@@ -3327,7 +3686,7 @@ class Component extends DCLogic {
     let topics = (o && o.topics) || [];
     topics = topics.filter(tp => tp && tp.title && Array.isArray(tp.pages) && tp.pages.length)
       .map((tp, i) => ({ id: "tp" + i + "_" + Math.random().toString(36).slice(2, 6), title: String(tp.title).slice(0, 44), symptom: String(tp.symptom || "").slice(0, 80), pages: tp.pages.map(x => +x).filter(x => x > 0), selected: true }));
-    return topics.slice(0, 24);
+    return topics.slice(0, 12);
   }
 
   catLabel(c) { return ({ procedure: "手順", troubleshoot: "問題対応", reference: "仕様・参照", legal: "安全・法規", other: "その他" })[c] || "その他"; }
@@ -3474,6 +3833,16 @@ class Component extends DCLogic {
     ].join("\n");
   }
 
+  flowGranularityPolicyText() {
+    return [
+      "# フロー粒度ポリシー（乱立防止）",
+      "- 1フローは『1つの業務目的・診断目的・手順目的』を最後まで扱う単位にする。ページ単位・質問単位・型番単位で細かいフローを量産しない。",
+      "- 例外、型番差、条件値、根拠資料、窓口/引き継ぎ先の違いは、新規フローではなく既存ノードの条件・詳細・DB参照として積み上げる。",
+      "- 新しいフローに分けるのは、開始条件・判断軸・完了状態が既存の流れと明確に違い、同じフローに入れると利用者が迷う場合だけ。",
+      "- 判断の順序が同じなら、細かな違いは choice / decision / models / detail / db_query で吸収する。"
+    ].join("\n");
+  }
+
   flowDbSchemaHint(includePages) {
     const page = includePages ? ',"pages":[40]' : "";
     return [
@@ -3575,12 +3944,12 @@ class Component extends DCLogic {
     const vision = this.state.pdfVision && this.visionCapable();
     const pageText = {}; this.state.pdfPages.forEach(p => { pageText[p.page] = p.text; });
     const mdByPage = {}; this.state.pdfIndex.forEach(p => { if (p.md) mdByPage[p.page] = p.md; });
-    this.setState({ stage: "extracting", analyzing: true, flow: null, newIds: [], buildLog: [], pdfError: null, error: null, pdfPhase: "build", progress: { current: 0, total: topics.length, msg: "フローを生成しています…" } });
+    this.setState({ stage: "extracting", analyzing: true, flow: null, newIds: [], buildLog: [], pdfError: null, error: null, pdfCoverage: null, pdfPhase: "build", progress: { current: 0, total: topics.length + 1, msg: "フローを生成しています…" } });
     await this.sleep(300);
     const built = [];
     for (let i = 0; i < topics.length; i++) {
       const tp = topics[i];
-      this.setState({ progress: { current: i + 1, total: topics.length, msg: "「" + tp.title + "」をフロー化中… (" + (i + 1) + " / " + topics.length + ")" }, flow: null, newIds: [] });
+      this.setState({ progress: { current: i + 1, total: topics.length + 1, msg: "「" + tp.title + "」をフロー化中… (" + (i + 1) + " / " + topics.length + ")" }, flow: null, newIds: [] });
       const parts = tp.pages.slice().sort((a, b) => a - b).map(pn => {
         const body = (vision && mdByPage[pn]) ? mdByPage[pn] : (pageText[pn] || "");
         return body ? ("[p" + pn + "] " + body) : "";
@@ -3621,11 +3990,19 @@ class Component extends DCLogic {
       await this.sleep(150);
     }
     if (!built.length) { this.setState({ stage: "topics", analyzing: false, pdfError: "フローを生成できませんでした。トピックやPDFの内容をご確認ください。" }); return; }
+    const finalized = await this.auditAndCompletePdfFlows(built, {
+      index: this.state.pdfIndex,
+      pageText,
+      mdByPage,
+      vision,
+      kb: this._pdfKb || this.state.pdfKb,
+      progressBase: topics.length,
+    });
     let firstId = null;
     const sf = this.state.savedFlows.slice();
-    built.forEach((fl, i) => { const id = this.uid("fl_"); if (i === 0) firstId = id; sf.push({ id, wsId: this.state.curWs, title: fl.title || "無題のフロー", flow: fl, chat: [], at: Date.now() + i, ...this.flowRecordMeta(fl) }); });
+    finalized.forEach((fl, i) => { const id = this.uid("fl_"); if (i === 0) firstId = id; sf.push({ id, wsId: this.state.curWs, title: fl.title || "無題のフロー", flow: fl, chat: [], at: Date.now() + i, ...this.flowRecordMeta(fl) }); });
     this.persistFlows(sf);
-    const first = built[0];
+    const first = finalized[0];
     this.setState({ savedFlows: sf, curFlowId: firstId, flow: first, stage: "flow", analyzing: false, view: "diagram", path: [], currentId: first.root, chat: [], newIds: [], pdfPhase: "" });
   }
 
@@ -3676,11 +4053,13 @@ class Component extends DCLogic {
       "以下は文書のページ別の要約一覧です。専門家が辿る『思考プロセス』（状況→判断→対応、または目的→操作手順）が成立するまとまりを、目的・状況・手順ごとのトピックに分割してください。",
       "",
       "# 重要・網羅性",
-      "- 1トピック＝1つの判断フロー／手順フローになる単位。関連する連続ページをまとめる。",
+      "- 1トピック＝1つの業務目的・診断目的・手順目的になる単位。ページ単位・小見出し単位で細かく分けない。",
+      "- 同じ開始条件・同じ判断軸・同じ完了状態に向かう内容は、関連ページが離れていても1トピックへ束ねる。",
       "- 手順・設定・点検・例外対応・判断基準に関わるページは、可能な限りもれなくどこかのトピックに含める。関連ページを取りこぼさないこと。",
       "- 一覧表・目次・注意事項のみで判断や手順に展開できないページは含めない。",
-      "- 内容が豊富な文書では 10〜20 トピックになってよい（最大20件）。細かく分けて網羅することを優先。title は短く（例『申請可否の判断』『状態別の切替手順』）。",
+      "- 内容が豊富な文書でも、まず 4〜10 トピック程度に束ねる（最大12件）。細かな例外・型番差・参照値は別トピックではなく同じトピック内の条件として扱う。",
       "- symptom にはそのフローが扱う状況や目的を1文で。pages に該当ページ番号を列挙。",
+      this.flowGranularityPolicyText(),
       "",
       "# 出力（JSONのみ。コードフェンスは付けない）",
       '{"topics":[{"title":"…","symptom":"…","pages":[40,41,42]}]}',
@@ -3701,6 +4080,7 @@ class Component extends DCLogic {
       "- ノードは5〜9個。text と why は各40文字以内で簡潔に。",
       "- 各ノードの \"why\" に『なぜ専門家がそこを確認・判断するのか』の根拠を1文。",
       "- 各ノードに、根拠となった文書のページ番号を \"pages\":[番号] で必ず付ける（本文中の [p12] 表記を参照）。",
+      this.flowGranularityPolicyText(),
       this.flowDbBoundaryCriteriaText(),
       this.flowDbSchemaHint(true),
       "- スキーマ:",
@@ -3728,6 +4108,7 @@ class Component extends DCLogic {
       "- 追加本文から読み取れる分岐・確認・結論だけを継ぎ足す。既存ノードは原則そのまま残す。",
       "- 重複・矛盾は避ける。新規ノードのidは既存と重複しない連番（n" + this.nextIdNum(flow) + " 以降）。",
       "- 各ノードに根拠ページを \"pages\":[番号] で付ける（本文の [pN] を参照）。本文に無いことは創作しない。",
+      this.flowGranularityPolicyText(),
       this.flowDbBoundaryCriteriaText(),
       this.flowDbSchemaHint(true),
       "",
@@ -3743,6 +4124,180 @@ class Component extends DCLogic {
       text,
       ">>>",
     ].join("\n");
+  }
+
+  pdfCoverageFlowSummary(flow, index) {
+    const nodes = (flow && flow.nodes) || {};
+    const pageSet = {};
+    const rows = Object.keys(nodes).map(id => {
+      const n = nodes[id] || {};
+      (Array.isArray(n.pages) ? n.pages : []).forEach(p => { if (+p > 0) pageSet[+p] = 1; });
+      const links = Array.isArray(n.links) ? n.links : [];
+      links.forEach(l => {
+        const m = String((l && l.url) || "").match(/kb:src:[^:]+:(\d+)/);
+        if (m) pageSet[+m[1]] = 1;
+      });
+      return {
+        id,
+        kind: n.kind || "",
+        text: n.text || "",
+        detail: n.detail || "",
+        db_query: n.db_query || "",
+        pages: Array.isArray(n.pages) ? n.pages : [],
+        branches: Array.isArray(n.branches) ? n.branches.map(b => b && b.label).filter(Boolean) : [],
+      };
+    });
+    return { title: (flow && flow.title) || "", root: (flow && flow.root) || "", pages: Object.keys(pageSet).map(Number).sort((a, b) => a - b), nodes: rows };
+  }
+
+  buildPdfCoveragePrompt(index, flows) {
+    const meaningful = (index || []).filter(p => {
+      const cat = p.category || "";
+      const hasConditions = Array.isArray(p.conditions) && p.conditions.length;
+      return cat === "procedure" || cat === "troubleshoot" || hasConditions || (cat === "reference" && hasConditions) || (cat === "legal" && hasConditions);
+    }).map(p => ({
+      page: p.page,
+      category: p.category || "other",
+      summary: p.summary || "",
+      keywords: p.keywords || [],
+      conditions: Array.isArray(p.conditions) ? p.conditions : [],
+    }));
+    const summaries = (flows || []).map((flow, i) => ({ index: i, ...this.pdfCoverageFlowSummary(flow, index) }));
+    return [
+      "あなたはPDFから作った思考プロセスのカバレッジを監査するアシスタントです。",
+      "ページ索引と生成済みフローを照合し、思考プロセスにするべき判断・手順・例外対応の抜け漏れを見つけてください。",
+      "",
+      "# 方針",
+      "- 目的は初回作成時点で完成度を上げること。差分提案ではなく、保存前の補完計画を作る。",
+      "- 既存フローにまとめられる内容は必ず merge_into_flow を選ぶ。ページ単位・型番単位・小見出し単位で create_flow しない。",
+      "- create_flow は、開始条件・判断軸・完了状態が既存フローと明確に異なり、混ぜると利用者が迷う場合だけ。",
+      "- 仕様表・価格・単なる注意事項・一覧は db_only。条件で次アクションが変わる場合だけフロー補完対象。",
+      "- すでにノードやDB参照で表現されている内容は actions に出さない。",
+      "- actions は最大8件。重要な抜けから順に出す。",
+      this.flowGranularityPolicyText(),
+      "",
+      "# 出力（JSONのみ。コードフェンスは付けない）",
+      '{"actions":[{"type":"merge_into_flow","flowIndex":0,"title":"既存フローへ足す観点","symptom":"抜けていた判断・手順","pages":[12,13],"reason":"なぜ補完が必要か"},{"type":"create_flow","title":"新規フロー名","symptom":"別目的である理由","pages":[30],"reason":"既存に統合できない理由"},{"type":"db_only","pages":[9],"reason":"参照情報のみ"}]}',
+      "",
+      "# ページ索引",
+      JSON.stringify(meaningful),
+      "",
+      "# 生成済みフロー",
+      JSON.stringify(summaries),
+    ].join("\n");
+  }
+
+  normalizePdfCoverageActions(raw, flows, index) {
+    const arr = (raw && (raw.actions || raw.repairs || raw.items)) || [];
+    if (!Array.isArray(arr)) return [];
+    const validPages = {};
+    (index || []).forEach(p => { if (p && +p.page > 0) validPages[+p.page] = 1; });
+    const byTitle = {};
+    (flows || []).forEach((f, i) => { byTitle[String((f && f.title) || "").trim()] = i; });
+    const out = [];
+    const seen = {};
+    arr.forEach(a => {
+      if (!a) return;
+      const rawType = String(a.type || a.action || a.decision || "").toLowerCase();
+      let type = rawType.indexOf("merge") >= 0 ? "merge_into_flow" : rawType.indexOf("create") >= 0 ? "create_flow" : rawType.indexOf("db") >= 0 ? "db_only" : "";
+      if (type === "db_only" || rawType.indexOf("covered") >= 0 || rawType.indexOf("ignore") >= 0) return;
+      if (type !== "merge_into_flow" && type !== "create_flow") return;
+      const pages0 = Array.isArray(a.pages) ? a.pages : (a.page ? [a.page] : []);
+      const pages = [...new Set(pages0.map(x => +x).filter(x => x > 0 && (!Object.keys(validPages).length || validPages[x])))].sort((x, y) => x - y);
+      if (!pages.length) return;
+      let flowIndex = Number.isFinite(+a.flowIndex) ? +a.flowIndex : Number.isFinite(+a.flow_id) ? +a.flow_id : -1;
+      if (type === "merge_into_flow" && (flowIndex < 0 || flowIndex >= flows.length)) {
+        const title = String(a.flowTitle || a.flow || "").trim();
+        flowIndex = Object.prototype.hasOwnProperty.call(byTitle, title) ? byTitle[title] : -1;
+      }
+      if (type === "merge_into_flow" && (flowIndex < 0 || flowIndex >= flows.length)) type = "create_flow";
+      const key = type + ":" + (type === "merge_into_flow" ? flowIndex : String(a.title || "")) + ":" + pages.join(",");
+      if (seen[key]) return;
+      seen[key] = 1;
+      out.push({
+        type,
+        flowIndex,
+        title: String(a.title || "").slice(0, 60),
+        symptom: String(a.symptom || "").slice(0, 120),
+        reason: String(a.reason || "").slice(0, 180),
+        pages,
+      });
+    });
+    return out.slice(0, 8);
+  }
+
+  pdfCoveragePartsForPages(pages, pageText, mdByPage, vision) {
+    return (pages || []).slice().sort((a, b) => a - b).map(pn => {
+      const body = (vision && mdByPage && mdByPage[pn]) ? mdByPage[pn] : ((pageText && pageText[pn]) || "");
+      return body ? ("[p" + pn + "] " + body) : "";
+    }).filter(s => s.length > 8);
+  }
+
+  async auditAndCompletePdfFlows(built, opts) {
+    const flows = (built || []).slice();
+    const index = (opts && opts.index) || [];
+    if (!flows.length || !index.length || !this.hasLLM()) return flows;
+    const base = (opts && opts.progressBase) || flows.length;
+    const kb = opts && opts.kb;
+    const meta = this.flowSourceMeta((kb && kb.folderId) || this.currentSaveFolderId(), kb && kb.sourceId ? [kb.sourceId] : [], []);
+    this.setState({ progress: { current: base + 1, total: base + 1, msg: "抜け漏れと統合余地を検査しています…" } });
+    try {
+      const raw = this.parseLoose(await this.llmComplete(this.buildPdfCoveragePrompt(index, flows))) || {};
+      const actions = this.normalizePdfCoverageActions(raw, flows, index);
+      const report = { actions: actions.length, merged: 0, created: 0 };
+      if (!actions.length) {
+        this.setState({ pdfCoverage: report, buildLog: this.state.buildLog.concat([{ label: "カバレッジ検査", added: 0, addedLabel: "補完なし" }]) });
+        return flows;
+      }
+      this.setState({ progress: { current: base + 1, total: base + actions.length, msg: "未カバーの判断・手順を補完しています…" } });
+      for (let i = 0; i < actions.length; i++) {
+        const a = actions[i];
+        this.setState({ progress: { current: base + i + 1, total: base + actions.length, msg: "補完 " + (i + 1) + " / " + actions.length + " を統合中…" } });
+        const parts = this.pdfCoveragePartsForPages(a.pages, opts.pageText, opts.mdByPage, opts.vision);
+        if (!parts.length) continue;
+        const chunks = this.chunkByChars(parts, 4200);
+        if (a.type === "merge_into_flow" && flows[a.flowIndex]) {
+          let flow = flows[a.flowIndex];
+          for (let c = 0; c < chunks.length; c++) {
+            try {
+              const t = await this.llmComplete(this.buildPdfMergePrompt(chunks[c], flow, { title: a.title || flow.title, symptom: a.symptom || a.reason || "カバレッジ補完" }));
+              flow = this.validateFlow(this.applyPatch(flow, this.parseFlow(t)));
+            } catch (e) { /* keep existing flow */ }
+            await this.sleep(120);
+          }
+          flow = this.applyFlowSourceMeta(this.linkNodesToKb(this.validateFlow(flow), kb), meta);
+          flows[a.flowIndex] = flow;
+          report.merged += 1;
+          if (a.flowIndex === 0) this.setState({ flow, currentId: flow.root, newIds: [] });
+        } else if (a.type === "create_flow") {
+          let flow = null;
+          for (let c = 0; c < chunks.length; c++) {
+            try {
+              if (!flow) {
+                const t = await this.llmComplete(this.buildPdfFlowPrompt({ title: a.title || "補完フロー", symptom: a.symptom || a.reason || "" }, chunks[c]));
+                const f = this.parseFlow(t);
+                if (f && f.nodes && f.root && f.nodes[f.root]) flow = this.validateFlow(f);
+              } else {
+                const t = await this.llmComplete(this.buildPdfMergePrompt(chunks[c], flow, { title: a.title || flow.title, symptom: a.symptom || a.reason || "カバレッジ補完" }));
+                flow = this.validateFlow(this.applyPatch(flow, this.parseFlow(t)));
+              }
+            } catch (e) { /* skip chunk */ }
+            await this.sleep(120);
+          }
+          if (flow && Object.keys(flow.nodes || {}).length) {
+            if (!flow.title) flow.title = a.title || "補完フロー";
+            flow = this.applyFlowSourceMeta(this.linkNodesToKb(this.validateFlow(flow), kb), meta);
+            flows.push(flow);
+            report.created += 1;
+          }
+        }
+      }
+      this.setState({ pdfCoverage: report, buildLog: this.state.buildLog.concat([{ label: "カバレッジ検査", added: report.merged + report.created, addedLabel: "統合" + report.merged + "・追加" + report.created }]) });
+      return flows;
+    } catch (e) {
+      this.setState({ pdfCoverage: { actions: 0, merged: 0, created: 0, error: true }, buildLog: this.state.buildLog.concat([{ label: "カバレッジ検査", added: 0, addedLabel: "補完なし" }]) });
+      return flows;
+    }
   }
 
   parseLoose(txt) {
@@ -3877,12 +4432,13 @@ class Component extends DCLogic {
     if (!flow.root || !nodes[flow.root]) return { hasNodes: false, nodes: [], edges: [], labels: [], canvasStyle: {}, svgStyle: {} };
     const pos = {}; const edgeList = []; let cursor = 0, uidc = 0; const idToUid = {};
     const layout = (id, row, path) => {
-      if (!id || !nodes[id] || path.indexOf(id) >= 0 || row > 40) return null;
+      if (!id || !nodes[id] || row > 40) return null;
       if (idToUid[id]) { const u = idToUid[id]; return { uid: u, col: pos[u] ? pos[u].col : 0 }; }
+      if (path.indexOf(id) >= 0) return null;
       const uid = ++uidc; idToUid[id] = uid; const n = nodes[id];
       const kids = this.childrenOf(n);
       const cr = [];
-      kids.forEach(([label, cid]) => { const r = layout(cid, row + 1, path.concat(id)); if (r) { cr.push(r); edgeList.push({ fromUid: uid, toUid: r.uid, fromId: id, toId: cid, label }); } });
+      kids.forEach(([label, cid], order) => { const r = layout(cid, row + 1, path.concat(id)); if (r) { cr.push(r); edgeList.push({ fromUid: uid, toUid: r.uid, fromId: id, toId: cid, label, order, siblingCount: kids.length }); } });
       let col;
       if (!cr.length) { col = cursor; cursor += 1; }
       else col = cr.reduce((a, c) => a + c.col, 0) / cr.length;
@@ -3892,10 +4448,20 @@ class Component extends DCLogic {
     layout(flow.root, 0, []);
     const items = Object.keys(pos).map(k => pos[k]);
     if (!items.length) return { hasNodes: false, nodes: [], edges: [], labels: [], canvasStyle: {}, svgStyle: {} };
-    const NODE_W = 212, NODE_H = 92, unitX = 252, rowY = 152, padL = 122, padT = 16;
+    const NODE_W = 230, NODE_H = 104, unitX = 304, rowY = 186, padL = 145, padT = 24;
+    const byRow = {};
+    items.forEach(i => { (byRow[i.row] || (byRow[i.row] = [])).push(i); });
+    Object.keys(byRow).forEach(row => {
+      let prevCol = -Infinity;
+      byRow[row].sort((a, b) => (a.col - b.col) || (a.uid - b.uid)).forEach(i => {
+        if (i.col < prevCol + 1) i.col = prevCol + 1;
+        prevCol = i.col;
+        if (pos[i.uid]) pos[i.uid].col = i.col;
+      });
+    });
     let maxCol = 0, maxRow = 0;
     items.forEach(i => { if (i.col > maxCol) maxCol = i.col; if (i.row > maxRow) maxRow = i.row; });
-    const W = Math.round(maxCol * unitX + NODE_W + 36), H = Math.round(maxRow * rowY + NODE_H + 32);
+    const W = Math.round(padL + maxCol * unitX + NODE_W / 2 + 220), H = Math.round(padT + maxRow * rowY + NODE_H + 64);
     const cx = (i) => padL + i.col * unitX;
     const topY = (i) => padT + i.row * rowY;
     const newSet = {}; (newIds || []).forEach(x => newSet[x] = 1);
@@ -3917,18 +4483,90 @@ class Component extends DCLogic {
         uid: "u" + i.uid, id: i.id, text: i.text, why: i.why, hasWhy: !!i.why, kindLabel: k.label, hasMeta,
         srcPages, hasPages: !!srcPages,
         kindStyle: { display: "inline-block", fontSize: "10.5px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px", background: k.bg, color: k.tx },
-        boxStyle: { position: "absolute", left: (cx(i) - NODE_W / 2) + "px", top: topY(i) + "px", width: NODE_W + "px", height: NODE_H + "px", background: "#fff", border: "1px solid " + (isHL ? "#4f6ef7" : (isNew ? "#f0d488" : "#e6e9ef")), borderTop: "4px solid " + k.c, borderRadius: "12px", padding: "9px 12px", boxShadow: isHL ? "0 8px 20px rgba(79,110,247,.30)" : (isNew ? "0 0 0 2px rgba(240,180,41,.5)" : "0 1px 3px rgba(16,24,40,.08)"), opacity: dim ? 0.32 : 1, display: "flex", flexDirection: "column", gap: "5px", overflow: "hidden", transition: "opacity .3s, box-shadow .3s, border-color .3s", animation: isNew ? "popIn .45s ease both" : "none", zIndex: isHL ? 3 : 1 },
+        boxStyle: { position: "absolute", left: (cx(i) - NODE_W / 2) + "px", top: topY(i) + "px", width: NODE_W + "px", height: NODE_H + "px", background: "#fff", border: "1px solid " + (isHL ? "#4f6ef7" : (isNew ? "#f0d488" : "#e6e9ef")), borderTop: "4px solid " + k.c, borderRadius: "12px", padding: "10px 13px", boxShadow: isHL ? "0 8px 20px rgba(79,110,247,.30)" : (isNew ? "0 0 0 2px rgba(240,180,41,.5)" : "0 1px 3px rgba(16,24,40,.08)"), opacity: dim ? 0.32 : 1, display: "flex", flexDirection: "column", gap: "6px", overflow: "hidden", transition: "opacity .3s, box-shadow .3s, border-color .3s", animation: isNew ? "popIn .45s ease both" : "none", zIndex: isHL ? 3 : 1 },
         textStyle: { fontSize: "13px", fontWeight: 600, lineHeight: 1.38, color: "#1f2733", display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden", outline: "none" },
       };
     });
-    const edgeDisp = []; const labelDisp = [];
+    const nodeBounds = {};
+    items.forEach(i => { nodeBounds[i.uid] = { left: cx(i) - NODE_W / 2, top: topY(i), right: cx(i) + NODE_W / 2, bottom: topY(i) + NODE_H }; });
+    const segmentHitsNode = (a, b, uidA, uidB) => {
+      const margin = 6;
+      return Object.keys(nodeBounds).some(k => {
+        const uid = Number(k);
+        if (uid === uidA || uid === uidB) return false;
+        const r0 = nodeBounds[uid];
+        const r = { left: r0.left + margin, right: r0.right - margin, top: r0.top + margin, bottom: r0.bottom - margin };
+        if (Math.abs(a.x - b.x) < 0.1) {
+          if (a.x <= r.left || a.x >= r.right) return false;
+          return Math.min(Math.max(a.y, b.y), r.bottom) - Math.max(Math.min(a.y, b.y), r.top) > 1;
+        }
+        if (Math.abs(a.y - b.y) < 0.1) {
+          if (a.y <= r.top || a.y >= r.bottom) return false;
+          return Math.min(Math.max(a.x, b.x), r.right) - Math.max(Math.min(a.x, b.x), r.left) > 1;
+        }
+        return false;
+      });
+    };
+    const routeHitsNode = (pts, uidA, uidB) => {
+      for (let i = 0; i < pts.length - 1; i++) if (segmentHitsNode(pts[i], pts[i + 1], uidA, uidB)) return true;
+      return false;
+    };
+    const pointsToPath = (pts) => pts.map((p, i) => (i ? "L " : "M ") + p.x + " " + p.y).join(" ");
+    const edgeDisp = []; const labelDisp = []; let backEdgeCount = 0; const trunkDone = {};
+    const edgeTone = (label) => {
+      if (label === "はい") return { line: "#b8c0cc", marker: "url(#fcArrow)", bg: "#e3f6ef", fg: "#0f835c", bd: "#bfe9d3" };
+      if (label === "いいえ") return { line: "#b8c0cc", marker: "url(#fcArrow)", bg: "#fdecea", fg: "#c0392b", bd: "#f3cdc7" };
+      if (label) return { line: "#b8c0cc", marker: "url(#fcArrow)", bg: "#f3ecfc", fg: "#6b32b3", bd: "#e2d3f5" };
+      return { line: "#c2cad6", marker: "url(#fcArrow)", bg: "#f1f3f8", fg: "#5a626f", bd: "#dbe2ee" };
+    };
     edgeList.forEach((e, idx) => {
-      const p = pos[e.fromUid], c = pos[e.toUid]; const px = cx(p), py = topY(p) + NODE_H, cxx = cx(c), cyy = topY(c); const midY = (py + cyy) / 2;
+      const p = pos[e.fromUid], c = pos[e.toUid]; const px = cx(p), py = topY(p) + NODE_H, cxx = cx(c), cyy = topY(c);
       const isHL = !!pairSet[e.fromId + ">" + e.toId];
-      edgeDisp.push({ key: "e" + idx, d: "M " + px + " " + py + " L " + px + " " + midY + " L " + cxx + " " + midY + " L " + cxx + " " + cyy, pathStyle: { fill: "none", stroke: isHL ? "#4f6ef7" : "#c2cad6", strokeWidth: isHL ? 2.6 : 1.6, markerEnd: isHL ? "url(#fcArrowHL)" : "url(#fcArrow)", opacity: isHL ? 1 : (hasHL ? 0.22 : 1), transition: "stroke .3s, opacity .3s" } });
+      const tone = edgeTone(e.label);
+      const isBackEdge = c.row <= p.row;
+      if (isBackEdge) {
+        const laneX = Math.round(W - 88 - backEdgeCount * 32);
+        backEdgeCount += 1;
+        const fromX = Math.round(px);
+        const fromY = Math.round(topY(p) + NODE_H);
+        const belowSourceY = Math.round(topY(p) + NODE_H + 28);
+        const aboveTargetY = Math.round(topY(c) - 28);
+        const toX = Math.round(cxx);
+        const toY = Math.round(topY(c));
+        const labelText = e.label || "戻る";
+        const pts = [{ x: fromX, y: fromY }, { x: fromX, y: belowSourceY }, { x: laneX, y: belowSourceY }, { x: laneX, y: aboveTargetY }, { x: toX, y: aboveTargetY }, { x: toX, y: toY }];
+        edgeDisp.push({ key: "e" + idx, fromId: e.fromId, toId: e.toId, label: labelText, isBackEdge, d: pointsToPath(pts), pathStyle: { fill: "none", stroke: isHL ? "#4f6ef7" : "#8a93a0", strokeWidth: isHL ? 2.8 : 1.9, strokeDasharray: "6 5", markerEnd: isHL ? "url(#fcArrowHL)" : "url(#fcArrow)", opacity: isHL ? 1 : (hasHL ? 0.22 : 0.9), transition: "stroke .3s, opacity .3s" } });
+        const labelY = Math.round((belowSourceY + aboveTargetY) / 2);
+        labelDisp.push({ key: "l" + idx, text: labelText, style: { position: "absolute", left: laneX + "px", top: labelY + "px", transform: "translate(-50%,-50%)", fontSize: "11px", fontWeight: 800, lineHeight: 1.35, padding: "2px 10px", borderRadius: "999px", background: "#f1f3f8", color: "#5a626f", border: "1px solid #dbe2ee", boxShadow: "0 0 0 4px #fff", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", zIndex: 4, whiteSpace: "nowrap", opacity: (hasHL && !isHL) ? 0.3 : 1, transition: "opacity .3s" } });
+        return;
+      }
+      const count = Math.max(1, e.siblingCount || 1);
+      const order = Math.max(0, e.order || 0);
+      const splitY = Math.round(Math.min(cyy - 40, py + (count > 1 ? 40 : 28)));
+      const fromX = Math.round(px);
+      const targetOffset = Math.abs(fromX - cxx) < 8 ? 0 : (fromX < cxx ? -38 : 38);
+      const toX = Math.round(cxx + targetOffset);
+      if (count > 1 && !trunkDone[e.fromUid]) {
+        trunkDone[e.fromUid] = 1;
+        edgeDisp.push({ key: "t" + idx, fromId: e.fromId, toId: "", label: "", isBackEdge: false, isTrunk: true, d: "M " + fromX + " " + py + " L " + fromX + " " + splitY, pathStyle: { fill: "none", stroke: "#b8c0cc", strokeWidth: 1.7, opacity: hasHL ? 0.24 : 1, transition: "opacity .3s" } });
+      }
+      let pts = count > 1 ? [{ x: fromX, y: splitY }, { x: toX, y: splitY }, { x: toX, y: cyy }] : [{ x: fromX, y: py }, { x: fromX, y: splitY }, { x: toX, y: splitY }, { x: toX, y: cyy }];
+      let isDetour = false;
+      if (routeHitsNode(pts, p.uid, c.uid)) {
+        isDetour = true;
+        let direction = (cxx >= px) ? 1 : -1;
+        if (cxx + direction * (NODE_W / 2 + 46) < 24) direction = 1;
+        const laneX = Math.round(cxx + direction * (NODE_W / 2 + 46));
+        const targetSideX = Math.round(cxx + direction * NODE_W / 2);
+        const targetMidY = Math.round(topY(c) + NODE_H / 2);
+        pts = count > 1 ? [{ x: fromX, y: splitY }, { x: laneX, y: splitY }, { x: laneX, y: targetMidY }, { x: targetSideX, y: targetMidY }] : [{ x: fromX, y: py }, { x: fromX, y: splitY }, { x: laneX, y: splitY }, { x: laneX, y: targetMidY }, { x: targetSideX, y: targetMidY }];
+      }
+      edgeDisp.push({ key: "e" + idx, fromId: e.fromId, toId: e.toId, label: e.label || "", isBackEdge, isTrunk: false, isDetour, d: pointsToPath(pts), pathStyle: { fill: "none", stroke: isHL ? "#4f6ef7" : tone.line, strokeWidth: isHL ? 2.8 : (e.label ? 2.1 : 1.7), markerEnd: isHL ? "url(#fcArrowHL)" : tone.marker, opacity: isHL ? 1 : (hasHL ? 0.22 : 1), transition: "stroke .3s, opacity .3s" } });
       if (e.label) {
-        const lt = e.label === "はい" ? { bg: "#e3f6ef", fg: "#0f835c", bd: "#bfe9d3" } : e.label === "いいえ" ? { bg: "#fdecea", fg: "#c0392b", bd: "#f3cdc7" } : { bg: "#f3ecfc", fg: "#6b32b3", bd: "#e2d3f5" };
-        labelDisp.push({ key: "l" + idx, text: e.label, style: { position: "absolute", left: cxx + "px", top: midY + "px", transform: "translate(-50%,-50%)", fontSize: "11px", fontWeight: 700, padding: "1px 9px", borderRadius: "999px", background: lt.bg, color: lt.fg, border: "1px solid " + lt.bd, maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", zIndex: 2, whiteSpace: "nowrap", opacity: (hasHL && !isHL) ? 0.3 : 1, transition: "opacity .3s" } });
+        const direction = Math.abs(toX - fromX) < 8 ? (order === 0 ? -1 : 1) : (toX > fromX ? 1 : -1);
+        const labelX = Math.round(fromX + direction * Math.max(56, Math.min(86, Math.abs(toX - fromX) * 0.45)));
+        const labelY = splitY;
+        labelDisp.push({ key: "l" + idx, text: e.label, rawText: e.label, style: { position: "absolute", left: labelX + "px", top: labelY + "px", transform: "translate(-50%,-50%)", fontSize: "11px", fontWeight: 800, lineHeight: 1.35, padding: "2px 10px", borderRadius: "999px", background: tone.bg, color: tone.fg, border: "1px solid " + tone.bd, boxShadow: "0 0 0 4px #fff", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", zIndex: 4, whiteSpace: "nowrap", opacity: (hasHL && !isHL) ? 0.3 : 1, transition: "opacity .3s" } });
       }
     });
     return { hasNodes: true, width: W, height: H, nodes: nodeDisp, edges: edgeDisp, labels: labelDisp, canvasStyle: { position: "relative", width: W + "px", height: H + "px", margin: "0" }, svgStyle: { position: "absolute", left: 0, top: 0, width: W + "px", height: H + "px", overflow: "visible" } };
@@ -4935,6 +5573,7 @@ class Component extends DCLogic {
       "- 新しい履歴から読み取れる分岐・確認・結論を、既存フローに継ぎ足す。",
       "- 既存ノードは原則そのまま残す。必要なら、空いていた分岐に新ノードを接続したり、yes/no/next のつなぎ替えを行う。",
       "- 重複や矛盾は避ける。",
+      this.flowGranularityPolicyText(),
       this.flowDbBoundaryCriteriaText(),
       this.flowDbSchemaHint(false),
       "",
@@ -5005,6 +5644,7 @@ class Component extends DCLogic {
       "- すべて日本語。",
       "- ノードは6〜9個に収める。text と why は各40文字以内で簡潔に（途中で切れないよう短く）。",
       "- 各ノードの \"why\" には『なぜ専門家がそこを確認・判断するのか』という根拠（暗黙知）を1文で書く。",
+      this.flowGranularityPolicyText(),
       this.flowDbBoundaryCriteriaText(),
       this.flowDbSchemaHint(false),
       "- スキーマ:",
@@ -5227,6 +5867,7 @@ class Component extends DCLogic {
 	    const flow = sel && sel.flow;
 	    const nodes = (flow && flow.nodes) || {};
 	    const nodeIds = Object.keys(nodes);
+	    const graph = flow ? this.buildGraph(flow, [], []) : { hasNodes: false, nodes: [], edges: [], labels: [], canvasStyle: {}, svgStyle: {} };
 	    const dbLinks = [];
 	    const nodeRows = nodeIds.map((id, i) => {
 	      const n = nodes[id] || {};
@@ -5269,6 +5910,8 @@ class Component extends DCLogic {
 	      flowLibTitle: sel ? sel.title : "",
 	      flowLibPath: sel ? sel.folderPath : "",
 	      flowLibCurrentId: selectedId,
+	      flowLibGraph: graph,
+	      flowLibGraphEmpty: !graph.hasNodes,
 	      flowLibRows: recs.map(r => {
 	        const active = r.id === selectedId;
 	        const ns = r.flow && r.flow.nodes ? Object.keys(r.flow.nodes) : [];
@@ -5284,6 +5927,12 @@ class Component extends DCLogic {
 	            display: "flex", alignItems: "center", gap: "9px", padding: "9px 10px", borderRadius: "10px", cursor: "pointer",
 	            background: active ? "#eef1ff" : "#fff", border: "1px solid " + (active ? "#cfd9ff" : "#eef1f5"),
 	            color: active ? primary : "#2b333f", marginBottom: "7px"
+	          },
+	          sideRowStyle: {
+	            width: "100%", display: "flex", alignItems: "center", gap: "8px", minHeight: "47px",
+	            borderRadius: "10px", padding: "7px 8px", textAlign: "left",
+	            background: active ? "#eef1ff" : "transparent", border: "1px solid " + (active ? "#d6def6" : "transparent"),
+	            color: active ? primary : "#3a414c", cursor: "pointer"
 	          }
 	        };
 	      }),
@@ -5315,6 +5964,13 @@ class Component extends DCLogic {
 
     const segOn = { fontSize: "13px", fontWeight: 700, padding: "8px 16px", borderRadius: "8px", background: "#fff", color: "#1f2733", boxShadow: "0 1px 3px rgba(16,24,40,.12)" };
     const segOff = { fontSize: "13px", fontWeight: 500, padding: "8px 16px", borderRadius: "8px", background: "transparent", color: "#8a93a0" };
+    const sideNavStyle = (active) => ({
+      display: "flex", alignItems: "center", gap: "10px", padding: "9px 10px", borderRadius: "9px",
+      fontSize: "12.5px", fontWeight: active ? 800 : 600, textAlign: "left",
+      color: active ? primary : "#5a626f", background: active ? "#f3f6ff" : "transparent",
+      border: "1px solid " + (active ? "#d6def6" : "transparent")
+    });
+    const flowLibOpenDisabled = !this.flowLibraryRecords(st).length;
 
     const allSources = ["Q&A・問い合わせ履歴", "対応記録・判断履歴", "チャット / メール", "マニュアル・手順書", "面談の文字起こし"];
     const sourceChips = allSources.map(label => {
@@ -5335,8 +5991,13 @@ class Component extends DCLogic {
 
     const out = {
       rootStyle, step,
-      isHome: st.stage === "home", isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
+      isHome: st.stage === "home", isDbMain: st.stage === "db", isFlowLibMain: st.stage === "flowlib",
+      isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
       isDiagram: st.view === "diagram", isDiagnose: st.view === "diagnose",
+      showChatSidebar: st.stage === "home",
+      showDbSidebar: st.stage === "db",
+      showFlowSidebar: st.stage === "flowlib",
+      showGenericSidebar: !["home", "db", "flowlib"].includes(st.stage),
       domain: st.domain,
       domainMfgStyle: st.domain === "設備点検" ? segOn : segOff,
       domainItStyle: st.domain === "IT機器サポート" ? segOn : segOff,
@@ -5346,7 +6007,7 @@ class Component extends DCLogic {
       extractDisabled, extractBtnStyle,
       pickDomain: this.pickDomain, onInput: this.onInput, onDomainInput: this.onDomainInput, toggleSource: this.toggleSource,
       extract: () => this.extract(), loadDemo: this.loadDemo,
-      restart: this.restart, pickView: this.pickView, fcScrollRef: this.fcScrollRef, goHome: this.goHome,
+      restart: this.restart, pickView: this.pickView, fcScrollRef: this.fcScrollRef, goHome: this.goHome, goDb: this.goDb, goFlowLib: this.goFlowLib,
       settingsOpen: st.settingsOpen, cfg: st.apiCfg,
       toggleSettings: this.toggleSettings, onCfgField: this.onCfgField, pickProvider: this.pickProvider, saveSettings: this.saveSettings, newChat: this.newChat, loadChatSession: this.loadChatSession,
       isClaude: st.apiCfg.provider === "claude", isOpenai: st.apiCfg.provider === "openai", isAzure: st.apiCfg.provider === "azure",
@@ -5359,6 +6020,14 @@ class Component extends DCLogic {
       dbOpen: st.dbOpen, dbCount: st.db.docs.length, dbFolderCount: st.db.folders.length, toggleDb: this.toggleDb,
       ...this.flowLibraryVals(st),
       homeNavStyle: { margin: "10px 14px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", border: "1px solid " + (st.stage === "home" ? "#cfd9ff" : "#e0e4ec"), background: st.stage === "home" ? "#f3f6ff" : "#fff", color: st.stage === "home" ? primary : "#5a626f", borderRadius: "11px", padding: "10px 11px", fontWeight: 700, fontSize: "13px" },
+      dbNavStyle: sideNavStyle(st.stage === "db"),
+      flowNavStyle: sideNavStyle(st.stage === "flowlib"),
+      flowLibOpenBtnStyle: {
+        display: "flex", alignItems: "center", gap: "7px", borderRadius: "10px", padding: "9px 13px", fontWeight: 700, fontSize: "12.5px",
+        border: "1px solid " + (flowLibOpenDisabled ? "#e0e4ec" : "#dbe2ee"),
+        background: flowLibOpenDisabled ? "#f1f3f8" : "#fff", color: flowLibOpenDisabled ? "#aab1bc" : "#5a626f",
+        cursor: flowLibOpenDisabled ? "not-allowed" : "pointer"
+      },
       inputSaveHint: "取り込んだPDF・履歴データ・生成フローは「" + this.folderLabel(this.currentSaveFolderId()) + "」に紐づけて保存されます。",
       dbOpenFolder: this.dbOpenFolder, dbToggleExpand: this.dbToggleExpand, dbNewFolder: this.dbNewFolder, dbNewDoc: this.dbNewDoc,
       dbOpenDoc: this.dbOpenDoc, dbCloseDoc: this.dbCloseDoc, dbDocField: this.dbDocField,
@@ -5367,8 +6036,8 @@ class Component extends DCLogic {
       publishFolder: this.publishFolder, unpublishFolder: this.unpublishFolder, closePubNotice: this.closePubNotice, onPubInput: this.onPubInput, addSubscription: this.addSubscription, removeSubscription: this.removeSubscription,
       onIngestPdf: this.onIngestPdf, clearIngestErr: this.clearIngestErr, ingestRunning: !!(st.dbIngest && st.dbIngest.running), ingestMsg: (st.dbIngest && st.dbIngest.msg) || "", ingestName: (st.dbIngest && st.dbIngest.name) || "", ingestErr: (st.dbIngest && st.dbIngest.error) || "", hasIngestErr: !!(st.dbIngest && st.dbIngest.error),
       hasIngestDone: !!st.ingestDone, ingestDoneName: (st.ingestDone && st.ingestDone.name) || "", runProposalsFromDone: this.runProposalsFromDone, closeIngestDone: this.closeIngestDone, runProposalsForSource: this.runProposalsForSource, buildFlowFromDbSource: this.buildFlowFromDbSource,
-      proposalsOpen: !!st.proposals, proposalsRunning: !!(st.proposals && st.proposals.running), proposalsErr: (st.proposals && st.proposals.error) || "", hasProposalsErr: !!(st.proposals && st.proposals.error), proposalsEmpty: !!(st.proposals && st.proposals.empty), proposalsSrcName: (st.proposals && st.proposals.srcName) || "", closeProposals: this.closeProposals, decideProposal: this.decideProposal, approveAllProposals: this.approveAllProposals,
-      proposalNone: !!(st.proposals && !st.proposals.running && !st.proposals.error && !st.proposals.empty && (st.proposals.items || []).length === 0),
+      proposalsOpen: !!st.proposals, proposalsRunning: !!(st.proposals && st.proposals.running), proposalsErr: (st.proposals && st.proposals.error) || "", hasProposalsErr: !!(st.proposals && st.proposals.error), proposalsEmpty: !!(st.proposals && st.proposals.empty), proposalAlreadyFlowed: !!(st.proposals && st.proposals.alreadyFlowed), proposalsSrcName: (st.proposals && st.proposals.srcName) || "", closeProposals: this.closeProposals, decideProposal: this.decideProposal, approveAllProposals: this.approveAllProposals,
+      proposalNone: !!(st.proposals && !st.proposals.running && !st.proposals.error && !st.proposals.empty && !st.proposals.alreadyFlowed && (st.proposals.items || []).length === 0),
       proposalItems: (st.proposals && st.proposals.items || []).map(it => {
         const labels = { attach_evidence: "根拠リンク追加", add_condition: "条件を追加", update_detail: "詳細/基準値を更新", create_new: "新規フロー候補", ask_human: "要レビュー" };
         const noteLike = it.op === "create_new" || it.op === "ask_human";
@@ -5459,7 +6128,7 @@ class Component extends DCLogic {
       liveNodeCount: st.flow ? Object.keys(st.flow.nodes || {}).length : 0,
       hasLiveFlow: !!(st.flow && Object.keys(st.flow.nodes || {}).length),
       noLiveFlow: !(st.flow && Object.keys(st.flow.nodes || {}).length),
-      buildLog: st.buildLog || [], hasLog: (st.buildLog || []).length > 0,
+      buildLog: (st.buildLog || []).map(b => ({ ...b, label: b.label || ("バッチ" + b.batch), addedLabel: b.addedLabel || ("＋" + (b.added || 0) + " ノード") })), hasLog: (st.buildLog || []).length > 0,
       onChatInput: this.onChatInput, sendChat: () => this.sendChat(), clearHighlight: this.clearHighlight, highlightMessage: this.highlightMessage, showMessageFlow: this.showMessageFlow, copyAnswerMarkdown: this.copyAnswerMarkdown, pickAnswerMode: this.pickAnswerMode,
       chatInput: st.chatInput, chatLoading: st.chatLoading, chatAgentStatus: st.chatAgentStatus || "フローとナレッジDBを横断しています…",
       answerModeConditionalStyle: (st.chatAnswerMode || "conditional") === "conditional" ? { ...segOn, fontSize: "11px", padding: "4px 8px", borderRadius: "7px" } : { ...segOff, fontSize: "11px", padding: "4px 8px", borderRadius: "7px" },

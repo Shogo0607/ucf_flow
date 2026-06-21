@@ -151,12 +151,143 @@ c._applyProposalToFlow(curationItems[1]);
 savedQuote = c.state.savedFlows.find(f => f.id === "flow_quote");
 assert.ok((savedQuote.flow.nodes.n3.models || []).includes("特約店経由"), "approving add_condition should add condition tags");
 assert.ok((savedQuote.flow.nodes.n3.detail || "").includes("担当特約店"), "approving add_condition should append condition detail");
+const curationItemsAfterApply = c.normalizeCurationProposals(curationRaw, c.flowsForProposal(), c.state.kbSources[0]);
+assert.equal(curationItemsAfterApply.some(it => it.op === "attach_evidence"), false, "already linked evidence should not be proposed again");
+assert.equal(curationItemsAfterApply.some(it => it.op === "add_condition"), false, "already applied conditions should not be proposed again");
+c.state.savedFlows = c.state.savedFlows.map(f => f.id === "flow_quote" ? { ...f, flow: { ...f.flow, sourceIds: ["kb_quote"] }, sourceIds: ["kb_quote"] } : f);
+let duplicateProposalCalledLlm = false;
+c.hasLLM = () => true;
+c.llmComplete = async () => { duplicateProposalCalledLlm = true; return "{}"; };
+await c.runProposals("kb_quote");
+assert.equal(duplicateProposalCalledLlm, false, "proposal generation should not call LLM when the same source already generated a flow");
+assert.equal(c.state.proposals.alreadyFlowed, true, "already-flowed PDF should show a duplicate-suppression proposal state");
 c.state.flowLibCurrent = "flow_quote";
 const flowLibVals = c.flowLibraryVals(c.state);
 assert.equal(flowLibVals.flowLibCount, 2, "flow library should list all saved flows in the workspace");
 assert.equal(flowLibVals.flowLibTitle, "見積承認フロー", "flow library should expose the selected flow title");
 assert.ok(flowLibVals.flowLibNodes.some(n => n.id === "n3" && n.hasLinks), "flow library should expose node-level DB links");
 assert.ok(flowLibVals.flowLibDbRefs.some(r => r.ref === "src:kb_quote:1"), "flow library should expose DB references across the selected flow");
+assert.equal(flowLibVals.flowLibGraph.hasNodes, true, "flow library should expose a flowchart graph for the selected process");
+assert.ok(flowLibVals.flowLibGraph.nodes.some(n => n.id === "n1"), "flowchart graph should include the root node");
+assert.ok(flowLibVals.flowLibGraph.edges.length > 0, "flowchart graph should include branch edges");
+const pxNum = (v) => Number(String(v || "").replace("px", ""));
+const graphNodeEdgeOverlaps = (graph) => {
+  const nodesById = new Map((graph.nodes || []).map(n => [n.id, {
+    id: n.id,
+    left: pxNum(n.boxStyle.left),
+    top: pxNum(n.boxStyle.top),
+    right: pxNum(n.boxStyle.left) + 230,
+    bottom: pxNum(n.boxStyle.top) + 104,
+  }]));
+  const parsePoints = (d) => {
+    const nums = (String(d || "").match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+    const pts = [];
+    for (let i = 0; i < nums.length - 1; i += 2) pts.push({ x: nums[i], y: nums[i + 1] });
+    return pts;
+  };
+  const segmentHits = (a, b, n) => {
+    const margin = 5;
+    const r = { left: n.left + margin, right: n.right - margin, top: n.top + margin, bottom: n.bottom - margin };
+    if (Math.abs(a.x - b.x) < 0.1) {
+      if (a.x <= r.left || a.x >= r.right) return false;
+      return Math.min(Math.max(a.y, b.y), r.bottom) - Math.max(Math.min(a.y, b.y), r.top) > 1;
+    }
+    if (Math.abs(a.y - b.y) < 0.1) {
+      if (a.y <= r.top || a.y >= r.bottom) return false;
+      return Math.min(Math.max(a.x, b.x), r.right) - Math.max(Math.min(a.x, b.x), r.left) > 1;
+    }
+    return false;
+  };
+  const issues = [];
+  (graph.edges || []).forEach(e => {
+    const pts = parsePoints(e.d);
+    for (let i = 0; i < pts.length - 1; i++) {
+      for (const n of nodesById.values()) {
+        if (n.id === e.fromId || n.id === e.toId) continue;
+        if (segmentHits(pts[i], pts[i + 1], n)) issues.push({ edge: `${e.fromId}>${e.toId}`, node: n.id, d: e.d });
+      }
+    }
+  });
+  return issues;
+};
+const convergingGraph = c.buildGraph({
+  title: "合流レイアウト",
+  root: "n1",
+  nodes: {
+    n1: { kind: "decision", text: "分岐するか？", yes: "n2", no: "n3" },
+    n2: { kind: "action", text: "Aを確認", next: "n4" },
+    n3: { kind: "action", text: "Bを確認", next: "n4" },
+    n4: { kind: "result", text: "合流して完了" },
+  },
+}, [], []);
+const nodeLeft = (id) => Number(String(convergingGraph.nodes.find(n => n.id === id).boxStyle.left).replace("px", ""));
+assert.ok(Math.abs(nodeLeft("n2") - nodeLeft("n3")) >= 230, "flowchart layout should keep converging sibling nodes from overlapping");
+const yesLabel = convergingGraph.labels.find(l => l.rawText === "はい");
+const noLabel = convergingGraph.labels.find(l => l.rawText === "いいえ");
+assert.equal(yesLabel.text, "はい", "yes label text should remain plain");
+assert.equal(noLabel.text, "いいえ", "no label text should remain plain");
+assert.equal(yesLabel.style.color, "#0f835c", "yes labels should be green");
+assert.equal(noLabel.style.color, "#c0392b", "no labels should be red");
+const yesNoLabelTops = convergingGraph.labels.filter(l => l.rawText === "はい" || l.rawText === "いいえ").map(l => Number(String(l.style.top).replace("px", "")));
+assert.equal(new Set(yesNoLabelTops).size, 1, "yes/no labels should share the same branch fold lane");
+const branchEdges = convergingGraph.edges.filter(e => e.fromId === "n1" && (e.label === "はい" || e.label === "いいえ"));
+const branchStarts = branchEdges.map(e => (String(e.d).match(/M\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/) || []).slice(1, 3).join(","));
+assert.equal(new Set(branchStarts).size, 1, "yes/no branch edges should start from the same split point");
+assert.ok(branchEdges.every(e => e.pathStyle.markerEnd === "url(#fcArrow)"), "branch edges themselves should be arrows");
+assert.ok(branchEdges.every(e => e.pathStyle.stroke === "#b8c0cc"), "branch edge lines should stay neutral; yes/no color belongs to labels");
+assert.ok(convergingGraph.edges.some(e => e.isTrunk && e.fromId === "n1"), "multi-branch decisions should have a shared trunk before splitting");
+const loopGraph = c.buildGraph({
+  title: "戻り線レイアウト",
+  root: "n1",
+  nodes: {
+    n1: { kind: "decision", text: "主電源はONか？", yes: "n2", no: "n3" },
+    n2: { kind: "result", text: "確認完了" },
+    n3: { kind: "action", text: "主電源をONにする", next: "n1" },
+  },
+}, [], []);
+const backEdges = loopGraph.edges.filter(e => e.isBackEdge);
+assert.equal(backEdges.length, 1, "back/cycle edges should be detected explicitly");
+assert.equal(backEdges[0].label, "戻る", "unlabeled back edges should get a visible return label");
+assert.equal(backEdges[0].pathStyle.strokeDasharray, "6 5", "back edges should be drawn as dashed outer-lane edges");
+const maxLoopNodeRight = Math.max(...loopGraph.nodes.map(n => Number(String(n.boxStyle.left).replace("px", "")) + 230));
+const returnLabelX = Number(String(loopGraph.labels.find(l => l.text === "戻る").style.left).replace("px", ""));
+assert.ok(returnLabelX > maxLoopNodeRight + 24, "return labels should be outside the node column");
+assert.deepEqual(graphNodeEdgeOverlaps(loopGraph), [], "back/cycle edge routes should not pass through non-endpoint nodes");
+const crossingGraph = c.buildGraph({
+  title: "深い合流レイアウト",
+  root: "n1",
+  nodes: {
+    n1: { kind: "decision", text: "分岐するか？", yes: "n2", no: "n3" },
+    n2: { kind: "action", text: "Aを確認", next: "n4" },
+    n4: { kind: "action", text: "Aの詳細を確認", next: "n5" },
+    n3: { kind: "action", text: "Bを確認", next: "n5" },
+    n5: { kind: "result", text: "合流して完了" },
+  },
+}, [], []);
+assert.ok(crossingGraph.edges.some(e => e.fromId === "n3" && e.toId === "n5" && e.isDetour), "long cross-column joins should detour around intermediate nodes");
+assert.deepEqual(graphNodeEdgeOverlaps(crossingGraph), [], "flowchart edge routes should not pass through non-endpoint nodes");
+c.goDb();
+let pageVals = c.renderVals();
+assert.equal(c.state.stage, "db", "knowledge database navigation should use a main stage");
+assert.equal(pageVals.isDbMain, true, "renderVals should expose the database main screen");
+assert.equal(pageVals.showDbSidebar, true, "database screen should show database-specific sidebar content");
+assert.equal(pageVals.showChatSidebar, false, "consultation history should not show on the database screen");
+assert.equal(c.state.dbOpen, false, "database navigation should not open the legacy modal");
+c.goFlowLib();
+pageVals = c.renderVals();
+assert.equal(c.state.stage, "flowlib", "thinking process navigation should use a main stage");
+assert.equal(pageVals.isFlowLibMain, true, "renderVals should expose the thinking process main screen");
+assert.equal(pageVals.showFlowSidebar, true, "thinking process screen should show flow-specific sidebar content");
+assert.equal(pageVals.showChatSidebar, false, "consultation history should not show on the thinking process screen");
+assert.equal(c.state.flowLibOpen, false, "thinking process navigation should not open the legacy modal");
+assert.ok(html.includes('data-pane="flow-lib-ai-chat"'), "thinking process flow display should place AI consultation in the right pane");
+assert.equal(html.includes(">差分を提案</button>"), false, "proactive diff proposal button should not be shown");
+assert.equal(html.includes('title="既存フローへの差分を提案"'), false, "database source rows should not show a flow-diff proposal button");
+assert.equal(html.includes('title="このPDFから既存フローへの差分を提案"'), false, "source rows should not show a PDF flow-diff proposal button");
+assert.ok(html.includes('title="このPDFから思考プロセスを抽出"'), "source rows should expose explicit thinking-process extraction");
+c.goHome();
+pageVals = c.renderVals();
+assert.equal(pageVals.showChatSidebar, true, "consultation history should show only on AI consultation");
 
 const extractPrompt = c.buildPrompt("価格表を見て、特約店経由なら営業は直接回答せず引き継ぐ。価格はDBの価格表を参照する。");
 assert.ok(extractPrompt.includes("フロー/DBの切り分け基準"), "flow extraction prompt should include flow-vs-db criteria");
@@ -242,5 +373,42 @@ c.state.chat = [];
 c.loadChatSession({ currentTarget: { dataset: { id: "ch_test" } } });
 assert.equal(c.state.currentChatSessionId, "ch_test", "clicking history should activate the session");
 assert.equal(c.state.chat.length, 2, "clicking history should restore messages for resume");
+
+const granularityPolicy = c.flowGranularityPolicyText();
+assert.ok(granularityPolicy.includes("ページ単位・質問単位・型番単位"), "granularity policy should explicitly discourage small flow proliferation");
+assert.ok(c.buildPrompt("見積相談").includes("# フロー粒度ポリシー"), "text/csv flow generation prompt should include granularity policy");
+assert.ok(c.buildMergePrompt("特約店経由なら引き継ぐ", quoteFlowRec.flow).includes("# フロー粒度ポリシー"), "merge prompt should include granularity policy");
+assert.ok(c.buildClusterPrompt([{ page: 1, category: "procedure", summary: "申請手順", keywords: ["申請"] }]).includes("最大12件"), "PDF topic clustering should cap broad topics");
+assert.ok(c.buildPdfFlowPrompt({ title: "申請可否の判断", symptom: "申請できるか判断する" }, "[p1] 条件を確認する").includes("# フロー粒度ポリシー"), "PDF flow prompt should include granularity policy");
+const coveragePrompt = c.buildPdfCoveragePrompt(
+  [{ page: 2, category: "procedure", summary: "例外条件では上長確認を行う", keywords: ["例外"], conditions: [{ if: "例外条件", then: "上長確認" }] }],
+  [{ title: "申請可否の判断", root: "n1", nodes: { n1: { kind: "action", text: "申請内容を確認", pages: [1] } } }],
+);
+assert.ok(coveragePrompt.includes("保存前の補完計画"), "PDF coverage audit prompt should run before saving as part of initial generation");
+assert.ok(coveragePrompt.includes("merge_into_flow"), "PDF coverage audit should prefer merging missing process content into existing flows");
+assert.ok(coveragePrompt.includes("create_flow は、開始条件・判断軸・完了状態が既存フローと明確に異なり"), "PDF coverage audit should discourage flow proliferation");
+const coverageActions = c.normalizePdfCoverageActions({
+  actions: [
+    { type: "db_only", pages: [9], reason: "参照のみ" },
+    { type: "merge_into_flow", flowIndex: 0, title: "例外確認", pages: [2], reason: "手順が未反映" },
+    { type: "create_flow", title: "範囲外", pages: [999], reason: "存在しないページ" },
+  ],
+}, [{ title: "申請可否の判断", nodes: {} }], [{ page: 2 }]);
+assert.equal(coverageActions.length, 1, "coverage normalization should keep actionable in-document gaps only");
+assert.equal(coverageActions[0].type, "merge_into_flow", "coverage normalization should preserve merge actions");
+let coverageCall = 0;
+c.hasLLM = () => true;
+c.llmComplete = async (prompt) => {
+  coverageCall += 1;
+  if (prompt.includes("カバレッジを監査")) return '{"actions":[{"type":"merge_into_flow","flowIndex":0,"title":"例外条件","symptom":"例外時の確認","pages":[2],"reason":"例外時の上長確認が未反映"}]}';
+  return '{"upsert":{"n2":{"kind":"action","text":"例外条件を確認","why":"通常手順と分けるため","pages":[2],"next":"n3"},"n3":{"kind":"result","text":"上長確認へ回す","pages":[2]}}}';
+};
+const completedFlows = await c.auditAndCompletePdfFlows(
+  [{ title: "申請可否の判断", root: "n1", nodes: { n1: { kind: "action", text: "申請内容を確認", pages: [1], next: "n2" }, n2: { kind: "result", text: "受理する", pages: [1] } } }],
+  { index: [{ page: 2, category: "procedure", summary: "例外条件では上長確認を行う", conditions: [{ if: "例外条件", then: "上長確認" }] }], pageText: { 2: "例外条件では上長確認を行う。" }, mdByPage: {}, vision: false, kb: null, progressBase: 1 },
+);
+assert.equal(coverageCall, 2, "coverage completion should audit once and merge missing content once");
+assert.equal(completedFlows.length, 1, "coverage completion should merge into the existing flow instead of creating a new one");
+assert.ok(completedFlows[0].nodes.n3, "coverage completion should add missing process nodes to the existing flow");
 
 console.log("flow search verification passed");
