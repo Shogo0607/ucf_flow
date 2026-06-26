@@ -8,6 +8,7 @@ const DEFAULT_HOST = process.env.FRONTEND_HOST || "127.0.0.1";
 const DEFAULT_PORT = Number(process.env.FRONTEND_PORT || 8000);
 const DEFAULT_ROOT = path.resolve(__dirname, "..", "src");
 const DEFAULT_ENTRY = "フロー化ツール（A・パイプライン）.dc.html";
+const DEFAULT_VENDOR_ROOT = path.resolve(__dirname, "..", "node_modules");
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -18,6 +19,7 @@ const MIME_TYPES = {
   ".jpg": "image/jpeg",
   ".js": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
   ".pdf": "application/pdf",
   ".png": "image/png",
   ".svg": "image/svg+xml; charset=utf-8",
@@ -49,6 +51,22 @@ function resolveRequestPath(root, pathname) {
   return filePath;
 }
 
+function resolveVendorPath(pathname) {
+  const prefix = "/vendor/pdfjs-dist/";
+  if (!pathname.startsWith(prefix)) return null;
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(pathname.slice(prefix.length));
+  } catch {
+    return null;
+  }
+  const filePath = path.resolve(DEFAULT_VENDOR_ROOT, "pdfjs-dist", "build", decodedPath.replace(/^\/+/, ""));
+  const vendorRoot = path.resolve(DEFAULT_VENDOR_ROOT, "pdfjs-dist", "build");
+  const relative = path.relative(vendorRoot, filePath);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) return null;
+  return filePath;
+}
+
 export function createFrontendServer({ root = DEFAULT_ROOT } = {}) {
   return http.createServer((req, res) => {
     if (req.method !== "GET" && req.method !== "HEAD") {
@@ -58,7 +76,7 @@ export function createFrontendServer({ root = DEFAULT_ROOT } = {}) {
 
     const url = new URL(req.url || "/", "http://localhost");
 
-    const filePath = resolveRequestPath(root, url.pathname);
+    const filePath = resolveVendorPath(url.pathname) || resolveRequestPath(root, url.pathname);
     if (!filePath) {
       send(res, 400, "Bad request");
       return;

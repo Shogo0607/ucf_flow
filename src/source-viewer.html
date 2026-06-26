@@ -203,7 +203,7 @@
       while (changed) {
         changed = false;
         (db.folders || []).forEach(f => {
-          if (!ids[f.id] && ids[f.parentId || ""]) {
+          if (!ids[f.id] && ids[f.parentId || f.parent || ""]) {
             ids[f.id] = true;
             changed = true;
           }

@@ -8,6 +8,11 @@
     "frontend": "node server/frontend.mjs",
     "backend": "node server/backend.mjs",
     "dev": "npm start",
+    "verify": "npm run verify:flow-search && npm run verify:backend-cors && npm audit --audit-level=high",
+    "verify:backend-cors": "node scripts/verify-backend-cors.mjs",
     "verify:flow-search": "node scripts/verify-flow-search.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "4.10.38"
   }
 }

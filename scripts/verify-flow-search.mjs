@@ -5,12 +5,15 @@ import vm from "node:vm";
 
 const root = process.cwd();
 const htmlPath = path.join(root, "src", "フロー化ツール（A・パイプライン）.dc.html");
+const helperPath = path.join(root, "src", "app-helpers.js");
 const html = fs.readFileSync(htmlPath, "utf8");
+const helperScript = fs.readFileSync(helperPath, "utf8");
 const script = (html.match(/<script\b[^>]*data-dc-script[^>]*>([\s\S]*?)<\/script>/) || [])[1];
 assert.ok(script, "script block should exist");
 
 globalThis.window = {};
 globalThis.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+vm.runInThisContext(helperScript, { filename: helperPath });
 globalThis.DCLogic = class {
   constructor() { this.props = {}; }
   setState(patch) { this.state = { ...this.state, ...(typeof patch === "function" ? patch(this.state) : patch) }; }
@@ -75,6 +78,21 @@ c.state.kbSources = [
     ],
   },
 ];
+
+const persistedWrites = [];
+const originalSetItem = globalThis.localStorage.setItem;
+globalThis.localStorage.setItem = (key, value) => { persistedWrites.push([key, value]); };
+c.persistKbSources([{ id: "kb_safe", folderId: "f_quote", pages: [] }]);
+globalThis.localStorage.setItem = originalSetItem;
+const kbWrite = persistedWrites.find(([key]) => key === "tpf_kbsrc_ws_default");
+assert.ok(kbWrite, "persistKbSources should use the current workspace-scoped KB key even with duplicate helper definitions");
+assert.deepEqual(JSON.parse(kbWrite[1]), [{ id: "kb_safe", folderId: "f_quote", pages: [] }], "persistKbSources should serialize the provided KB source array");
+globalThis.localStorage.setItem = () => { throw new Error("quota exceeded"); };
+c.persistDb({ folders: [], docs: [] });
+globalThis.localStorage.setItem = originalSetItem;
+assert.ok(c.state.storageWarning.includes("ナレッジDBを保存できませんでした"), "localStorage write failures should surface in component state");
+c.clearStorageWarning();
+assert.equal(c.state.storageWarning, null, "storage warning should be dismissible");
 
 const cands = c.candidateFlows();
 assert.equal(cands.length, 2, "candidateFlows should include saved flows");
@@ -331,6 +349,25 @@ const answerHtml = c.markdownToHtml(answerMarkdown);
 assert.ok(answerHtml.includes("<strong>UX2-S型の場合</strong>"), "markdown renderer should render bold text");
 assert.ok(answerHtml.includes("<ul>") && answerHtml.includes("<ol>"), "markdown renderer should render unordered and ordered lists");
 assert.ok(!answerHtml.includes("**UX2-S型の場合**"), "markdown markers should not remain visible");
+const unsafeMarkdown = [
+  "<script>window.xss = true</script>",
+  "<img src=x onerror=\"window.xss = true\">",
+  "[危険リンク](javascript:window.xss = true)",
+  "[安全リンク](https://example.com/path)",
+  "",
+  "```html",
+  "<button onclick=\"window.xss = true\">run</button>",
+  "```",
+].join("\n");
+const unsafeHtml = c.markdownToHtml(unsafeMarkdown);
+assert.equal(unsafeHtml.includes("<script"), false, "markdown renderer should not render raw script tags as HTML");
+assert.equal(unsafeHtml.includes("<img"), false, "markdown renderer should not render raw HTML tags with event handlers");
+assert.equal(unsafeHtml.includes("<button"), false, "markdown renderer should escape HTML inside code blocks");
+assert.equal(unsafeHtml.includes("<a href=\"javascript:"), false, "markdown renderer should not create javascript: links");
+assert.ok(unsafeHtml.includes("&lt;script&gt;window.xss = true&lt;/script&gt;"), "markdown renderer should preserve script text only as escaped content");
+assert.ok(unsafeHtml.includes("&lt;img src=x onerror=&quot;window.xss = true&quot;&gt;"), "markdown renderer should preserve event-handler text only as escaped content");
+assert.ok(unsafeHtml.includes("[危険リンク](javascript:window.xss = true)"), "unsupported javascript markdown links should remain inert text");
+assert.ok(unsafeHtml.includes('<a href="https://example.com/path" target="_blank" rel="noopener noreferrer">安全リンク</a>'), "safe https markdown links should still render as anchors");
 const detailMarkdown = [
   "UX2の納入品は、原典では以下のとおりです。",
   "",
@@ -373,6 +410,13 @@ c.state.chat = [];
 c.loadChatSession({ currentTarget: { dataset: { id: "ch_test" } } });
 assert.equal(c.state.currentChatSessionId, "ch_test", "clicking history should activate the session");
 assert.equal(c.state.chat.length, 2, "clicking history should restore messages for resume");
+
+const sourceWithPdfStoreFailure = { id: "kb_pdf_fail", name: "保存失敗.pdf" };
+c.putPdfBlob = async () => { throw new Error("quota exceeded"); };
+const attachedPdfSource = await c.attachPdfToSource(sourceWithPdfStoreFailure, new Blob(["%PDF-1.4"], { type: "application/pdf" }), "asset://pdf");
+assert.equal(attachedPdfSource.pdfUrl, "asset://pdf", "PDF source should keep the asset URL even when durable blob storage fails");
+assert.equal(attachedPdfSource.pdfBlobKey, undefined, "PDF source should not claim a durable blob key after storage failure");
+assert.ok(attachedPdfSource.pdfStoreError.includes("quota exceeded"), "PDF storage write failures should surface on the source record");
 
 const granularityPolicy = c.flowGranularityPolicyText();
 assert.ok(granularityPolicy.includes("ページ単位・質問単位・型番単位"), "granularity policy should explicitly discourage small flow proliferation");

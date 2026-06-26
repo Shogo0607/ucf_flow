@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./app-helpers.js"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -40,6 +41,13 @@
 </helmet>
 
 <div style="{{ rootStyle }}">
+  <sc-if value="{{ storageWarning }}" hint-placeholder-val="">
+    <div style="position:fixed;left:282px;right:18px;top:14px;z-index:45;background:#fff8e6;border:1px solid #f1d28a;color:#8a5a00;border-radius:10px;padding:9px 13px;font-size:12.5px;line-height:1.5;box-shadow:0 6px 18px rgba(16,24,40,.10);display:flex;align-items:center;gap:10px;">
+      <span style="font-weight:800;flex:none;">保存に失敗しました</span>
+      <span style="flex:1;">{{ storageWarning }}</span>
+      <button onClick="{{ clearStorageWarning }}" title="閉じる" style="width:24px;height:24px;border-radius:7px;color:#8a5a00;font-size:17px;line-height:1;">×</button>
+    </div>
+  </sc-if>
 
   <!-- ===== SIDEBAR ===== -->
   <aside style="width:264px;flex:none;height:100vh;background:#fff;border-right:1px solid #e9edf3;display:flex;flex-direction:column;">
@@ -1160,11 +1168,12 @@
           <div style="font-size:16px;font-weight:700;">{{ progress.msg }}</div>
           <div style="font-size:12.5px;color:#8a93a0;margin-top:2px;">履歴を読み取り、フローを少しずつ組み立てています</div>
         </div>
-        <div style="text-align:right;flex:none;">
-          <div style="font-size:24px;font-weight:700;line-height:1;color:var(--primary);">{{ liveNodeCount }}</div>
-          <div style="font-size:11px;color:#8a93a0;margin-top:3px;">ノード生成</div>
-        </div>
-      </div>
+	        <div style="text-align:right;flex:none;">
+	          <div style="font-size:24px;font-weight:700;line-height:1;color:var(--primary);">{{ liveNodeCount }}</div>
+	          <div style="font-size:11px;color:#8a93a0;margin-top:3px;">ノード生成</div>
+	        </div>
+	        <button onClick="{{ cancelLongTask }}" style="font-size:12.5px;font-weight:700;color:#6b7480;border:1px solid #dbe2ee;background:#fff;border-radius:9px;padding:8px 12px;flex:none;">中止</button>
+	      </div>
       <div style="margin-top:16px;height:9px;border-radius:6px;background:#eef1f5;overflow:hidden;">
         <div style="{{ progressBarStyle }}"></div>
       </div>
@@ -1626,6 +1635,7 @@ class Component extends DCLogic {
 	      chatAgentStatus: "",
 	      copiedChatIdx: null,
 	      highlightIds: [],
+	      storageWarning: null,
       zoom: 1,
       settingsOpen: false,
       apiCfg: savedApiCfg,
@@ -1747,14 +1757,36 @@ class Component extends DCLogic {
     }
   }
 
-  persistWs(ws, cur) { try { localStorage.setItem("tpf_ws_v1", JSON.stringify({ workspaces: ws, curWs: cur })); } catch (e) { /* ignore */ } }
-  persistFlows(sf) { try { localStorage.setItem("tpf_flows_v1", JSON.stringify(sf)); } catch (e) { /* ignore */ } }
+  helper() { return (typeof window !== "undefined" && window.TPF) ? window.TPF : null; }
+  clearStorageWarning = () => this.setState({ storageWarning: null });
+  rememberStorageResult(result) {
+    if (!result || result.ok) return true;
+    const text = (result.label || result.key || "データ") + "を保存できませんでした：" + result.message;
+    if (!this.state || this.state.storageWarning === text) return false;
+    this.setState({ storageWarning: text });
+    return false;
+  }
+  writeJson(key, value, label) {
+    const h = this.helper();
+    const result = h && h.writeJson ? h.writeJson(key, value, label) : (() => {
+      try { localStorage.setItem(key, JSON.stringify(value)); return { ok: true }; }
+      catch (e) { return { ok: false, key, label, message: (e && e.message) || "保存できませんでした。" }; }
+    })();
+    return this.rememberStorageResult(result);
+  }
+  readJson(key, fallback) {
+    const h = this.helper();
+    if (h && h.readJson) return h.readJson(key, fallback);
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
+  }
+  persistWs(ws, cur) { this.writeJson("tpf_ws_v1", { workspaces: ws, curWs: cur }, "ワークスペース"); }
+  persistFlows(sf) { this.writeJson("tpf_flows_v1", sf, "フロー"); }
   loadActiveFlowState() { try { return JSON.parse(localStorage.getItem("tpf_active_flow_v1")) || {}; } catch (e) { return {}; } }
-  persistActiveFlow(ws, flowId, view) { try { localStorage.setItem("tpf_active_flow_v1", JSON.stringify({ curWs: ws || this.state.curWs, curFlowId: flowId || null, view: view || this.state.view || "diagram" })); } catch (e) { /* ignore */ } }
+  persistActiveFlow(ws, flowId, view) { this.writeJson("tpf_active_flow_v1", { curWs: ws || this.state.curWs, curFlowId: flowId || null, view: view || this.state.view || "diagram" }, "現在のフロー"); }
 
   toggleWs = () => this.setState({ wsOpen: !this.state.wsOpen });
   pickWs = (e) => { const id = e.currentTarget.dataset.id; if (id === this.state.curWs) { this.setState({ wsOpen: false }); return; } this.persistWs(this.state.workspaces, id); this.persistActiveFlow(id, null, this.state.view || "diagram"); this.setState({ curWs: id, stage: "home", flow: null, curFlowId: null, chat: [], currentChatSessionId: null, highlightIds: [], ...this.loadWsData(id), dbCurrent: "", dbUploadFolder: "", dbEditDoc: null, dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {}, wsOpen: false }); };
-  newWorkspace = () => { const id = this.uid("ws_"); const ws = this.state.workspaces.concat([{ id, name: "ワークスペース" + (this.state.workspaces.length + 1) }]); this.persistWs(ws, id); this.persistActiveFlow(id, null, "diagram"); const empty = { folders: [], docs: [] }; try { localStorage.setItem(this.dbKey(id), JSON.stringify(empty)); localStorage.setItem(this.kbKey(id), "[]"); localStorage.setItem(this.subsKey(id), "[]"); localStorage.setItem(this.chatKey(id), "[]"); } catch (e) {} this.setState({ workspaces: ws, curWs: id, stage: "home", flow: null, curFlowId: null, chat: [], chatSessions: [], currentChatSessionId: null, highlightIds: [], db: empty, kbSources: [], subs: [], dbCurrent: "", dbUploadFolder: "", dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {} }); };
+  newWorkspace = () => { const id = this.uid("ws_"); const ws = this.state.workspaces.concat([{ id, name: "ワークスペース" + (this.state.workspaces.length + 1) }]); this.persistWs(ws, id); this.persistActiveFlow(id, null, "diagram"); const empty = { folders: [], docs: [] }; this.writeJson(this.dbKey(id), empty, "ナレッジDB"); this.writeJson(this.kbKey(id), [], "PDFソース"); this.writeJson(this.subsKey(id), [], "購読"); this.writeJson(this.chatKey(id), [], "相談履歴"); this.setState({ workspaces: ws, curWs: id, stage: "home", flow: null, curFlowId: null, chat: [], chatSessions: [], currentChatSessionId: null, highlightIds: [], db: empty, kbSources: [], subs: [], dbCurrent: "", dbUploadFolder: "", dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {} }); };
   delWorkspace = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; if (this.state.workspaces.length <= 1) return; const ws = this.state.workspaces.filter(w => w.id !== id); const sf = this.state.savedFlows.filter(f => f.wsId !== id); const cur = this.state.curWs === id ? ws[0].id : this.state.curWs; this.persistWs(ws, cur); this.persistFlows(sf); this.persistActiveFlow(cur, null, "diagram"); try { localStorage.removeItem(this.dbKey(id)); localStorage.removeItem(this.kbKey(id)); localStorage.removeItem(this.subsKey(id)); localStorage.removeItem(this.chatKey(id)); } catch (x) {} this.setState({ workspaces: ws, savedFlows: sf, curWs: cur, stage: "home", flow: null, curFlowId: null, chat: [], currentChatSessionId: null, highlightIds: [], ...this.loadWsData(cur), dbCurrent: "", dbUploadFolder: "" }); };
   saveCurrentFlow = () => {
     if (!this.state.flow) return;
@@ -1803,24 +1835,23 @@ class Component extends DCLogic {
   loadSavedApiCfg() {
     try {
       if (typeof localStorage === "undefined") return this.defaultApiCfg();
-      const raw = localStorage.getItem("tpf_api_cfg_v1");
-      return this.normalizeApiCfg(raw ? JSON.parse(raw) : null);
+      return this.normalizeApiCfg(this.readJson("tpf_api_cfg_v1", null));
     } catch (e) { return this.defaultApiCfg(); }
   }
-  persistApiCfg(cfg) {
-    const out = this.normalizeApiCfg(cfg);
-    try { localStorage.setItem("tpf_api_cfg_v1", JSON.stringify(out)); } catch (e) { /* ignore */ }
-    return out;
-  }
-  // ワークスペース別にデータベースを分離（localStorageをwsキーで保存）
-  dbKey(ws) { return "tpf_db_" + (ws || this.state.curWs); }
-  kbKey(ws) { return "tpf_kbsrc_" + (ws || this.state.curWs); }
-  subsKey(ws) { return "tpf_subs_" + (ws || this.state.curWs); }
-  chatKey(ws) { return "tpf_chat_sessions_" + (ws || this.state.curWs); }
-  persistDb(db) { try { localStorage.setItem(this.dbKey(), JSON.stringify(db)); } catch (e) { /* ignore */ } }
-  persistKbSources(arr) { try { localStorage.setItem(this.kbKey(), JSON.stringify(arr)); } catch (e) { /* ignore */ } }
-  persistSubs(arr) { try { localStorage.setItem(this.subsKey(), JSON.stringify(arr)); } catch (e) { /* ignore */ } }
-  persistChatSessions(arr, ws) { try { localStorage.setItem(this.chatKey(ws), JSON.stringify(arr || [])); } catch (e) { /* ignore */ } }
+	  persistApiCfg(cfg) {
+	    const out = this.normalizeApiCfg(cfg);
+	    this.writeJson("tpf_api_cfg_v1", out, "API設定");
+	    return out;
+	  }
+	  // ワークスペース別にデータベースを分離（localStorageをwsキーで保存）
+	  dbKey(ws) { return "tpf_db_" + (ws || this.state.curWs); }
+	  kbKey(ws) { return "tpf_kbsrc_" + (ws || this.state.curWs); }
+	  subsKey(ws) { return "tpf_subs_" + (ws || this.state.curWs); }
+	  chatKey(ws) { return "tpf_chat_sessions_" + (ws || this.state.curWs); }
+	  persistDb(db) { this.writeJson(this.dbKey(), db, "ナレッジDB"); }
+	  persistKbSources(arr) { this.writeJson(this.kbKey(), arr, "PDFソース"); }
+	  persistSubs(arr) { this.writeJson(this.subsKey(), arr, "購読"); }
+	  persistChatSessions(arr, ws) { this.writeJson(this.chatKey(ws), arr || [], "相談履歴"); }
   pdfBlobKey(sourceId) { return "pdf:" + (this.state.curWs || "default") + ":" + sourceId; }
   openPdfStore() {
     if (this._pdfStorePromise) return this._pdfStorePromise;
@@ -1868,8 +1899,8 @@ class Component extends DCLogic {
 	    return { db, kbSources, subs, chatSessions };
 	  }
   // ---- 公開（フォルダを公開キー付きで共有）・購読 ----
-  readPubReg() { try { return JSON.parse(localStorage.getItem("tpf_pub_v1")) || {}; } catch (e) { return {}; } }
-  writePubReg(r) { try { localStorage.setItem("tpf_pub_v1", JSON.stringify(r)); } catch (e) {} }
+  readPubReg() { return this.readJson("tpf_pub_v1", {}); }
+  writePubReg(r) { this.writeJson("tpf_pub_v1", r, "公開設定"); }
   publishFolder = (e) => {
     e.stopPropagation && e.stopPropagation();
     const fid = e.currentTarget.dataset.id; const folders = this.state.db.folders; const f = folders.find(x => x.id === fid); if (!f) return;
@@ -2098,8 +2129,6 @@ class Component extends DCLogic {
     const ids = {}; const collect = (fid) => { ids[fid] = 1; (db.folders || []).filter(f => f.parent === fid).forEach(c => collect(c.id)); }; collect(ent.folderId);
     return { key, name: ent.name, ownerWs: ent.ownerWs, rootId: ent.folderId, folders: (db.folders || []).filter(f => ids[f.id]), docs: (db.docs || []).filter(d => ids[d.folderId]), sources: (sources || []).filter(s => ids[s.folderId || ""]) };
   }
-  persistKbSources(arr) { try { localStorage.setItem(this.kbKey(), JSON.stringify(arr)); } catch (e) { /* ignore */ } }
-  __unused_persistKbSources() {}
   // PDFソース1冊を削除
   dbToggleSrc = (e) => { const id = e.currentTarget.dataset.id; this.setState({ dbSrcExpand: { ...this.state.dbSrcExpand, [id]: !this.state.dbSrcExpand[id] } }); };
   dbToggleSrcPage = (e) => { e.stopPropagation && e.stopPropagation(); const r = e.currentTarget.dataset.ref; this.setState({ dbSrcPageExpand: { ...this.state.dbSrcPageExpand, [r]: !this.state.dbSrcPageExpand[r] } }); };
@@ -3091,7 +3120,10 @@ class Component extends DCLogic {
     this.setState(st => ({ search: { ...st.search, running: false, answer } }));
   }
 
-  componentWillUnmount() { if (this._iv) clearInterval(this._iv); }
+  componentWillUnmount() {
+    if (this._iv) clearInterval(this._iv);
+    this.abortActiveRequests();
+  }
 
   // ---- LLM routing (内蔵Claude / OpenAI / Azure OpenAI) ----
   hasLLM() {
@@ -3100,11 +3132,53 @@ class Component extends DCLogic {
   }
   async llmComplete(prompt, images) {
     const s = this.state.apiCfg;
+    this.throwIfCancelled();
     if (s && s.provider === "openai" && s.apiKey) return this.callOpenAI(prompt, s, images);
     if (s && s.provider === "azure" && s.apiKey) return this.callAzure(prompt, s, images);
     if (window.claude && window.claude.complete) return window.claude.complete(prompt);
     throw new Error("AIが設定されていません。右上の「API設定」からOpenAI/AzureのAPIキーを入力してください。");
   }
+  llmTimeoutMs() { return Math.max(15000, Number(this.state.apiCfg && this.state.apiCfg.timeoutMs) || 90000); }
+  abortActiveRequests() {
+    (this._abortControllers || []).forEach(c => { try { c.abort(); } catch (e) {} });
+    this._abortControllers = new Set();
+  }
+  async fetchWithTimeout(url, options, label) {
+    const controller = new AbortController();
+    this._abortControllers = this._abortControllers || new Set();
+    this._abortControllers.add(controller);
+    const timer = setTimeout(() => controller.abort(), this.llmTimeoutMs());
+    try {
+      return await fetch(url, { ...(options || {}), signal: controller.signal });
+    } catch (e) {
+      if (e && e.name === "AbortError") {
+        throw new Error(this._cancelRequested ? "処理を中止しました。" : ((label || "API呼び出し") + "がタイムアウトしました。"));
+      }
+      throw e;
+    } finally {
+      clearTimeout(timer);
+      this._abortControllers.delete(controller);
+    }
+  }
+  beginLongTask() {
+    this._cancelRequested = false;
+    this._runId = (this._runId || 0) + 1;
+    return this._runId;
+  }
+  throwIfCancelled(runId) {
+    if (this._cancelRequested || (runId && runId !== this._runId)) throw new Error("処理を中止しました。");
+  }
+  cancelLongTask = () => {
+    if (!this.state.analyzing && this.state.stage !== "extracting") return;
+    this._cancelRequested = true;
+    this._runId = (this._runId || 0) + 1;
+    this.abortActiveRequests();
+    const msg = "処理を中止しました。";
+    const patch = { stage: this.state.pdfTopics && this.state.pdfTopics.length ? "topics" : "input", analyzing: false, pdfPhase: "", progress: { current: 0, total: 0, msg: "" } };
+    if (this.state.inputMode === "pdf" || this.state.pdfReady || this.state.pdfTopics.length) patch.pdfError = msg;
+    else patch.error = msg;
+    this.setState(patch);
+  };
   buildContent(prompt, images) {
     if (!images || !images.length) return prompt;
     return [{ type: "text", text: prompt }].concat(images.map(u => ({ type: "image_url", image_url: { url: u } })));
@@ -3114,11 +3188,11 @@ class Component extends DCLogic {
     let body = { model: s.model || "gpt-4o-mini", messages: [{ role: "user", content: this.buildContent(prompt, images) }], temperature: 0.2, max_tokens: 1500 };
     let lastError = "";
     for (let i = 0; i < 3; i++) {
-      const r = await fetch(base + "/chat/completions", {
+      const r = await this.fetchWithTimeout(base + "/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.apiKey },
         body: JSON.stringify(body),
-      });
+      }, "OpenAI API呼び出し");
       if (r.ok) {
         const j = await r.json();
         return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
@@ -3190,11 +3264,11 @@ class Component extends DCLogic {
     let body = this.azureInitialBody(prompt, s, images, req.bodyModel);
     let lastError = "";
     for (let i = 0; i < 3; i++) {
-      const r = await fetch(req.url, {
+      const r = await this.fetchWithTimeout(req.url, {
         method: "POST",
         headers: { "Content-Type": "application/json", "api-key": s.apiKey },
         body: JSON.stringify(body),
-      });
+      }, "Azure API呼び出し");
       if (r.ok) {
         const j = await r.json();
         return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
@@ -3288,86 +3362,21 @@ class Component extends DCLogic {
 	    if (this.state.chatAgentStatus !== v) this.setState({ chatAgentStatus: v });
 	  }
 	  escapeHtml(s) {
-	    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+	    const h = this.helper();
+	    return h && h.escapeHtml ? h.escapeHtml(s) : String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 	  }
 	  markdownInline(s) {
-	    const codes = [];
-	    let t = this.escapeHtml(s).replace(/`([^`]+)`/g, (_, code) => {
-	      const key = "\u0000CODE" + codes.length + "\u0000";
-	      codes.push("<code>" + code + "</code>");
-	      return key;
-	    });
-	    t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-	    t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-	    t = t.replace(/__([^_]+)__/g, "<strong>$1</strong>");
-	    codes.forEach((html, i) => { t = t.split("\u0000CODE" + i + "\u0000").join(html); });
-	    return t;
+	    const h = this.helper();
+	    return h && h.markdownInline ? h.markdownInline(s) : this.escapeHtml(s);
 	  }
 	  markdownToHtml(md) {
-	    const lines = String(md || "").replace(/\r\n/g, "\n").split("\n");
-	    const html = [], para = [], stack = [];
-	    const flushPara = () => {
-	      if (!para.length) return;
-	      html.push("<p>" + this.markdownInline(para.join(" ")) + "</p>");
-	      para.length = 0;
-	    };
-	    const closeTopLi = () => { const top = stack[stack.length - 1]; if (top && top.liOpen) { html.push("</li>"); top.liOpen = false; } };
-	    const closeLists = (targetIndent) => {
-	      while (stack.length && (targetIndent == null || stack[stack.length - 1].indent > targetIndent)) {
-	        closeTopLi();
-	        html.push("</" + stack.pop().type + ">");
-	      }
-	    };
-	    const closeAllLists = () => closeLists(null);
-	    let inCode = false, code = [];
-	    lines.forEach(line => {
-	      if (/^\s*```/.test(line)) {
-	        flushPara();
-	        if (inCode) {
-	          html.push("<pre><code>" + this.escapeHtml(code.join("\n")) + "</code></pre>");
-	          inCode = false; code = [];
-	        } else {
-	          closeAllLists(); inCode = true; code = [];
-	        }
-	        return;
-	      }
-	      if (inCode) { code.push(line); return; }
-	      if (!line.trim()) { flushPara(); closeAllLists(); return; }
-	      const heading = line.match(/^(#{1,3})\s+(.+)$/);
-	      if (heading) {
-	        flushPara(); closeAllLists();
-	        const level = Math.min(3, heading[1].length) + 2;
-	        html.push("<h" + level + ">" + this.markdownInline(heading[2]) + "</h" + level + ">");
-	        return;
-	      }
-	      const quote = line.match(/^>\s?(.+)$/);
-	      if (quote) { flushPara(); closeAllLists(); html.push("<blockquote>" + this.markdownInline(quote[1]) + "</blockquote>"); return; }
-	      const item = line.match(/^(\s*)([-*+]|\d+\.)\s+(.+)$/);
-	      if (item) {
-	        flushPara();
-	        const indent = item[1].replace(/\t/g, "  ").length;
-	        const type = /\d+\./.test(item[2]) ? "ol" : "ul";
-	        closeLists(indent);
-	        let top = stack[stack.length - 1];
-	        if (!top || top.indent < indent || top.type !== type) {
-	          html.push("<" + type + ">");
-	          top = { type, indent, liOpen: false };
-	          stack.push(top);
-	        } else {
-	          closeTopLi();
-	        }
-	        html.push("<li>" + this.markdownInline(item[3]));
-	        top.liOpen = true;
-	        return;
-	      }
-	      closeAllLists();
-	      para.push(line.trim());
-	    });
-	    flushPara(); closeAllLists();
-	    if (inCode) html.push("<pre><code>" + this.escapeHtml(code.join("\n")) + "</code></pre>");
-	    return html.join("");
+	    const h = this.helper();
+	    return h && h.markdownToHtml ? h.markdownToHtml(md) : this.escapeHtml(md);
 	  }
-	  answerHtmlObj(text) { return { __html: this.markdownToHtml(text) }; }
+	  answerHtmlObj(text) {
+	    const h = this.helper();
+	    return h && h.answerHtmlObj ? h.answerHtmlObj(text) : { __html: this.markdownToHtml(text) };
+	  }
 	  copyTextFallback(text) {
 	    const ta = document.createElement("textarea");
 	    ta.value = text;
@@ -3583,8 +3592,14 @@ class Component extends DCLogic {
 
   async ensurePdfjs() {
     if (this._pdfjs) return this._pdfjs;
-    const m = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.min.mjs");
-    m.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.7.76/build/pdf.worker.min.mjs";
+    let m;
+    try {
+      m = await import("/vendor/pdfjs-dist/pdf.min.mjs");
+      m.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs-dist/pdf.worker.min.mjs";
+    } catch (e) {
+      m = await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs");
+      m.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+    }
     this._pdfjs = m;
     return m;
   }
@@ -3911,20 +3926,25 @@ class Component extends DCLogic {
   async runPdfPipeline() {
     if (!this._pdfDoc) { this.setState({ pdfError: "PDFを読み込んでください。" }); return; }
     if (!this.hasLLM()) { this.setState({ pdfError: "AIが未設定です。右上の「API設定」でキーを入力してください（内蔵Claudeでも動作します）。" }); return; }
+    const runId = this.beginLongTask();
     const vision = this.state.pdfVision && this.visionCapable();
     this.setState({ stage: "extracting", analyzing: true, flow: null, newIds: [], buildLog: [], pdfError: null, error: null, pdfPhase: "index", progress: { current: 0, total: this.state.pdfNumPages, msg: "PDFを読み込んでいます…" } });
     await this.sleep(250);
     try {
+      this.throwIfCancelled(runId);
       const pages = await this.extractPdfPages();
+      this.throwIfCancelled(runId);
       this.setState({ pdfPages: pages });
       const nonEmpty = pages.filter(p => (vision ? true : (p.text && p.text.length > 8)));
       const index = await this.indexPages(nonEmpty.length ? nonEmpty : pages, vision);
+      this.throwIfCancelled(runId);
       this.setState({ pdfIndex: index });
       this.setState({ progress: { current: 1, total: 1, msg: "ナレッジベースに登録しています…" } });
       const kb = await this.registerPdfToKb(nonEmpty.length ? nonEmpty : pages, index);
       this._pdfKb = kb;
       this.setState({ pdfKb: kb });
       const topics = await this.clusterTopics(index);
+      this.throwIfCancelled(runId);
       if (!topics.length) throw new Error("思考プロセスとして抽出できる判断・手順のまとまりが見つかりませんでした。ナレッジベースには全ページを登録済みです。");
       this.setState({ stage: "topics", analyzing: false, pdfTopics: topics, pdfPhase: "" });
     } catch (err) {
@@ -3941,13 +3961,16 @@ class Component extends DCLogic {
   async buildSelectedTopics() {
     const topics = this.state.pdfTopics.filter(t => t.selected);
     if (!topics.length) { this.setState({ pdfError: "トピックを1つ以上選択してください。" }); return; }
+    const runId = this.beginLongTask();
     const vision = this.state.pdfVision && this.visionCapable();
     const pageText = {}; this.state.pdfPages.forEach(p => { pageText[p.page] = p.text; });
     const mdByPage = {}; this.state.pdfIndex.forEach(p => { if (p.md) mdByPage[p.page] = p.md; });
     this.setState({ stage: "extracting", analyzing: true, flow: null, newIds: [], buildLog: [], pdfError: null, error: null, pdfCoverage: null, pdfPhase: "build", progress: { current: 0, total: topics.length + 1, msg: "フローを生成しています…" } });
     await this.sleep(300);
     const built = [];
+    const failures = [];
     for (let i = 0; i < topics.length; i++) {
+      this.throwIfCancelled(runId);
       const tp = topics[i];
       this.setState({ progress: { current: i + 1, total: topics.length + 1, msg: "「" + tp.title + "」をフロー化中… (" + (i + 1) + " / " + topics.length + ")" }, flow: null, newIds: [] });
       const parts = tp.pages.slice().sort((a, b) => a - b).map(pn => {
@@ -3958,6 +3981,7 @@ class Component extends DCLogic {
       const chunks = this.chunkByChars(parts, 4200);
       let flow = null;
       for (let c = 0; c < chunks.length; c++) {
+        this.throwIfCancelled(runId);
         try {
           if (!flow) {
             const t = await this.llmComplete(this.buildPdfFlowPrompt(tp, chunks[c]));
@@ -3974,7 +3998,10 @@ class Component extends DCLogic {
             const added = Object.keys(flow.nodes).filter(id => before.indexOf(id) < 0);
             this.setState({ flow, newIds: added });
           }
-        } catch (e) { /* skip chunk */ }
+        } catch (e) {
+          failures.push({ topic: tp.title, chunk: c + 1, message: (e && e.message) || "生成に失敗しました。" });
+          this.setState({ buildLog: this.state.buildLog.concat([{ label: "失敗: " + tp.title, added: 0, addedLabel: "chunk " + (c + 1) }]) });
+        }
         await this.sleep(220);
       }
       if (flow && Object.keys(flow.nodes).length) {
@@ -3990,6 +4017,7 @@ class Component extends DCLogic {
       await this.sleep(150);
     }
     if (!built.length) { this.setState({ stage: "topics", analyzing: false, pdfError: "フローを生成できませんでした。トピックやPDFの内容をご確認ください。" }); return; }
+    this.throwIfCancelled(runId);
     const finalized = await this.auditAndCompletePdfFlows(built, {
       index: this.state.pdfIndex,
       pageText,
@@ -4003,7 +4031,7 @@ class Component extends DCLogic {
     finalized.forEach((fl, i) => { const id = this.uid("fl_"); if (i === 0) firstId = id; sf.push({ id, wsId: this.state.curWs, title: fl.title || "無題のフロー", flow: fl, chat: [], at: Date.now() + i, ...this.flowRecordMeta(fl) }); });
     this.persistFlows(sf);
     const first = finalized[0];
-    this.setState({ savedFlows: sf, curFlowId: firstId, flow: first, stage: "flow", analyzing: false, view: "diagram", path: [], currentId: first.root, chat: [], newIds: [], pdfPhase: "" });
+    this.setState({ savedFlows: sf, curFlowId: firstId, flow: first, stage: "flow", analyzing: false, view: "diagram", path: [], currentId: first.root, chat: [], newIds: [], pdfPhase: "", pdfCoverage: failures.length ? { ...(this.state.pdfCoverage || {}), chunkFailures: failures.length } : this.state.pdfCoverage });
   }
 
   buildIndexPrompt(batch) {
@@ -4352,6 +4380,7 @@ class Component extends DCLogic {
   };
 
   async analyzeCsv() {
+    const runId = this.beginLongTask();
     const recs = this.state.csvRows;
     const batches = this.chunkRecords(recs);
     const folderId = this.currentSaveFolderId();
@@ -4360,9 +4389,11 @@ class Component extends DCLogic {
     this.setState({ stage: "extracting", analyzing: true, flow: null, newIds: [], buildLog: [], error: null, currentId: null, path: [], progress: { current: 0, total: batches.length, msg: "CSVを読み込んでいます…" } });
     await this.sleep(450);
     try {
+      this.throwIfCancelled(runId);
       if (!this.hasLLM()) throw new Error("AIが未設定です。右上の「API設定」でOpenAI/Azureのキーを入力するか、『サンプルCSVでリアルタイム分析デモ』をお試しください。");
       let flow = null;
       for (let i = 0; i < batches.length; i++) {
+        this.throwIfCancelled(runId);
         this.setState({ progress: { current: i + 1, total: batches.length, msg: "バッチ " + (i + 1) + " / " + batches.length + " を分析中…" } });
         const text = batches[i].join("\n");
         try {
@@ -4388,6 +4419,7 @@ class Component extends DCLogic {
         }
         await this.sleep(520);
       }
+      this.throwIfCancelled(runId);
       if (!flow) throw new Error("フローを生成できませんでした。CSVの内容や形式（ヘッダー行＋データ行）をご確認のうえ、もう一度お試しください。");
       flow = this.normalizeFlowDbReferences(flow, { docRefs: docId ? ["doc:" + docId] : [] });
       flow = this.applyFlowSourceMeta(flow, this.flowSourceMeta(folderId, [], docId ? [docId] : []));
@@ -4398,22 +4430,29 @@ class Component extends DCLogic {
   }
 
   async simulateAnalysis() {
+    const runId = this.beginLongTask();
     const order = ["n1", "n2", "n5", "n3", "n7", "n4", "n8", "n9", "n6"];
     const batches = [];
     for (let i = 0; i < order.length; i += 2) batches.push(order.slice(i, i + 2));
     this.setState({ stage: "extracting", analyzing: true, flow: { title: this.DEMO.title, root: "n1", nodes: {} }, newIds: [], buildLog: [], currentId: "n1", path: [], progress: { current: 0, total: batches.length, msg: "CSVを読み込んでいます…" } });
-    await this.sleep(750);
-    let nodes = {};
-    for (let i = 0; i < batches.length; i++) {
-      this.setState({ progress: { current: i + 1, total: batches.length, msg: "バッチ " + (i + 1) + " / " + batches.length + " を分析中…" } });
-      await this.sleep(780);
-      const added = [];
-      batches[i].forEach(id => { if (this.DEMO.nodes[id]) { nodes = { ...nodes, [id]: this.DEMO.nodes[id] }; added.push(id); } });
-      this.setState({ flow: { ...this.state.flow, nodes: { ...nodes } }, newIds: added, buildLog: this.state.buildLog.concat([{ batch: i + 1, added: added.length }]) });
-      await this.sleep(560);
+    try {
+      await this.sleep(750);
+      let nodes = {};
+      for (let i = 0; i < batches.length; i++) {
+        this.throwIfCancelled(runId);
+        this.setState({ progress: { current: i + 1, total: batches.length, msg: "バッチ " + (i + 1) + " / " + batches.length + " を分析中…" } });
+        await this.sleep(780);
+        const added = [];
+        batches[i].forEach(id => { if (this.DEMO.nodes[id]) { nodes = { ...nodes, [id]: this.DEMO.nodes[id] }; added.push(id); } });
+        this.setState({ flow: { ...this.state.flow, nodes: { ...nodes } }, newIds: added, buildLog: this.state.buildLog.concat([{ batch: i + 1, added: added.length }]) });
+        await this.sleep(560);
+      }
+      this.throwIfCancelled(runId);
+      await this.sleep(550);
+      this.setState({ stage: "flow", analyzing: false, view: "diagram", currentId: "n1", path: [], chat: [], ...this.makeReg(this.state.flow, []) });
+    } catch (err) {
+      this.setState({ stage: "input", analyzing: false, error: (err && err.message) || "デモ生成に失敗しました。" });
     }
-    await this.sleep(550);
-    this.setState({ stage: "flow", analyzing: false, view: "diagram", currentId: "n1", path: [], chat: [], ...this.makeReg(this.state.flow, []) });
   }
 
   // 分岐の取得（二択 decision / 多岐 choice / 連結 action を統一）
@@ -5699,6 +5738,7 @@ class Component extends DCLogic {
 
   async extract() {
     if (!this.state.dataText.trim()) { this.setState({ error: "履歴データを入力してください。" }); return; }
+    const runId = this.beginLongTask();
     const folderId = this.currentSaveFolderId();
     const titleBase = (this.state.domain || "貼り付け履歴データ").trim();
     const docId = this.saveHistoryDoc("text", titleBase + "（取り込み履歴）", this.state.dataText, folderId);
@@ -5707,8 +5747,10 @@ class Component extends DCLogic {
     let i = 0; this.setState({ loadingMsg: msgs[0] });
     this._iv = setInterval(() => { i = (i + 1) % msgs.length; this.setState({ loadingMsg: msgs[i] }); }, 1400);
     try {
+      this.throwIfCancelled(runId);
       if (!this.hasLLM()) throw new Error("AIが未設定です。右上の「API設定」でキーを入力するか、『デモのフローを見る』をお試しください。");
       const txt = await this.llmComplete(this.buildPrompt());
+      this.throwIfCancelled(runId);
       const flow = this.parseFlow(txt);
       if (!flow || !flow.nodes || !flow.root || !flow.nodes[flow.root]) throw new Error("抽出結果の構造を解釈できませんでした。もう一度お試しください。");
       const meta = this.flowSourceMeta(folderId, [], docId ? [docId] : []);
@@ -5991,6 +6033,9 @@ class Component extends DCLogic {
 
     const out = {
       rootStyle, step,
+      storageWarning: st.storageWarning || "",
+      clearStorageWarning: this.clearStorageWarning,
+      cancelLongTask: this.cancelLongTask,
       isHome: st.stage === "home", isDbMain: st.stage === "db", isFlowLibMain: st.stage === "flowlib",
       isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
       isDiagram: st.view === "diagram", isDiagnose: st.view === "diagnose",
