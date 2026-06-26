@@ -93,10 +93,11 @@
             <button onClick="{{ submitAuth }}" disabled="{{ authBusy }}" style="{{ authSubmitStyle }}">{{ authSubmitLabel }}</button>
             <sc-if value="{{ authDemoAccounts }}" hint-placeholder-val="">
             <div style="border-top:1px solid #eef1f5;padding-top:13px;">
-              <div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:8px;">検証用アカウント</div>
+              <div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:5px;">検証用アカウントでログイン</div>
+              <div style="font-size:10.5px;color:#8a93a0;line-height:1.5;margin-bottom:8px;">動作確認用の管理者または一般ユーザとしてすぐにログインします。</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-                <button data-email="admin@example.test" data-password="Password123!" onClick="{{ loginDemoAccount }}" style="border:1px solid #dbe2ee;background:#fff;color:#3a414c;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;">管理者</button>
-                <button data-email="user@example.test" data-password="Password123!" onClick="{{ loginDemoAccount }}" style="border:1px solid #dbe2ee;background:#fff;color:#3a414c;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;">一般ユーザ</button>
+                <button data-email="admin@example.test" data-password="Password123!" onClick="{{ loginDemoAccount }}" title="管理者権限の検証用アカウントでログイン" style="border:1px solid #dbe2ee;background:#fff;color:#3a414c;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;line-height:1.35;">管理者でログイン</button>
+                <button data-email="user@example.test" data-password="Password123!" onClick="{{ loginDemoAccount }}" title="一般ユーザ権限の検証用アカウントでログイン" style="border:1px solid #dbe2ee;background:#fff;color:#3a414c;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;line-height:1.35;">一般ユーザでログイン</button>
               </div>
             </div>
             </sc-if>
@@ -1942,7 +1943,12 @@ class Component extends DCLogic {
 	    return "http://127.0.0.1:3001";
 	  }
 	  async apiRequest(path, options) {
-	    const res = await fetch(this.apiBase() + path, { credentials: "include", ...(options || {}), headers: { "Content-Type": "application/json", ...((options && options.headers) || {}) } });
+	    let res;
+	    try {
+	      res = await fetch(this.apiBase() + path, { credentials: "include", ...(options || {}), headers: { "Content-Type": "application/json", ...((options && options.headers) || {}) } });
+	    } catch (e) {
+	      throw new Error("バックエンドに接続できません。npm start でサーバを起動してください。");
+	    }
 	    const data = await res.json().catch(() => ({}));
 	    if (!res.ok) throw new Error(data.error || data.message || ("HTTP " + res.status));
 	    return data;
