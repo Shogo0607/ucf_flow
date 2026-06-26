@@ -1895,23 +1895,6 @@ class Component extends DCLogic {
       this._apiCfgDraft = c;
       this.setState({ apiCfg: c });
     } catch (e) { /* ignore */ }
-    let curWs = this.state.curWs, workspaces = this.state.workspaces, savedFlows = [];
-    try {
-      const raw = localStorage.getItem("tpf_ws_v1");
-      if (raw) { const w = JSON.parse(raw); if (w && w.workspaces && w.workspaces.length) { workspaces = w.workspaces; curWs = w.curWs || w.workspaces[0].id; } }
-      const rf = localStorage.getItem("tpf_flows_v1");
-      if (rf) { const sf = JSON.parse(rf); if (Array.isArray(sf)) savedFlows = sf; }
-    } catch (e) { /* ignore */ }
-    if (!workspaces.some(w => w.id === curWs)) curWs = (workspaces[0] && workspaces[0].id) || "ws_default";
-    try {
-      const oldDb = localStorage.getItem("tpf_db_v1"); if (oldDb && !localStorage.getItem(this.dbKey(curWs))) localStorage.setItem(this.dbKey(curWs), oldDb);
-      const oldKb = localStorage.getItem("tpf_kbsrc_v1"); if (oldKb && !localStorage.getItem(this.kbKey(curWs))) localStorage.setItem(this.kbKey(curWs), oldKb);
-    } catch (e) { /* ignore */ }
-    const active = this.loadActiveFlowState();
-    let rec = active.curWs === curWs ? savedFlows.find(f => f.id === active.curFlowId && f.wsId === curWs && f.flow && f.flow.nodes) : null;
-    const next = { workspaces, curWs, savedFlows, ...this.loadWsData(curWs) };
-    if (rec) Object.assign(next, { flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: rec.id, stage: "home", view: active.view || "diagram", currentId: rec.flow.root, path: [], chat: (rec.chat || []).slice(), highlightIds: [], nodeModalId: null });
-    this.setState(next);
   }
 
   flowSourceMeta(folderId, sourceIds, docIds) {
@@ -1997,9 +1980,11 @@ class Component extends DCLogic {
 	    try {
 	      const config = await this.apiRequest("/api/auth/config", { method: "GET", headers: {} });
 	      const data = await this.apiRequest("/api/auth/me", { method: "GET", headers: {} });
-	      this.setState({ authUser: data.user || null, authChecking: false, authError: "", authDemoAccounts: !!config.demoAccountsEnabled });
+	      const user = data.user || null;
+	      const next = user ? this.loadUserWorkspaceState(user) : this.blankUserWorkspaceState();
+	      this.setState({ authUser: user, authChecking: false, authError: "", authDemoAccounts: !!config.demoAccountsEnabled, ...next });
 	    } catch (e) {
-	      this.setState({ authUser: null, authChecking: false, authError: "バックエンドに接続できません。npm start でサーバを起動してください。" });
+	      this.setState({ authUser: null, authChecking: false, authError: "バックエンドに接続できません。npm start でサーバを起動してください。", ...this.blankUserWorkspaceState() });
 	    }
 	  }
 	  pickAuthMode = (e) => this.setState({ authMode: e.currentTarget.dataset.mode || "login", authError: "" });
@@ -2019,7 +2004,7 @@ class Component extends DCLogic {
 	        ? { email: form.email, name: form.name, password: form.password }
 	        : { email: form.email, password: form.password };
 	      const data = await this.apiRequest("/api/auth/" + mode, { method: "POST", body: JSON.stringify(body) });
-	      this.setState({ authUser: data.user, authBusy: false, authError: "", authForm: { email: "", name: "", password: "" } });
+	      this.setState({ authUser: data.user, authBusy: false, authError: "", authForm: { email: "", name: "", password: "" }, ...this.loadUserWorkspaceState(data.user) });
 	    } catch (e) {
 	      this.setState({ authBusy: false, authError: (e && e.message) || "認証に失敗しました。" });
 	    }
@@ -2032,7 +2017,7 @@ class Component extends DCLogic {
 	  };
 	  logout = async () => {
 	    try { await this.apiRequest("/api/auth/logout", { method: "POST", body: "{}" }); } catch (e) { /* ignore */ }
-	    this.setState({ authUser: null, authMode: "login", authForm: { email: "", name: "", password: "" }, stage: "home", adminUsers: [], adminNotice: "", adminError: "" });
+	    this.setState({ authUser: null, authMode: "login", authForm: { email: "", name: "", password: "" }, stage: "home", adminUsers: [], adminNotice: "", adminError: "", ...this.blankUserWorkspaceState() });
 	  };
 	  goAdmin = async () => {
 	    if (!this.state.authUser || this.state.authUser.role !== "admin") return;
@@ -2097,6 +2082,101 @@ class Component extends DCLogic {
 	    }
 	  }
 	  clearStorageWarning = () => this.setState({ storageWarning: null });
+  blankUserWorkspaceState() {
+    return {
+      workspaces: [{ id: "ws_default", name: "マイワークスペース" }],
+      curWs: "ws_default",
+      savedFlows: [],
+      curFlowId: null,
+      flow: null,
+      stage: "home",
+      view: "diagram",
+      currentId: null,
+      path: [],
+      chat: [],
+      chatSessions: [],
+      currentChatSessionId: null,
+      highlightIds: [],
+      kbSources: [],
+      subs: [],
+      db: JSON.parse(JSON.stringify(this.SAMPLE_DB)),
+      dbCurrent: "",
+      dbUploadFolder: "",
+      dbSrcExpand: {},
+      dbSrcPageExpand: {},
+      sharedExpand: {},
+      wsOpen: false,
+      nodeModalId: null,
+    };
+  }
+  storageUserId(user) {
+    const src = user || this.state.authUser;
+    const id = src && src.id ? String(src.id) : "guest";
+    return "u_" + id.replace(/[^a-zA-Z0-9_-]/g, "_");
+  }
+  currentStorageUserId() { return this.storageUserId(this.state.authUser); }
+  scopedKey(base, userId) { return base + "__" + (userId || this.currentStorageUserId()); }
+  hasStorageKey(key) {
+    try { return typeof localStorage !== "undefined" && localStorage.getItem(key) !== null; } catch (e) { return false; }
+  }
+  legacyOwnerKey() { return "tpf_legacy_owner_v1"; }
+  legacyDataExists() {
+    const keys = ["tpf_ws_v1", "tpf_flows_v1", "tpf_active_flow_v1", "tpf_db_v1", "tpf_kbsrc_v1", "tpf_db_ws_default", "tpf_kbsrc_ws_default"];
+    return keys.some(k => this.hasStorageKey(k));
+  }
+  claimLegacyDataForUser(userId) {
+    if (!userId || userId === "u_guest") return false;
+    try {
+      const owner = localStorage.getItem(this.legacyOwnerKey());
+      if (!owner && this.legacyDataExists()) localStorage.setItem(this.legacyOwnerKey(), userId);
+      return localStorage.getItem(this.legacyOwnerKey()) === userId;
+    } catch (e) {
+      return false;
+    }
+  }
+  readUserJson(base, fallback, userId) {
+    const key = this.scopedKey(base, userId);
+    if (this.hasStorageKey(key)) return this.readJson(key, fallback);
+    if (userId && userId !== "u_guest") {
+      try {
+        if (localStorage.getItem(this.legacyOwnerKey()) === userId && this.hasStorageKey(base)) {
+          return this.readJson(base, fallback);
+        }
+      } catch (e) { /* ignore */ }
+    }
+    return fallback;
+  }
+  loadUserWorkspaceState(user) {
+    const userId = this.storageUserId(user);
+    this.claimLegacyDataForUser(userId);
+    let curWs = "ws_default";
+    let workspaces = [{ id: "ws_default", name: "マイワークスペース" }];
+    let savedFlows = [];
+    const wsData = this.readUserJson("tpf_ws_v1", null, userId);
+    if (wsData && Array.isArray(wsData.workspaces) && wsData.workspaces.length) {
+      workspaces = wsData.workspaces;
+      curWs = wsData.curWs || wsData.workspaces[0].id;
+    }
+    const flowData = this.readUserJson("tpf_flows_v1", [], userId);
+    if (Array.isArray(flowData)) savedFlows = flowData;
+    if (!workspaces.some(w => w.id === curWs)) curWs = (workspaces[0] && workspaces[0].id) || "ws_default";
+    this.migrateLegacyWsData(curWs, userId);
+    const active = this.loadActiveFlowState(userId);
+    const rec = active.curWs === curWs ? savedFlows.find(f => f.id === active.curFlowId && f.wsId === curWs && f.flow && f.flow.nodes) : null;
+    const next = { ...this.blankUserWorkspaceState(), workspaces, curWs, savedFlows, ...this.loadWsData(curWs, userId) };
+    if (rec) Object.assign(next, { flow: JSON.parse(JSON.stringify(rec.flow)), curFlowId: rec.id, stage: "home", view: active.view || "diagram", currentId: rec.flow.root, path: [], chat: (rec.chat || []).slice(), highlightIds: [], nodeModalId: null });
+    return next;
+  }
+  migrateLegacyWsData(ws, userId) {
+    if (!userId || userId === "u_guest") return;
+    try {
+      if (localStorage.getItem(this.legacyOwnerKey()) !== userId) return;
+      const oldDb = localStorage.getItem("tpf_db_v1");
+      if (oldDb && !localStorage.getItem(this.dbKey(ws, userId))) localStorage.setItem(this.dbKey(ws, userId), oldDb);
+      const oldKb = localStorage.getItem("tpf_kbsrc_v1");
+      if (oldKb && !localStorage.getItem(this.kbKey(ws, userId))) localStorage.setItem(this.kbKey(ws, userId), oldKb);
+    } catch (e) { /* ignore */ }
+  }
   rememberStorageResult(result) {
     if (!result || result.ok) return true;
     const text = (result.label || result.key || "データ") + "を保存できませんでした：" + result.message;
@@ -2117,10 +2197,10 @@ class Component extends DCLogic {
     if (h && h.readJson) return h.readJson(key, fallback);
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; } catch (e) { return fallback; }
   }
-  persistWs(ws, cur) { this.writeJson("tpf_ws_v1", { workspaces: ws, curWs: cur }, "ワークスペース"); }
-  persistFlows(sf) { this.writeJson("tpf_flows_v1", sf, "フロー"); }
-  loadActiveFlowState() { try { return JSON.parse(localStorage.getItem("tpf_active_flow_v1")) || {}; } catch (e) { return {}; } }
-  persistActiveFlow(ws, flowId, view) { this.writeJson("tpf_active_flow_v1", { curWs: ws || this.state.curWs, curFlowId: flowId || null, view: view || this.state.view || "diagram" }, "現在のフロー"); }
+  persistWs(ws, cur) { this.writeJson(this.scopedKey("tpf_ws_v1"), { workspaces: ws, curWs: cur }, "ワークスペース"); }
+  persistFlows(sf) { this.writeJson(this.scopedKey("tpf_flows_v1"), sf, "フロー"); }
+  loadActiveFlowState(userId) { return this.readUserJson("tpf_active_flow_v1", {}, userId || this.currentStorageUserId()); }
+  persistActiveFlow(ws, flowId, view) { this.writeJson(this.scopedKey("tpf_active_flow_v1"), { curWs: ws || this.state.curWs, curFlowId: flowId || null, view: view || this.state.view || "diagram" }, "現在のフロー"); }
 
   toggleWs = () => this.setState({ wsOpen: !this.state.wsOpen });
   pickWs = (e) => { const id = e.currentTarget.dataset.id; if (id === this.state.curWs) { this.setState({ wsOpen: false }); return; } this.persistWs(this.state.workspaces, id); this.persistActiveFlow(id, null, this.state.view || "diagram"); this.setState({ curWs: id, stage: "home", flow: null, curFlowId: null, chat: [], currentChatSessionId: null, highlightIds: [], ...this.loadWsData(id), dbCurrent: "", dbUploadFolder: "", dbEditDoc: null, dbSrcExpand: {}, dbSrcPageExpand: {}, sharedExpand: {}, wsOpen: false }); };
@@ -2181,16 +2261,16 @@ class Component extends DCLogic {
 	    this.writeJson("tpf_api_cfg_v1", out, "API設定");
 	    return out;
 	  }
-	  // ワークスペース別にデータベースを分離（localStorageをwsキーで保存）
-	  dbKey(ws) { return "tpf_db_" + (ws || this.state.curWs); }
-	  kbKey(ws) { return "tpf_kbsrc_" + (ws || this.state.curWs); }
-	  subsKey(ws) { return "tpf_subs_" + (ws || this.state.curWs); }
-	  chatKey(ws) { return "tpf_chat_sessions_" + (ws || this.state.curWs); }
+	  // ユーザ別 + ワークスペース別にデータベースを分離（localStorageをユーザ/WSキーで保存）
+	  dbKey(ws, userId) { return this.scopedKey("tpf_db_" + (ws || this.state.curWs), userId); }
+	  kbKey(ws, userId) { return this.scopedKey("tpf_kbsrc_" + (ws || this.state.curWs), userId); }
+	  subsKey(ws, userId) { return this.scopedKey("tpf_subs_" + (ws || this.state.curWs), userId); }
+	  chatKey(ws, userId) { return this.scopedKey("tpf_chat_sessions_" + (ws || this.state.curWs), userId); }
 	  persistDb(db) { this.writeJson(this.dbKey(), db, "ナレッジDB"); }
 	  persistKbSources(arr) { this.writeJson(this.kbKey(), arr, "PDFソース"); }
 	  persistSubs(arr) { this.writeJson(this.subsKey(), arr, "購読"); }
 	  persistChatSessions(arr, ws) { this.writeJson(this.chatKey(ws), arr || [], "相談履歴"); }
-  pdfBlobKey(sourceId) { return "pdf:" + (this.state.curWs || "default") + ":" + sourceId; }
+  pdfBlobKey(sourceId) { return "pdf:" + this.currentStorageUserId() + ":" + (this.state.curWs || "default") + ":" + sourceId; }
   openPdfStore() {
     if (this._pdfStorePromise) return this._pdfStorePromise;
     this._pdfStorePromise = new Promise((resolve, reject) => {
@@ -2228,12 +2308,17 @@ class Component extends DCLogic {
     }
     return source;
   }
-	  loadWsData(ws) {
+	  loadWsData(ws, userId) {
 	    let db = JSON.parse(JSON.stringify(this.SAMPLE_DB)), kbSources = [], subs = [], chatSessions = [];
-	    try { const r = localStorage.getItem(this.dbKey(ws)); if (r) { const d = JSON.parse(r); if (d && d.folders && d.docs) db = d; } } catch (e) {}
-	    try { const r = localStorage.getItem(this.kbKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) kbSources = a; } } catch (e) {}
-	    try { const r = localStorage.getItem(this.subsKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) subs = a; } } catch (e) {}
-	    try { const r = localStorage.getItem(this.chatKey(ws)); if (r) { const a = JSON.parse(r); if (Array.isArray(a)) chatSessions = a; } } catch (e) {}
+	    userId = userId || this.currentStorageUserId();
+	    const d = this.readUserJson("tpf_db_" + (ws || this.state.curWs), null, userId);
+	    if (d && d.folders && d.docs) db = d;
+	    const k = this.readUserJson("tpf_kbsrc_" + (ws || this.state.curWs), [], userId);
+	    if (Array.isArray(k)) kbSources = k;
+	    const s = this.readUserJson("tpf_subs_" + (ws || this.state.curWs), [], userId);
+	    if (Array.isArray(s)) subs = s;
+	    const ch = this.readUserJson("tpf_chat_sessions_" + (ws || this.state.curWs), [], userId);
+	    if (Array.isArray(ch)) chatSessions = ch;
 	    return { db, kbSources, subs, chatSessions };
 	  }
   // ---- 公開（フォルダを公開キー付きで共有）・購読 ----
@@ -2249,7 +2334,7 @@ class Component extends DCLogic {
       return;
     }
     const key = f.pubKey || ("pub_" + Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6));
-    const reg = this.readPubReg(); reg[key] = { ownerWs: this.state.curWs, folderId: fid, name: f.name, createdAt: Date.now() }; this.writePubReg(reg);
+    const reg = this.readPubReg(); reg[key] = { ownerWs: this.state.curWs, ownerUser: this.currentStorageUserId(), folderId: fid, name: f.name, createdAt: Date.now() }; this.writePubReg(reg);
     const nf = folders.map(x => x.id === fid ? { ...x, pubKey: key } : x);
     const db = { ...this.state.db, folders: nf }; this.persistDb(db);
     this.setState({ db, pubNotice: { name: f.name, key } });
@@ -5355,7 +5440,7 @@ class Component extends DCLogic {
     const ref = e.currentTarget.dataset.ref || "";
     if (!ref) return;
     const q = e.currentTarget.dataset.query || "";
-    const url = "source-viewer.html?ws=" + encodeURIComponent(this.state.curWs || "") + "&ref=" + encodeURIComponent(ref) + (q ? ("&q=" + encodeURIComponent(q)) : "");
+    const url = "source-viewer.html?ws=" + encodeURIComponent(this.state.curWs || "") + "&user=" + encodeURIComponent(this.currentStorageUserId()) + "&ref=" + encodeURIComponent(ref) + (q ? ("&q=" + encodeURIComponent(q)) : "");
     const win = window.open(url, "_blank");
     if (win) { try { win.opener = null; } catch (x) {} return; }
     const m = /^src:(.+):(\d+)$/.exec(ref);

@@ -117,11 +117,32 @@ c.setState({ stage: "home", flow: null, savedFlows: seededSavedFlows, csvRows: [
 const persistedWrites = [];
 const originalSetItem = globalThis.localStorage.setItem;
 globalThis.localStorage.setItem = (key, value) => { persistedWrites.push([key, value]); };
+c.setState({ authUser: { id: "user_a", email: "a@example.test", name: "A" } });
 c.persistKbSources([{ id: "kb_safe", folderId: "f_quote", pages: [] }]);
 globalThis.localStorage.setItem = originalSetItem;
-const kbWrite = persistedWrites.find(([key]) => key === "tpf_kbsrc_ws_default");
-assert.ok(kbWrite, "persistKbSources should use the current workspace-scoped KB key even with duplicate helper definitions");
+const kbWrite = persistedWrites.find(([key]) => key === "tpf_kbsrc_ws_default__u_user_a");
+assert.ok(kbWrite, "persistKbSources should use the current user-and-workspace-scoped KB key");
 assert.deepEqual(JSON.parse(kbWrite[1]), [{ id: "kb_safe", folderId: "f_quote", pages: [] }], "persistKbSources should serialize the provided KB source array");
+const originalLocalStorage = globalThis.localStorage;
+const scopedStore = {
+  tpf_ws_v1__u_user_a: JSON.stringify({ workspaces: [{ id: "ws_default", name: "A workspace" }], curWs: "ws_default" }),
+  tpf_ws_v1__u_user_b: JSON.stringify({ workspaces: [{ id: "ws_default", name: "B workspace" }], curWs: "ws_default" }),
+  tpf_kbsrc_ws_default__u_user_a: JSON.stringify([{ id: "kb_a", folderId: "", pages: [{ page: 1, md: "A専用ナレッジ" }] }]),
+  tpf_kbsrc_ws_default__u_user_b: JSON.stringify([{ id: "kb_b", folderId: "", pages: [{ page: 1, md: "B専用ナレッジ" }] }]),
+};
+globalThis.localStorage = {
+  getItem: (key) => Object.prototype.hasOwnProperty.call(scopedStore, key) ? scopedStore[key] : null,
+  setItem: (key, value) => { scopedStore[key] = String(value); },
+  removeItem: (key) => { delete scopedStore[key]; },
+};
+const scopedReader = new globalThis.Component();
+const stateForA = scopedReader.loadUserWorkspaceState({ id: "user_a", email: "a@example.test", name: "A" });
+const stateForB = scopedReader.loadUserWorkspaceState({ id: "user_b", email: "b@example.test", name: "B" });
+assert.equal(stateForA.workspaces[0].name, "A workspace", "user A should load user A workspace state");
+assert.equal(stateForB.workspaces[0].name, "B workspace", "user B should load user B workspace state");
+assert.equal(stateForA.kbSources[0].id, "kb_a", "user A should load only user A knowledge sources");
+assert.equal(stateForB.kbSources[0].id, "kb_b", "user B should load only user B knowledge sources");
+globalThis.localStorage = originalLocalStorage;
 globalThis.localStorage.setItem = () => { throw new Error("quota exceeded"); };
 c.persistDb({ folders: [], docs: [] });
 globalThis.localStorage.setItem = originalSetItem;

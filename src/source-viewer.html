@@ -182,6 +182,7 @@
   <script>
     const params = new URLSearchParams(location.search);
     const ws = params.get("ws") || "ws_default";
+    const user = params.get("user") || params.get("u") || "";
     const ref = params.get("ref") || "";
     const highlightQuery = params.get("q") || params.get("query") || "";
 
@@ -194,8 +195,9 @@
       }
     }
 
-    function kbKey(workspaceId) { return "tpf_kbsrc_" + (workspaceId || "ws_default"); }
-    function dbKey(workspaceId) { return "tpf_db_" + (workspaceId || "ws_default"); }
+    function scopedKey(base, userId) { return userId ? (base + "__" + userId) : base; }
+    function kbKey(workspaceId, userId) { return scopedKey("tpf_kbsrc_" + (workspaceId || "ws_default"), userId == null ? user : userId); }
+    function dbKey(workspaceId, userId) { return scopedKey("tpf_db_" + (workspaceId || "ws_default"), userId == null ? user : userId); }
 
     function childFolderIds(db, rootId) {
       const ids = { [rootId || ""]: true };
@@ -216,11 +218,12 @@
       const reg = readJson("tpf_pub_v1", {});
       const ent = reg[key];
       if (!ent) return null;
-      const db = readJson(dbKey(ent.ownerWs), { folders: [], docs: [] });
+      const ownerUser = ent.ownerUser || "";
+      const db = readJson(dbKey(ent.ownerWs, ownerUser), { folders: [], docs: [] });
       const ids = childFolderIds(db, ent.folderId || "");
-      const sources = readJson(kbKey(ent.ownerWs), []).filter(s => ids[s.folderId || ""]);
+      const sources = readJson(kbKey(ent.ownerWs, ownerUser), []).filter(s => ids[s.folderId || ""]);
       const docs = (db.docs || []).filter(d => ids[d.folderId || ""]);
-      return { ownerWs: ent.ownerWs, name: ent.name, sources, docs };
+      return { ownerWs: ent.ownerWs, ownerUser, name: ent.name, sources, docs };
     }
 
     function parseRef(value) {
@@ -239,13 +242,13 @@
       const parsed = parseRef(value);
       if (!parsed) return null;
       if (parsed.type === "src") {
-        const sources = readJson(kbKey(parsed.workspaceId), []);
+        const sources = readJson(kbKey(parsed.workspaceId, user), []);
         const source = sources.find(s => s.id === parsed.sourceId);
         const page = source && (source.pages || []).find(p => Number(p.page) === parsed.page);
         return source && page ? { kind: "pdf-page", source, page, pageNo: parsed.page, workspaceId: parsed.workspaceId } : null;
       }
       if (parsed.type === "doc") {
-        const db = readJson(dbKey(parsed.workspaceId), { docs: [] });
+        const db = readJson(dbKey(parsed.workspaceId, user), { docs: [] });
         const doc = (db.docs || []).find(d => d.id === parsed.docId);
         return doc ? { kind: "doc", doc, workspaceId: parsed.workspaceId } : null;
       }
