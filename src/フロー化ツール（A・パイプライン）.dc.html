@@ -5133,6 +5133,20 @@ class Component extends DCLogic {
   onChatInput = (e) => this.setState({ chatInput: e.target.value });
   pickAnswerMode = (e) => this.setState({ chatAnswerMode: e.currentTarget.dataset.mode || "conditional" });
   quickReply = (e) => { const v = e.currentTarget.dataset.opt; if (v) this.sendChat(v, { forceScope: "flow" }); };
+  casualChatReply(q) {
+    const compact = String(q || "").trim().replace(/[\s　。、,.!！?？]+/g, "").toLowerCase();
+    if (!compact) return "";
+    if (/^(こんにちは|こんにちわ|こんばんは|おはよう|おはようございます|はじめまして|hi|hello|hey)$/.test(compact)) {
+      return "こんにちは。業務判断・手順・資料確認など、相談したい内容を入力してください。必要な場合だけ保存済みフローやナレッジDBを確認します。";
+    }
+    if (/^(ありがとう|ありがとうございます|どうもありがとう|助かりました|ok|了解|承知しました)$/.test(compact)) {
+      return "どういたしまして。続けて確認したい内容があれば入力してください。";
+    }
+    if (/^(テスト|test)$/.test(compact)) {
+      return "入力は受け取れています。確認したい業務内容を入力すると、必要に応じてフローやナレッジDBを検索します。";
+    }
+    return "";
+  }
   chatQuestionFor(index, chatArr) {
     for (let j = index - 1; j >= 0; j--) {
       const m = (chatArr || [])[j];
@@ -5883,15 +5897,22 @@ class Component extends DCLogic {
     };
   }
 
-	  async sendChat(textArg, opts) {
-	    opts = opts || {};
-	    const q = (typeof textArg === "string" ? textArg : this.state.chatInput).trim();
-	    if (!q || this.state.chatLoading || this.state.chatStreaming) return;
-	    const chatSessionId = this.ensureChatSession(q);
-	    this._pendingChatSessionId = chatSessionId;
-	    const cands = this.candidateFlows();
-	    const hasKbEntries = this.kbIndex().length > 0;
-	    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容を読み取り、調査計画を立てています…" });
+  async sendChat(textArg, opts) {
+    opts = opts || {};
+    const q = (typeof textArg === "string" ? textArg : this.state.chatInput).trim();
+    if (!q || this.state.chatLoading || this.state.chatStreaming) return;
+    const chatSessionId = this.ensureChatSession(q);
+    this._pendingChatSessionId = chatSessionId;
+    const casualReply = opts.forceScope ? "" : this.casualChatReply(q);
+    if (casualReply) {
+      const baseChat = this.state.chat.slice();
+      this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "検索不要の入力として応答しています…", chat: baseChat.concat([{ role: "user", text: q }]) });
+      await this.finishChatMessage({ role: "assistant", answer: casualReply, steps: [], path: [], trace: [{ title: "検索不要: あいさつのみのためフロー/DB検索は実行していません。", sub: false }] }, []);
+      return;
+    }
+    const cands = this.candidateFlows();
+    const hasKbEntries = this.kbIndex().length > 0;
+    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容を読み取り、調査計画を立てています…" });
     try {
       let target = { id: this.state.curFlowId, flow: this.state.flow, chat: this.state.chat, title: this.state.flow && this.state.flow.title };
       let switched = false;

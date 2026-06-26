@@ -401,13 +401,31 @@ emptyChat.state.kbSources = [];
 emptyChat.state.savedFlows = [];
 emptyChat.state.flow = null;
 emptyChat.state.curFlowId = null;
-emptyChat.state.chatInput = "こんにちは";
+emptyChat.state.chatInput = "見積の承認はどう進める？";
 emptyChat.hasLLM = () => true;
 emptyChat.chatHarnessLoop = async () => { throw new Error("empty chat should not invoke the agent harness"); };
 let emptyAnswer = "";
 emptyChat.finishChatMessage = async (msg) => { emptyAnswer = msg.answer || ""; emptyChat.setState({ chatLoading: false }); };
 await emptyChat.sendChat();
 assert.ok(emptyAnswer.includes("相談に使える保存済みフローまたはナレッジDBがまだありません"), "empty chat should show a setup guidance message instead of a generic processing failure");
+
+const greetingChat = new globalThis.Component();
+greetingChat.state.db = c.state.db;
+greetingChat.state.kbSources = c.state.kbSources;
+greetingChat.state.savedFlows = seededSavedFlows;
+greetingChat.state.flow = null;
+greetingChat.state.curFlowId = null;
+greetingChat.state.chatInput = "こんにちは";
+greetingChat.hasLLM = () => true;
+greetingChat.chatHarnessLoop = async () => { throw new Error("greeting-only chat should not invoke the agent harness"); };
+greetingChat.buildDbChatMessage = async () => { throw new Error("greeting-only chat should not search DB"); };
+let greetingAnswer = "";
+greetingChat.finishChatMessage = async (msg) => { greetingAnswer = msg.answer || ""; greetingChat.setState({ chatLoading: false }); };
+await greetingChat.sendChat();
+assert.ok(greetingAnswer.includes("必要な場合だけ保存済みフローやナレッジDBを確認します"), "greeting-only chat should answer immediately without flow/DB search");
+
+const businessGreeting = new globalThis.Component();
+assert.equal(businessGreeting.casualChatReply("こんにちは、見積の承認はどう進める？"), "", "greetings with a business question should still use the normal search path");
 
 const extractPrompt = c.buildPrompt("価格表を見て、特約店経由なら営業は直接回答せず引き継ぐ。価格はDBの価格表を参照する。");
 assert.ok(extractPrompt.includes("フロー/DBの切り分け基準"), "flow extraction prompt should include flow-vs-db criteria");
