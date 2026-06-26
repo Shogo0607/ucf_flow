@@ -178,7 +178,7 @@
       <button data-id="" data-folder="" onClick="{{ dbOpenFolder }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ dbSidebarRootStyle }}">すべて</button>
       <div style="display:flex;flex-direction:column;gap:2px;margin-top:3px;">
         <sc-for list="{{ dbTreeRows }}" as="t" hint-placeholder-count="0">
-          <button data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.sideRowStyle }}">
+          <button data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onDoubleClick="{{ dbOpenFolder }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.sideRowStyle }}">
             <span data-id="{{ t.id }}" onClick="{{ dbToggleExpand }}" style="width:15px;text-align:center;color:#8a93a0;font-size:10px;flex:none;">{{ t.chevron }}</span>
             <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;">{{ t.name }}</span>
           </button>
@@ -304,7 +304,7 @@
         <div style="width:236px;flex:none;border-right:1px solid #eef1f5;overflow:auto;padding:10px 8px;background:#fbfcfe;">
           <div data-id="" data-folder="" onClick="{{ dbOpenFolder }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;margin-bottom:2px;background:{{ dbRootBg }};">📚 すべて</div>
           <sc-for list="{{ dbTreeRows }}" as="t" hint-placeholder-count="0">
-            <div data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.rowStyle }}">
+            <div data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onDoubleClick="{{ dbOpenFolder }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.rowStyle }}">
               <span data-id="{{ t.id }}" onClick="{{ dbToggleExpand }}" style="width:15px;text-align:center;color:#8a93a0;font-size:10px;flex:none;">{{ t.chevron }}</span>
               <span style="flex:none;">📁</span>
               <sc-if value="{{ t.renaming }}" hint-placeholder-val="">
@@ -389,7 +389,7 @@
                 <div style="height:1px;background:#eef1f5;margin:6px 4px 10px;"></div>
               </sc-if>
               <sc-for list="{{ dbCurFolders }}" as="f" hint-placeholder-count="0">
-                <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
+                <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onDoubleClick="{{ dbOpenFolder }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
                   <span style="font-size:18px;flex:none;">📁</span>
                   <div style="flex:1;min-width:0;">
                     <sc-if value="{{ f.renaming }}" hint-placeholder-val="">
@@ -918,7 +918,7 @@
               </sc-for>
             </sc-if>
             <sc-for list="{{ dbCurFolders }}" as="f" hint-placeholder-count="0">
-              <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
+              <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onDoubleClick="{{ dbOpenFolder }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
                 <span style="font-size:18px;flex:none;">📁</span>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:13.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.name }}</div>
@@ -2448,6 +2448,10 @@ class Component extends DCLogic {
   dbCloseFolderMenu = () => this.setState({ dbFolderMenu: null });
   dbSelectFolder(id) {
     const fid = id || "";
+    this.setState({ dbSelectedFolder: fid, dbUploadFolder: fid, dbRename: null, dbFolderMenu: null });
+  }
+  dbNavigateFolder(id) {
+    const fid = id || "";
     this.setState({ dbSelectedFolder: fid, dbCurrent: fid, dbUploadFolder: fid, dbEditDoc: null, dbRename: null, dbFolderMenu: null, dbExpanded: { ...this.state.dbExpanded, [fid]: true } });
   }
   dbFolderSingleClick = (e) => {
@@ -2461,12 +2465,9 @@ class Component extends DCLogic {
     const rect = e.currentTarget.getBoundingClientRect();
     this.setState({
       dbSelectedFolder: id,
-      dbCurrent: id,
       dbUploadFolder: id,
-      dbEditDoc: null,
       dbRename: null,
       dbFolderMenu: { id, x: Math.round(e.clientX || (rect.left + 16)), y: Math.round(e.clientY || (rect.top + 16)) },
-      dbExpanded: { ...this.state.dbExpanded, [id]: true },
     });
   };
   selectedFolderSourceIds(folderId) {
@@ -2593,7 +2594,7 @@ class Component extends DCLogic {
 
   // ---- DB manager (explorer風) ----
   toggleDb = () => this.goDb();
-  dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id || ""; this.dbSelectFolder(id); };
+  dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id || ""; this.dbNavigateFolder(id); };
   dbToggleExpand = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; this.setState({ dbExpanded: { ...this.state.dbExpanded, [id]: !this.state.dbExpanded[id] } }); };
   dbNewFolder = () => {
     const id = this.uid("f_");

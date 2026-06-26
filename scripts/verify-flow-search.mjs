@@ -295,12 +295,17 @@ assert.equal(c.state.dbOpen, false, "database navigation should not open the leg
 assert.equal(html.includes("公開キー pub_..."), false, "database screen should not show public-key input");
 assert.equal(html.includes("新規取り込みPDFの保存先"), false, "database screen should not show legacy upload destination selector");
 assert.ok(html.includes("dbFolderContextMenu"), "folder rows should expose right-click menu handling");
+assert.ok(html.includes('onDoubleClick="{{ dbOpenFolder }}"'), "folder rows should navigate on double-click");
 assert.ok(html.includes("dbDeleteConfirmOpen"), "folder deletion should use a confirmation modal");
 assert.ok(!html.includes('data-type="folder" data-id="{{ f.id }}" data-name="{{ f.name }}" onClick="{{ dbStartRename }}"'), "folder rows should not expose inline rename icons");
 assert.ok(!html.includes('data-id="{{ f.id }}" onClick="{{ delFolder }}" title="削除"'), "folder rows should not expose inline delete icons");
 c.dbFolderSingleClick({ currentTarget: { dataset: { id: "f_sales" } } });
 assert.equal(c.state.dbSelectedFolder, "f_sales", "single-click should mark the folder as selected");
-assert.equal(c.state.dbCurrent, "f_sales", "single-click should navigate to the selected folder");
+assert.equal(c.state.dbCurrent, "", "single-click should not navigate to the selected folder");
+assert.equal(c.state.dbUploadFolder, "f_sales", "single-click should keep the selected folder available as the save target");
+c.dbOpenFolder({ currentTarget: { dataset: { id: "f_sales" } } });
+assert.equal(c.state.dbCurrent, "f_sales", "double-click/open should navigate to the selected folder");
+c.setState({ dbCurrent: "", dbUploadFolder: "" });
 c.dbFolderContextMenu({
   preventDefault() {},
   stopPropagation() {},
@@ -309,12 +314,14 @@ c.dbFolderContextMenu({
   currentTarget: { dataset: { id: "f_quote" }, getBoundingClientRect: () => ({ left: 0, top: 0 }) },
 });
 assert.equal(c.state.dbSelectedFolder, "f_quote", "right-click should select the target folder");
+assert.equal(c.state.dbCurrent, "", "right-click should not navigate to the selected folder");
 pageVals = c.renderVals();
 assert.equal(pageVals.dbFolderMenuOpen, true, "right-click should open a folder context menu");
 c.dbMenuDeleteFolder();
 pageVals = c.renderVals();
 assert.equal(pageVals.dbDeleteConfirmOpen, true, "folder deletion from context menu should ask for confirmation");
 c.dbCancelDelete();
+c.dbOpenFolder({ currentTarget: { dataset: { id: "f_quote" } } });
 pageVals = c.renderVals();
 assert.equal(pageVals.dbCurSources[0].thoughtExtractDisabled, true, "already extracted PDF sources should disable thinking-process extraction");
 c.dbFolderContextMenu({
