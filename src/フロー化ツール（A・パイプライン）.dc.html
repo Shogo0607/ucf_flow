@@ -3611,40 +3611,101 @@ class Component extends DCLogic {
     else patch.error = msg;
     this.setState(patch);
   };
-  buildContent(prompt, images) {
-    if (!images || !images.length) return prompt;
-    return [{ type: "text", text: prompt }].concat(images.map(u => ({ type: "image_url", image_url: { url: u } })));
-  }
-  async callOpenAI(prompt, s, images) {
-    const base = (s.baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
-    let body = { model: s.model || "gpt-4o-mini", messages: [{ role: "user", content: this.buildContent(prompt, images) }], temperature: 0.2, max_tokens: 1500 };
-    let lastError = "";
-    for (let i = 0; i < 3; i++) {
-      const r = await this.fetchWithTimeout(base + "/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.apiKey },
-        body: JSON.stringify(body),
-      }, "OpenAI API呼び出し");
-      if (r.ok) {
-        const j = await r.json();
-        return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
-      }
-      lastError = await r.text().catch(() => "");
-      if (r.status !== 400) throw new Error("OpenAI APIエラー " + r.status + "：" + lastError.slice(0, 140));
-      if (/max_tokens/i.test(lastError) && /max_completion_tokens/i.test(lastError) && body.max_tokens) {
-        body = { ...body, max_completion_tokens: body.max_tokens };
-        delete body.max_tokens;
-        continue;
-      }
-      if (/temperature/i.test(lastError) && /unsupported/i.test(lastError) && body.temperature !== undefined) {
-        body = { ...body };
-        delete body.temperature;
-        continue;
-      }
-      throw new Error("OpenAI APIエラー " + r.status + "：" + lastError.slice(0, 140));
-    }
-    throw new Error("OpenAI APIエラー 400：" + lastError.slice(0, 140));
-  }
+	  buildContent(prompt, images) {
+	    if (!images || !images.length) return prompt;
+	    return [{ type: "text", text: prompt }].concat(images.map(u => ({ type: "image_url", image_url: { url: u } })));
+	  }
+	  buildResponsesInput(prompt, images) {
+	    if (!images || !images.length) return prompt;
+	    return [{
+	      role: "user",
+	      content: [{ type: "input_text", text: prompt }].concat(images.map(u => ({ type: "input_image", image_url: u })))
+	    }];
+	  }
+	  extractOpenAiText(j) {
+	    if (!j || typeof j !== "object") return "";
+	    if (typeof j.output_text === "string") return j.output_text;
+	    if (j.choices && j.choices[0] && j.choices[0].message) return j.choices[0].message.content || "";
+	    const out = [];
+	    (j.output || []).forEach(item => {
+	      (item.content || []).forEach(c => {
+	        if (typeof c.text === "string") out.push(c.text);
+	        else if (typeof c.output_text === "string") out.push(c.output_text);
+	      });
+	    });
+	    return out.join("\n");
+	  }
+	  openAiErrorMessage(status, text, label) {
+	    let msg = String(text || "").trim();
+	    try {
+	      const j = JSON.parse(msg);
+	      const e = j && (j.error || j);
+	      msg = [e.message, e.code ? ("code=" + e.code) : "", e.type ? ("type=" + e.type) : ""].filter(Boolean).join(" / ");
+	    } catch (e) {}
+	    return (label || "OpenAI API") + "エラー " + status + "：" + msg.slice(0, 220);
+	  }
+	  shouldFallbackToChatCompletions(status, text) {
+	    if (status !== 404) return false;
+	    const s = String(text || "");
+	    if (/model|モデル|does not exist|not have access|model_not_found/i.test(s)) return false;
+	    return /not found|unknown|invalid url|route/i.test(s);
+	  }
+	  async callOpenAI(prompt, s, images) {
+	    const base = (s.baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
+	    let body = { model: s.model || "gpt-4o-mini", input: this.buildResponsesInput(prompt, images), temperature: 0.2, max_output_tokens: 1500 };
+	    let lastError = "";
+	    for (let i = 0; i < 3; i++) {
+	      const r = await this.fetchWithTimeout(base + "/responses", {
+	        method: "POST",
+	        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.apiKey },
+	        body: JSON.stringify(body),
+	      }, "OpenAI API呼び出し");
+	      if (r.ok) {
+	        const j = await r.json();
+	        return this.extractOpenAiText(j);
+	      }
+	      lastError = await r.text().catch(() => "");
+	      if (this.shouldFallbackToChatCompletions(r.status, lastError)) break;
+	      if (r.status !== 400) throw new Error(this.openAiErrorMessage(r.status, lastError, "OpenAI Responses API"));
+	      if (/temperature/i.test(lastError) && /unsupported/i.test(lastError) && body.temperature !== undefined) {
+	        body = { ...body };
+	        delete body.temperature;
+	        continue;
+	      }
+	      throw new Error(this.openAiErrorMessage(r.status, lastError, "OpenAI Responses API"));
+	    }
+	    return this.callOpenAIChatCompletions(prompt, s, images);
+	  }
+	  async callOpenAIChatCompletions(prompt, s, images) {
+	    const base = (s.baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
+	    let body = { model: s.model || "gpt-4o-mini", messages: [{ role: "user", content: this.buildContent(prompt, images) }], temperature: 0.2, max_tokens: 1500 };
+	    let lastError = "";
+	    for (let i = 0; i < 3; i++) {
+	      const r = await this.fetchWithTimeout(base + "/chat/completions", {
+	        method: "POST",
+	        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.apiKey },
+	        body: JSON.stringify(body),
+	      }, "OpenAI Chat Completions API呼び出し");
+	      if (r.ok) {
+	        const j = await r.json();
+	        return this.extractOpenAiText(j);
+	      }
+	      lastError = await r.text().catch(() => "");
+	      if (r.status !== 400) throw new Error(this.openAiErrorMessage(r.status, lastError, "OpenAI Chat Completions API"));
+	      if (/max_tokens/i.test(lastError) && /max_completion_tokens/i.test(lastError) && body.max_tokens) {
+	        body = { ...body, max_completion_tokens: body.max_tokens };
+	        delete body.max_tokens;
+	        continue;
+	      }
+	      if (/temperature/i.test(lastError) && /unsupported/i.test(lastError) && body.temperature !== undefined) {
+	        body = { ...body };
+	        delete body.temperature;
+	        continue;
+	      }
+	      throw new Error(this.openAiErrorMessage(r.status, lastError, "OpenAI Chat Completions API"));
+	    }
+	    throw new Error(this.openAiErrorMessage(400, lastError, "OpenAI Chat Completions API"));
+	  }
   isReasoningModelName(name) {
     return /^(gpt-5|o[1-9]|codex-mini)(?:$|[-_.:])/i.test((name || "").trim());
   }

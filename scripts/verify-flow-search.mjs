@@ -457,6 +457,31 @@ assert.ok(openAiPrompt.includes("接続テスト"), "OpenAI connection test shou
 assert.equal(apiOpenAiTest.state.apiTest.ok, true, "successful OpenAI connection test should set ok state");
 assert.ok(apiOpenAiTest.state.apiTest.message.includes("OpenAI 接続OK"), "successful OpenAI connection test should show provider success");
 
+const openAiResponsesCall = new globalThis.Component();
+const openAiUrls = [];
+openAiResponsesCall.fetchWithTimeout = async (url, options) => {
+  openAiUrls.push(url);
+  const body = JSON.parse(options.body);
+  assert.equal(body.model, "gpt-5.4-mini", "OpenAI calls should preserve the selected model");
+  assert.ok(body.input, "OpenAI calls should use Responses API input payload");
+  assert.equal(body.messages, undefined, "OpenAI Responses API calls should not use chat messages payload");
+  return { ok: true, json: async () => ({ output_text: "接続OK" }) };
+};
+const responsesText = await openAiResponsesCall.callOpenAI("接続テスト", { provider: "openai", apiKey: "sk-test", baseUrl: "https://api.openai.com/v1", model: "gpt-5.4-mini" });
+assert.equal(responsesText, "接続OK", "OpenAI Responses API response text should be parsed");
+assert.equal(openAiUrls[0], "https://api.openai.com/v1/responses", "OpenAI should use Responses API before Chat Completions");
+
+const openAiFallbackCall = new globalThis.Component();
+const fallbackUrls = [];
+openAiFallbackCall.fetchWithTimeout = async (url, options) => {
+  fallbackUrls.push(url);
+  if (url.endsWith("/responses")) return { ok: false, status: 404, text: async () => "route not found" };
+  return { ok: true, json: async () => ({ choices: [{ message: { content: "chat fallback ok" } }] }) };
+};
+const fallbackText = await openAiFallbackCall.callOpenAI("接続テスト", { provider: "openai", apiKey: "sk-test", baseUrl: "https://compatible.example/v1", model: "gpt-4o-mini" });
+assert.equal(fallbackText, "chat fallback ok", "OpenAI-compatible base URLs without Responses support should fall back to Chat Completions");
+assert.deepEqual(fallbackUrls, ["https://compatible.example/v1/responses", "https://compatible.example/v1/chat/completions"], "fallback should try Responses before Chat Completions");
+
 const apiMissingKeyTest = new globalThis.Component();
 apiMissingKeyTest.state.apiCfg = apiMissingKeyTest.normalizeApiCfg({ provider: "openai", apiKey: "", model: "gpt-4o-mini" });
 apiMissingKeyTest._apiCfgDraft = apiMissingKeyTest.state.apiCfg;
