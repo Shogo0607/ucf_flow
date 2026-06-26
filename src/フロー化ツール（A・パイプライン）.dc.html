@@ -1279,7 +1279,7 @@
           <div style="max-width:620px;margin:0 auto 18px;text-align:left;background:#fff;border:1px solid #e6e9ef;border-radius:10px;padding:11px 13px;font-size:11.8px;color:#6b7480;line-height:1.7;">
             <div style="font-weight:800;color:#2b333f;margin-bottom:3px;">CSV形式</div>
             <div>1行目はヘッダー、2行目以降は1行1件のQ&A・問い合わせ・対応履歴にしてください。</div>
-            <div>推奨列: 日付 / 問い合わせ・症状 / 確認したこと / 判断・対応 / 結果。単なる名簿や数値表のように判断や対応が含まれないCSVは、フロー化できない場合があります。</div>
+            <div>Q&A二列なら「問い合わせ内容」「回答内容」を使えます。対応履歴型の推奨列: 日付 / 問い合わせ・症状 / 確認したこと / 判断・対応 / 結果。単なる名簿や数値表のように判断や対応が含まれないCSVは、フロー化できない場合があります。</div>
           </div>
           <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">
             <label style="display:inline-block;font-size:13.5px;font-weight:700;color:#fff;background:var(--primary);padding:11px 20px;border-radius:10px;box-shadow:0 4px 12px rgba(79,110,247,.3);cursor:pointer;">CSVファイルを選択<input type="file" accept=".csv,text/csv" onChange="{{ onCsvFile }}" style="display:none;" /></label>
@@ -1799,6 +1799,7 @@ class Component extends DCLogic {
       domain: "",
       inputMode: "text",
       csvRows: [],
+      csvRecords: [],
       csvName: "",
       pdfName: "", pdfNumPages: 0, pdfReady: false, pdfLoading: false,
       pdfPages: [], pdfIndex: [], pdfTopics: [], pdfVision: false, pdfPhase: "", pdfError: null, pdfKb: null, pdfCoverage: null,
@@ -3961,7 +3962,7 @@ class Component extends DCLogic {
 
   sleep = (ms) => new Promise(r => setTimeout(r, ms));
   pickMode = (e) => this.setState({ inputMode: e.currentTarget.dataset.mode, error: null, pdfError: null });
-  clearCsv = () => this.setState({ csvRows: [], csvName: "", error: null });
+  clearCsv = () => this.setState({ csvRows: [], csvRecords: [], csvName: "", error: null });
   loadSampleCsv = () => this.ingestCsv(this.SAMPLE_CSV, "サンプル_対応履歴.csv");
   onCsvFile = (e) => {
     const f = e.target.files && e.target.files[0];
@@ -4022,15 +4023,20 @@ class Component extends DCLogic {
   }
 
   ingestCsv(text, name) {
-    const rows = this.parseCSV(text);
-    if (rows.length < 2) { this.setState({ error: "CSVに有効な行が見つかりませんでした。ヘッダー行＋データ行が必要です。" }); return; }
-    const header = rows[0].map(h => String(h || "").trim());
-    const recs = rows.slice(1).map(r =>
-      header.map((h, idx) => { const v = String(r[idx] || "").trim(); return v ? (h ? h + "：" + v : v) : ""; })
-        .filter(Boolean).join(" ｜ ")
-    ).filter(x => x.trim());
-    if (!recs.length) { this.setState({ error: "CSVからレコードを読み取れませんでした。" }); return; }
-    this.setState({ inputMode: "csv", csvRows: recs, csvName: name || "history.csv", error: null });
+    const rows = this.parseCSV(this.decodeCsvBuffer(text));
+    const fail = (msg) => this.setState({ csvRows: [], csvRecords: [], csvName: "", error: msg });
+    if (rows.length < 2) { fail("CSVに有効な行が見つかりませんでした。ヘッダー行＋データ行が必要です。"); return; }
+    const header = rows[0].map(h => String(h || "").replace(/^\uFEFF/, "").trim());
+    const records = rows.slice(1).map(r => {
+      const fields = header.map((h, idx) => ({ header: h, value: String(r[idx] || "").trim() })).filter(f => f.value);
+      return {
+        fields,
+        text: fields.map(f => f.header ? (f.header + "：" + f.value) : f.value).join(" ｜ "),
+      };
+    }).filter(rec => rec.text.trim());
+    const recs = records.map(rec => rec.text);
+    if (!recs.length) { fail("CSVからレコードを読み取れませんでした。"); return; }
+    this.setState({ inputMode: "csv", csvRows: recs, csvRecords: records, csvName: name || "history.csv", error: null });
   }
 
   // ============================================================
@@ -4817,6 +4823,45 @@ class Component extends DCLogic {
     return out;
   }
 
+  csvRecordValue(rec, patterns) {
+    const fields = (rec && rec.fields) || [];
+    const hit = fields.find(f => patterns.some(rx => rx.test(String(f.header || ""))));
+    return hit ? String(hit.value || "").trim() : "";
+  }
+
+  shortNodeText(text, max) {
+    const s = String(text || "").replace(/\s+/g, " ").trim();
+    return s.length > max ? s.slice(0, Math.max(0, max - 1)) + "…" : s;
+  }
+
+  buildQaCsvFallbackFlow(records, name) {
+    const qPats = [/問い合わせ/i, /問合せ/i, /質問/i, /^q$/i, /^question$/i];
+    const aPats = [/回答/i, /返答/i, /^a$/i, /^answer$/i];
+    const qa = (records || []).map(rec => ({
+      q: this.csvRecordValue(rec, qPats),
+      a: this.csvRecordValue(rec, aPats),
+    })).filter(x => x.q && x.a);
+    if (!qa.length) return null;
+    const title = (name || "Q&A履歴").replace(/\.[^.]+$/, "") + "フロー";
+    const nodes = {};
+    if (qa.length === 1) {
+      nodes.n1 = { kind: "action", text: "問い合わせ内容を確認する", why: "Q&A履歴の質問に対応する回答を案内するため", next: "n2" };
+      nodes.n2 = { kind: "result", text: this.shortNodeText(qa[0].a, 80), detail: "問い合わせ内容：" + qa[0].q + "\n回答内容：" + qa[0].a };
+      return { title, root: "n1", nodes };
+    }
+    const use = qa.slice(0, 8);
+    nodes.n1 = {
+      kind: "choice",
+      text: "問い合わせ内容はどれですか？",
+      why: "問い合わせごとに回答内容が決まっているため",
+      branches: use.map((x, idx) => ({ label: this.shortNodeText(x.q, 24), to: "n" + (idx + 2) })),
+    };
+    use.forEach((x, idx) => {
+      nodes["n" + (idx + 2)] = { kind: "result", text: this.shortNodeText(x.a, 80), detail: "問い合わせ内容：" + x.q + "\n回答内容：" + x.a };
+    });
+    return { title, root: "n1", nodes };
+  }
+
   startAnalysis = () => {
     if (this.state.inputMode === "pdf") {
       if (!this.state.pdfReady) { this.setState({ pdfError: "PDFを読み込んでください。" }); return; }
@@ -4851,36 +4896,48 @@ class Component extends DCLogic {
     await this.sleep(450);
     try {
       this.throwIfCancelled(runId);
-      if (!this.hasLLM()) throw new Error("AIが未設定です。右上の「API設定」でOpenAI/Azureのキーを入力するか、『サンプルCSVでリアルタイム分析デモ』をお試しください。");
+      const qaFallback = this.buildQaCsvFallbackFlow(this.state.csvRecords, this.state.csvName);
       let flow = null;
-      for (let i = 0; i < batches.length; i++) {
-        this.throwIfCancelled(runId);
-        this.setState({ progress: { current: i + 1, total: batches.length, msg: "バッチ " + (i + 1) + " / " + batches.length + " を分析中…" } });
-        const text = batches[i].join("\n");
-        try {
-          if (!flow) {
-            const t = await this.llmComplete(this.buildPrompt(text));
-            const f = this.parseFlow(t);
-            if (!f || !f.nodes || !f.root || !f.nodes[f.root]) throw new Error("parse");
-            flow = f;
-            const ids = Object.keys(flow.nodes);
-            this.setState({ flow, currentId: flow.root, newIds: ids, buildLog: this.state.buildLog.concat([{ batch: i + 1, added: ids.length }]) });
-          } else {
-            const t = await this.llmComplete(this.buildMergePrompt(text, flow));
-            const patch = this.parseFlow(t);
-            const up = (patch && (patch.upsert || patch.nodes)) || {};
-            const ids = Object.keys(up).filter(id => up[id] && up[id].kind);
-            const nodes = { ...flow.nodes };
-            ids.forEach(id => { nodes[id] = { ...(nodes[id] || {}), ...up[id] }; });
-            flow = { ...flow, nodes, root: (patch.root && nodes[patch.root]) ? patch.root : flow.root, title: patch.title || flow.title };
-            this.setState({ flow, newIds: ids, buildLog: this.state.buildLog.concat([{ batch: i + 1, added: ids.length }]) });
+      if (!this.hasLLM()) {
+        if (!qaFallback) throw new Error("AIが未設定です。右上の「API設定」でOpenAI/Azureのキーを入力するか、『サンプルCSVでリアルタイム分析デモ』をお試しください。");
+        flow = qaFallback;
+        const ids = Object.keys(flow.nodes);
+        this.setState({ flow, currentId: flow.root, newIds: ids, buildLog: this.state.buildLog.concat([{ batch: 1, added: ids.length, label: "Q&A変換" }]) });
+      } else {
+        for (let i = 0; i < batches.length; i++) {
+          this.throwIfCancelled(runId);
+          this.setState({ progress: { current: i + 1, total: batches.length, msg: "バッチ " + (i + 1) + " / " + batches.length + " を分析中…" } });
+          const text = batches[i].join("\n");
+          try {
+            if (!flow) {
+              const t = await this.llmComplete(this.buildPrompt(text));
+              const f = this.parseFlow(t);
+              if (!f || !f.nodes || !f.root || !f.nodes[f.root]) throw new Error("parse");
+              flow = f;
+              const ids = Object.keys(flow.nodes);
+              this.setState({ flow, currentId: flow.root, newIds: ids, buildLog: this.state.buildLog.concat([{ batch: i + 1, added: ids.length }]) });
+            } else {
+              const t = await this.llmComplete(this.buildMergePrompt(text, flow));
+              const patch = this.parseFlow(t);
+              const up = (patch && (patch.upsert || patch.nodes)) || {};
+              const ids = Object.keys(up).filter(id => up[id] && up[id].kind);
+              const nodes = { ...flow.nodes };
+              ids.forEach(id => { nodes[id] = { ...(nodes[id] || {}), ...up[id] }; });
+              flow = { ...flow, nodes, root: (patch.root && nodes[patch.root]) ? patch.root : flow.root, title: patch.title || flow.title };
+              this.setState({ flow, newIds: ids, buildLog: this.state.buildLog.concat([{ batch: i + 1, added: ids.length }]) });
+            }
+          } catch (e) {
+            this.setState({ newIds: [], buildLog: this.state.buildLog.concat([{ batch: i + 1, added: 0 }]) });
           }
-        } catch (e) {
-          this.setState({ newIds: [], buildLog: this.state.buildLog.concat([{ batch: i + 1, added: 0 }]) });
+          await this.sleep(520);
         }
-        await this.sleep(520);
       }
       this.throwIfCancelled(runId);
+      if (!flow && qaFallback) {
+        flow = qaFallback;
+        const ids = Object.keys(flow.nodes);
+        this.setState({ flow, currentId: flow.root, newIds: ids, buildLog: this.state.buildLog.concat([{ batch: batches.length + 1, added: ids.length, label: "Q&A変換" }]) });
+      }
       if (!flow) throw new Error("フローを生成できませんでした。CSVは1行目をヘッダー、2行目以降を1行1件のQ&A・問い合わせ・対応履歴にしてください。判断・確認・対応・結果が分かる列がないCSVはフロー化できない場合があります。");
       flow = this.normalizeFlowDbReferences(flow, { docRefs: docId ? ["doc:" + docId] : [] });
       flow = this.applyFlowSourceMeta(flow, this.flowSourceMeta(folderId, [], docId ? [docId] : []));
