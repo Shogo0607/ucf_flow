@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./app-helpers.js"></script>
 <script src="./support.js"></script>
+<script src="/app-config.js"></script>
 </head>
 <body>
 <x-dc>
@@ -49,6 +50,62 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{ authGateOpen }}" hint-placeholder-val="">
+    <div style="position:fixed;inset:0;z-index:80;background:#edf1f7;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;">
+      <div style="width:100%;max-width:420px;background:#fff;border:1px solid #e2e7f0;border-radius:16px;box-shadow:0 24px 70px rgba(16,24,40,.18);overflow:hidden;">
+        <div style="padding:24px 26px 18px;border-bottom:1px solid #eef1f5;">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:14px;">
+            <span style="width:38px;height:38px;border-radius:11px;background:var(--primary);display:flex;align-items:center;justify-content:center;box-shadow:0 5px 14px rgba(79,110,247,.3);">
+              <span style="display:block;width:17px;height:17px;border:2.5px solid #fff;border-radius:4px;position:relative;"><span style="position:absolute;left:50%;top:100%;width:2.5px;height:7px;background:#fff;transform:translateX(-50%);"></span></span>
+            </span>
+            <div>
+              <div style="font-size:17px;font-weight:900;color:#1f2733;">Thinking Flow Studio</div>
+              <div style="font-size:11px;color:#8a93a0;font-weight:700;">思考プロセス フロー化</div>
+            </div>
+          </div>
+          <div style="display:flex;background:#f1f3f8;border:1px solid #e6e9ef;border-radius:10px;padding:4px;gap:4px;">
+            <button data-mode="login" onClick="{{ pickAuthMode }}" style="{{ authLoginTabStyle }}">ログイン</button>
+            <button data-mode="register" onClick="{{ pickAuthMode }}" style="{{ authRegisterTabStyle }}">新規登録</button>
+          </div>
+        </div>
+        <div style="padding:22px 26px;display:flex;flex-direction:column;gap:13px;">
+          <sc-if value="{{ authChecking }}" hint-placeholder-val="">
+            <div style="font-size:13px;color:#6b7480;line-height:1.6;background:#f6f8fb;border-radius:10px;padding:12px;">セッションを確認しています。</div>
+          </sc-if>
+          <sc-if value="{{ authNotChecking }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ isAuthRegister }}" hint-placeholder-val="">
+              <label style="display:block;">
+                <span style="font-size:12px;font-weight:800;color:#6b7480;">名前</span>
+                <input value="{{ authForm.name }}" data-field="name" onInput="{{ onAuthField }}" placeholder="山田 太郎" style="width:100%;margin-top:6px;border:1.5px solid #e0e4ec;border-radius:9px;padding:11px 12px;font-size:13px;background:#fbfcfe;" />
+              </label>
+            </sc-if>
+            <label style="display:block;">
+              <span style="font-size:12px;font-weight:800;color:#6b7480;">メールアドレス</span>
+              <input value="{{ authForm.email }}" data-field="email" onInput="{{ onAuthField }}" placeholder="user@example.test" style="width:100%;margin-top:6px;border:1.5px solid #e0e4ec;border-radius:9px;padding:11px 12px;font-size:13px;background:#fbfcfe;" />
+            </label>
+            <label style="display:block;">
+              <span style="font-size:12px;font-weight:800;color:#6b7480;">パスワード</span>
+              <input type="password" value="{{ authForm.password }}" data-field="password" onInput="{{ onAuthField }}" placeholder="8文字以上" style="width:100%;margin-top:6px;border:1.5px solid #e0e4ec;border-radius:9px;padding:11px 12px;font-size:13px;background:#fbfcfe;" />
+            </label>
+            <sc-if value="{{ authError }}" hint-placeholder-val="">
+              <div style="font-size:12px;color:#b42318;line-height:1.55;background:#fff3f0;border:1px solid #ffd2ca;border-radius:10px;padding:10px 11px;">{{ authError }}</div>
+            </sc-if>
+            <button onClick="{{ submitAuth }}" disabled="{{ authBusy }}" style="{{ authSubmitStyle }}">{{ authSubmitLabel }}</button>
+            <sc-if value="{{ authDemoAccounts }}" hint-placeholder-val="">
+            <div style="border-top:1px solid #eef1f5;padding-top:13px;">
+              <div style="font-size:11px;font-weight:800;color:#8a93a0;margin-bottom:8px;">検証用アカウント</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button data-email="admin@example.test" data-password="Password123!" onClick="{{ loginDemoAccount }}" style="border:1px solid #dbe2ee;background:#fff;color:#3a414c;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;">管理者</button>
+                <button data-email="user@example.test" data-password="Password123!" onClick="{{ loginDemoAccount }}" style="border:1px solid #dbe2ee;background:#fff;color:#3a414c;border-radius:10px;padding:9px 10px;font-size:12px;font-weight:800;">一般ユーザ</button>
+              </div>
+            </div>
+            </sc-if>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
   <!-- ===== SIDEBAR ===== -->
   <aside style="width:264px;flex:none;height:100vh;background:#fff;border-right:1px solid #e9edf3;display:flex;flex-direction:column;">
     <div style="padding:16px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f1f3f8;">
@@ -57,12 +114,22 @@
       </span>
       <div style="min-width:0;"><div style="font-size:13.5px;font-weight:700;letter-spacing:.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">思考プロセス フロー化</div><div style="font-size:10.5px;color:#aab1bc;">Thinking Flow Studio</div></div>
     </div>
-    <button onClick="{{ toggleWs }}" style="margin:12px 14px 4px;display:flex;align-items:center;gap:9px;border:1px solid #e0e4ec;border-radius:11px;padding:9px 11px;background:#fbfcfe;text-align:left;">
+	    <button onClick="{{ toggleWs }}" style="margin:12px 14px 4px;display:flex;align-items:center;gap:9px;border:1px solid #e0e4ec;border-radius:11px;padding:9px 11px;background:#fbfcfe;text-align:left;">
       <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f6ef7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg></span>
       <span style="flex:1;min-width:0;"><span style="display:block;font-size:10px;color:#aab1bc;font-weight:700;">ワークスペース</span><span style="display:block;font-size:13px;font-weight:700;color:#2b333f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ curWsName }}</span></span>
-      <span style="color:#aab1bc;font-size:11px;flex:none;">⇅</span>
-    </button>
-    <button onClick="{{ goHome }}" style="{{ homeNavStyle }}">
+	      <span style="color:#aab1bc;font-size:11px;flex:none;">⇅</span>
+	    </button>
+    <div style="margin:8px 14px 0;border:1px solid #e6e9ef;background:#fbfcfe;border-radius:11px;padding:9px 10px;display:flex;align-items:center;gap:9px;">
+      <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;flex:none;">{{ authInitial }}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:800;color:#2b333f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ authUserName }}</div>
+        <div style="font-size:10.5px;color:#8a93a0;font-weight:700;">{{ authUserRoleLabel }}</div>
+      </div>
+      <button onClick="{{ logout }}" title="ログアウト" style="width:28px;height:28px;border-radius:8px;color:#8a93a0;display:flex;align-items:center;justify-content:center;flex:none;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></svg>
+      </button>
+    </div>
+	    <button onClick="{{ goHome }}" style="{{ homeNavStyle }}">
       <span style="width:20px;height:20px;border-radius:6px;background:rgba(79,110,247,.12);display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:11px;font-weight:800;flex:none;">AI</span>AIに相談
     </button>
     <button onClick="{{ newFlowDraft }}" style="margin:8px 14px 8px;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--primary);color:#fff;border-radius:11px;padding:11px;font-weight:700;font-size:13px;box-shadow:0 5px 14px rgba(79,110,247,.32);">
@@ -155,11 +222,17 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
         <span style="flex:1;">ナレッジデータベース</span><span style="font-size:10.5px;color:#aab1bc;">{{ dbCount }}</span>
       </button>
-      <button onClick="{{ goFlowLib }}" style="{{ flowNavStyle }}">
+	      <button onClick="{{ goFlowLib }}" style="{{ flowNavStyle }}">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg>
-        <span style="flex:1;">思考プロセス</span><span style="font-size:10.5px;color:#aab1bc;">{{ flowLibCount }}</span>
-      </button>
-      <button onClick="{{ toggleSettings }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
+	        <span style="flex:1;">思考プロセス</span><span style="font-size:10.5px;color:#aab1bc;">{{ flowLibCount }}</span>
+	      </button>
+      <sc-if value="{{ isAdmin }}" hint-placeholder-val="">
+        <button onClick="{{ goAdmin }}" style="{{ adminNavStyle }}">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span style="flex:1;">ユーザ管理</span><span style="font-size:10.5px;color:#4f6ef7;font-weight:800;">Admin</span>
+        </button>
+      </sc-if>
+	      <button onClick="{{ toggleSettings }}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;font-size:12.5px;font-weight:600;color:#5a626f;text-align:left;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         <span style="flex:1;">API設定</span><span style="font-size:10.5px;color:#4f6ef7;font-weight:700;">{{ providerLabel }}</span>
       </button>
@@ -684,6 +757,94 @@
 
   <!-- ===== MAIN ===== -->
   <main style="flex:1;min-width:0;height:100vh;overflow:auto;background:#f4f6fa;">
+
+  <!-- ADMIN USER MANAGEMENT -->
+  <sc-if value="{{ isAdminMain }}" hint-placeholder-val="">
+  <div style="min-height:100vh;background:#f4f6fa;display:flex;flex-direction:column;">
+    <div style="padding:22px 28px 14px;border-bottom:1px solid #e6e9ef;background:#fff;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:5px;">
+          <span style="width:28px;height:28px;border-radius:8px;background:#eef1ff;display:flex;align-items:center;justify-content:center;color:var(--primary);flex:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </span>
+          <h1 style="font-size:20px;font-weight:800;margin:0;color:#1f2733;">ユーザ管理</h1>
+        </div>
+        <div style="font-size:13px;color:#6b7480;line-height:1.6;">アカウントの作成、ロール変更、無効化、パスワード再設定を行います。</div>
+      </div>
+      <button onClick="{{ reloadAdminUsers }}" style="display:flex;align-items:center;gap:7px;border:1px solid #dbe2ee;background:#fff;color:#5a626f;border-radius:10px;padding:9px 13px;font-weight:700;font-size:12.5px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8a93a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M3 21v-5h5"></path><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M16 8h5V3"></path></svg>更新
+      </button>
+    </div>
+    <div style="padding:18px 22px;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start;">
+      <section style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;overflow:hidden;min-width:0;">
+        <div style="padding:14px 16px;border-bottom:1px solid #eef1f5;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:13px;font-weight:900;color:#1f2733;flex:1;">登録ユーザ</div>
+          <span style="font-size:11px;color:#8a93a0;font-weight:800;">{{ adminUserCount }} 件</span>
+        </div>
+        <sc-if value="{{ adminLoading }}" hint-placeholder-val="">
+          <div style="padding:28px;text-align:center;font-size:13px;color:#8a93a0;">読み込み中です。</div>
+        </sc-if>
+        <sc-if value="{{ adminError }}" hint-placeholder-val="">
+          <div style="margin:14px 16px;font-size:12px;color:#b42318;line-height:1.55;background:#fff3f0;border:1px solid #ffd2ca;border-radius:10px;padding:10px 11px;">{{ adminError }}</div>
+        </sc-if>
+        <div style="overflow:auto;">
+          <div style="min-width:760px;">
+            <div style="display:grid;grid-template-columns:2fr 1.1fr 112px 118px 184px;gap:10px;padding:9px 14px;background:#fbfcfe;border-bottom:1px solid #eef1f5;font-size:10.5px;font-weight:900;color:#8a93a0;">
+              <div>ユーザ</div><div>最終ログイン</div><div>ロール</div><div>状態</div><div>操作</div>
+            </div>
+            <sc-for list="{{ adminUserRows }}" as="u" hint-placeholder-count="2">
+              <div style="display:grid;grid-template-columns:2fr 1.1fr 112px 118px 184px;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid #f2f4f8;">
+                <div style="min-width:0;">
+                  <div style="font-size:13px;font-weight:900;color:#1f2733;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ u.name }}</div>
+                  <div style="font-size:11px;color:#8a93a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ u.email }}</div>
+                </div>
+                <div style="font-size:11.5px;color:#6b7480;">{{ u.lastLoginLabel }}</div>
+                <select data-id="{{ u.id }}" data-field="role" value="{{ u.role }}" onChange="{{ adminUpdateUserField }}" disabled="{{ u.isSelf }}" style="border:1.5px solid #e0e4ec;border-radius:8px;padding:7px 8px;font-size:12px;background:#fff;">
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                </select>
+                <select data-id="{{ u.id }}" data-field="status" value="{{ u.status }}" onChange="{{ adminUpdateUserField }}" disabled="{{ u.isSelf }}" style="border:1.5px solid #e0e4ec;border-radius:8px;padding:7px 8px;font-size:12px;background:#fff;">
+                  <option value="active">active</option>
+                  <option value="disabled">disabled</option>
+                </select>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button data-id="{{ u.id }}" onClick="{{ adminResetPassword }}" style="border:1px solid #dbe2ee;background:#fff;color:#5a626f;border-radius:8px;padding:7px 9px;font-size:11.5px;font-weight:800;">PW再設定</button>
+                  <sc-if value="{{ u.canDisable }}" hint-placeholder-val="">
+                    <button data-id="{{ u.id }}" onClick="{{ adminDisableUser }}" style="border:1px solid #ffd2ca;background:#fff7f5;color:#b42318;border-radius:8px;padding:7px 9px;font-size:11.5px;font-weight:800;">無効化</button>
+                  </sc-if>
+                  <sc-if value="{{ u.canEnable }}" hint-placeholder-val="">
+                    <button data-id="{{ u.id }}" onClick="{{ adminEnableUser }}" style="border:1px solid #c8ead8;background:#f4fbf7;color:#0f835c;border-radius:8px;padding:7px 9px;font-size:11.5px;font-weight:800;">有効化</button>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+      <aside style="display:flex;flex-direction:column;gap:12px;min-width:0;">
+        <section style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;font-weight:900;color:#1f2733;">新規ユーザ</div>
+          <input value="{{ adminCreate.email }}" data-field="email" onInput="{{ onAdminCreateField }}" placeholder="email@example.test" style="border:1.5px solid #e0e4ec;border-radius:9px;padding:10px 11px;font-size:12.5px;background:#fbfcfe;" />
+          <input value="{{ adminCreate.name }}" data-field="name" onInput="{{ onAdminCreateField }}" placeholder="名前" style="border:1.5px solid #e0e4ec;border-radius:9px;padding:10px 11px;font-size:12.5px;background:#fbfcfe;" />
+          <input type="password" value="{{ adminCreate.password }}" data-field="password" onInput="{{ onAdminCreateField }}" placeholder="初期パスワード" style="border:1.5px solid #e0e4ec;border-radius:9px;padding:10px 11px;font-size:12.5px;background:#fbfcfe;" />
+          <select value="{{ adminCreate.role }}" data-field="role" onChange="{{ onAdminCreateField }}" style="border:1.5px solid #e0e4ec;border-radius:9px;padding:10px 11px;font-size:12.5px;background:#fff;">
+            <option value="user">user</option>
+            <option value="admin">admin</option>
+          </select>
+          <button onClick="{{ adminCreateUser }}" style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:900;box-shadow:0 4px 12px rgba(79,110,247,.25);">作成</button>
+        </section>
+        <section style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;padding:15px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:13px;font-weight:900;color:#1f2733;">パスワード再設定</div>
+          <input type="password" value="{{ adminPassword }}" onInput="{{ onAdminPassword }}" placeholder="新しいパスワード" style="border:1.5px solid #e0e4ec;border-radius:9px;padding:10px 11px;font-size:12.5px;background:#fbfcfe;" />
+          <div style="font-size:11.5px;color:#8a93a0;line-height:1.55;">対象行の PW再設定 を押すと、この値で更新します。</div>
+        </section>
+        <sc-if value="{{ adminNotice }}" hint-placeholder-val="">
+          <div style="font-size:12px;color:#0f835c;line-height:1.55;background:#f4fbf7;border:1px solid #c8ead8;border-radius:10px;padding:10px 11px;">{{ adminNotice }}</div>
+        </sc-if>
+      </aside>
+    </div>
+  </div>
+  </sc-if>
 
   <!-- KNOWLEDGE DATABASE -->
   <sc-if value="{{ isDbMain }}" hint-placeholder-val="">
@@ -1636,7 +1797,20 @@ class Component extends DCLogic {
 	      copiedChatIdx: null,
 	      highlightIds: [],
 	      storageWarning: null,
-      zoom: 1,
+	      authChecking: true,
+	      authBusy: false,
+	      authDemoAccounts: false,
+	      authMode: "login",
+	      authUser: null,
+	      authForm: { email: "", name: "", password: "" },
+	      authError: "",
+	      adminUsers: [],
+	      adminLoading: false,
+	      adminError: "",
+	      adminNotice: "",
+	      adminPassword: "",
+	      adminCreate: { email: "", name: "", password: "", role: "user" },
+	      zoom: 1,
       settingsOpen: false,
       apiCfg: savedApiCfg,
       db: JSON.parse(JSON.stringify(this.SAMPLE_DB)),
@@ -1674,8 +1848,9 @@ class Component extends DCLogic {
     this._iv = null;
   }
 
-  componentDidMount() {
-    try {
+	  componentDidMount() {
+	    this.loadAuthMe();
+	    try {
       const c = this.loadSavedApiCfg();
       this._apiCfgDraft = c;
       this.setState({ apiCfg: c });
@@ -1757,8 +1932,126 @@ class Component extends DCLogic {
     }
   }
 
-  helper() { return (typeof window !== "undefined" && window.TPF) ? window.TPF : null; }
-  clearStorageWarning = () => this.setState({ storageWarning: null });
+	  helper() { return (typeof window !== "undefined" && window.TPF) ? window.TPF : null; }
+	  apiBase() {
+	    if (typeof window === "undefined") return "http://127.0.0.1:3001";
+	    const saved = this.readJson("tpf_backend_url_v1", "");
+	    if (saved) return String(saved).replace(/\/+$/, "");
+	    if (window.TPF_BACKEND_URL) return String(window.TPF_BACKEND_URL).replace(/\/+$/, "");
+	    if (window.location && /^https?:$/.test(window.location.protocol)) return window.location.protocol + "//" + window.location.hostname + ":3001";
+	    return "http://127.0.0.1:3001";
+	  }
+	  async apiRequest(path, options) {
+	    const res = await fetch(this.apiBase() + path, { credentials: "include", ...(options || {}), headers: { "Content-Type": "application/json", ...((options && options.headers) || {}) } });
+	    const data = await res.json().catch(() => ({}));
+	    if (!res.ok) throw new Error(data.error || data.message || ("HTTP " + res.status));
+	    return data;
+	  }
+	  async loadAuthMe() {
+	    this.setState({ authChecking: true, authError: "" });
+	    try {
+	      const config = await this.apiRequest("/api/auth/config", { method: "GET", headers: {} });
+	      const data = await this.apiRequest("/api/auth/me", { method: "GET", headers: {} });
+	      this.setState({ authUser: data.user || null, authChecking: false, authError: "", authDemoAccounts: !!config.demoAccountsEnabled });
+	    } catch (e) {
+	      this.setState({ authUser: null, authChecking: false, authError: "バックエンドに接続できません。npm start でサーバを起動してください。" });
+	    }
+	  }
+	  pickAuthMode = (e) => this.setState({ authMode: e.currentTarget.dataset.mode || "login", authError: "" });
+	  onAuthField = (e) => {
+	    const f = e.currentTarget.dataset.field;
+	    this.setState({ authForm: { ...this.state.authForm, [f]: e.target.value }, authError: "" });
+	  };
+	  submitAuth = async () => {
+	    const mode = this.state.authMode === "register" ? "register" : "login";
+	    await this.loginOrRegister(mode, this.state.authForm);
+	  };
+	  async loginOrRegister(mode, form) {
+	    if (this.state.authBusy) return;
+	    this.setState({ authBusy: true, authError: "" });
+	    try {
+	      const body = mode === "register"
+	        ? { email: form.email, name: form.name, password: form.password }
+	        : { email: form.email, password: form.password };
+	      const data = await this.apiRequest("/api/auth/" + mode, { method: "POST", body: JSON.stringify(body) });
+	      this.setState({ authUser: data.user, authBusy: false, authError: "", authForm: { email: "", name: "", password: "" } });
+	    } catch (e) {
+	      this.setState({ authBusy: false, authError: (e && e.message) || "認証に失敗しました。" });
+	    }
+	  }
+	  loginDemoAccount = async (e) => {
+	    const email = e.currentTarget.dataset.email || "";
+	    const password = e.currentTarget.dataset.password || "";
+	    this.setState({ authForm: { email, name: "", password }, authMode: "login" });
+	    await this.loginOrRegister("login", { email, password });
+	  };
+	  logout = async () => {
+	    try { await this.apiRequest("/api/auth/logout", { method: "POST", body: "{}" }); } catch (e) { /* ignore */ }
+	    this.setState({ authUser: null, authMode: "login", authForm: { email: "", name: "", password: "" }, stage: "home", adminUsers: [], adminNotice: "", adminError: "" });
+	  };
+	  goAdmin = async () => {
+	    if (!this.state.authUser || this.state.authUser.role !== "admin") return;
+	    this.setState({ stage: "admin", wsOpen: false, dbOpen: false, flowLibOpen: false, highlightIds: [], nodeModalId: null });
+	    await this.loadAdminUsers();
+	  };
+	  async loadAdminUsers() {
+	    if (!this.state.authUser || this.state.authUser.role !== "admin") return;
+	    this.setState({ adminLoading: true, adminError: "", adminNotice: "" });
+	    try {
+	      const data = await this.apiRequest("/api/admin/users", { method: "GET", headers: {} });
+	      this.setState({ adminUsers: data.users || [], adminLoading: false, adminError: "" });
+	    } catch (e) {
+	      this.setState({ adminLoading: false, adminError: (e && e.message) || "ユーザ一覧を読み込めませんでした。" });
+	    }
+	  }
+	  reloadAdminUsers = () => this.loadAdminUsers();
+	  onAdminCreateField = (e) => {
+	    const f = e.currentTarget.dataset.field;
+	    this.setState({ adminCreate: { ...this.state.adminCreate, [f]: e.target.value }, adminError: "", adminNotice: "" });
+	  };
+	  adminCreateUser = async () => {
+	    try {
+	      const data = await this.apiRequest("/api/admin/users", { method: "POST", body: JSON.stringify(this.state.adminCreate) });
+	      this.setState({ adminUsers: this.state.adminUsers.concat([data.user]), adminCreate: { email: "", name: "", password: "", role: "user" }, adminNotice: "ユーザを作成しました。", adminError: "" });
+	      await this.loadAdminUsers();
+	      this.setState({ adminNotice: "ユーザを作成しました。", adminError: "" });
+	    } catch (e) {
+	      this.setState({ adminError: (e && e.message) || "ユーザを作成できませんでした。", adminNotice: "" });
+	    }
+	  };
+	  adminUpdateUserField = async (e) => {
+	    const id = e.currentTarget.dataset.id;
+	    const field = e.currentTarget.dataset.field;
+	    const value = e.target.value;
+	    try {
+	      const data = await this.apiRequest("/api/admin/users/" + encodeURIComponent(id), { method: "PATCH", body: JSON.stringify({ [field]: value }) });
+	      this.setState({ adminUsers: this.state.adminUsers.map(u => u.id === id ? data.user : u), adminNotice: "ユーザを更新しました。", adminError: "" });
+	    } catch (err) {
+	      this.setState({ adminError: (err && err.message) || "ユーザを更新できませんでした。", adminNotice: "" });
+	      await this.loadAdminUsers();
+	    }
+	  };
+	  onAdminPassword = (e) => this.setState({ adminPassword: e.target.value, adminError: "", adminNotice: "" });
+	  adminResetPassword = async (e) => {
+	    const id = e.currentTarget.dataset.id;
+	    try {
+	      const data = await this.apiRequest("/api/admin/users/" + encodeURIComponent(id) + "/reset-password", { method: "POST", body: JSON.stringify({ password: this.state.adminPassword }) });
+	      this.setState({ adminUsers: this.state.adminUsers.map(u => u.id === id ? data.user : u), adminPassword: "", adminNotice: "パスワードを再設定しました。", adminError: "" });
+	    } catch (err) {
+	      this.setState({ adminError: (err && err.message) || "パスワードを再設定できませんでした。", adminNotice: "" });
+	    }
+	  };
+	  adminDisableUser = async (e) => this.adminSetUserStatus(e.currentTarget.dataset.id, "disable");
+	  adminEnableUser = async (e) => this.adminSetUserStatus(e.currentTarget.dataset.id, "enable");
+	  async adminSetUserStatus(id, action) {
+	    try {
+	      const data = await this.apiRequest("/api/admin/users/" + encodeURIComponent(id) + "/" + action, { method: "POST", body: "{}" });
+	      this.setState({ adminUsers: this.state.adminUsers.map(u => u.id === id ? data.user : u), adminNotice: action === "disable" ? "ユーザを無効化しました。" : "ユーザを有効化しました。", adminError: "" });
+	    } catch (err) {
+	      this.setState({ adminError: (err && err.message) || "ユーザ状態を変更できませんでした。", adminNotice: "" });
+	    }
+	  }
+	  clearStorageWarning = () => this.setState({ storageWarning: null });
   rememberStorageResult(result) {
     if (!result || result.ok) return true;
     const text = (result.label || result.key || "データ") + "を保存できませんでした：" + result.message;
@@ -6025,25 +6318,64 @@ class Component extends DCLogic {
     });
 
     const extractDisabled = !st.dataText.trim();
-    const extractBtnStyle = {
-      fontSize: "14.5px", fontWeight: 700, padding: "13px 26px", borderRadius: "12px", color: "#fff",
-      background: extractDisabled ? "#bcc4d1" : primary, boxShadow: extractDisabled ? "none" : "0 6px 16px rgba(79,110,247,.32)",
-      cursor: extractDisabled ? "not-allowed" : "pointer",
-    };
+	    const extractBtnStyle = {
+	      fontSize: "14.5px", fontWeight: 700, padding: "13px 26px", borderRadius: "12px", color: "#fff",
+	      background: extractDisabled ? "#bcc4d1" : primary, boxShadow: extractDisabled ? "none" : "0 6px 16px rgba(79,110,247,.32)",
+	      cursor: extractDisabled ? "not-allowed" : "pointer",
+	    };
+	    const authTab = (active) => ({ flex: 1, fontSize: "13px", fontWeight: active ? 900 : 700, padding: "8px 12px", borderRadius: "8px", background: active ? "#fff" : "transparent", color: active ? "#1f2733" : "#8a93a0", boxShadow: active ? "0 1px 3px rgba(16,24,40,.12)" : "none" });
+	    const authUser = st.authUser || {};
+	    const adminRows = (st.adminUsers || []).map(u => {
+	      const last = u.lastLoginAt ? new Date(u.lastLoginAt) : null;
+	      return {
+	        ...u,
+	        lastLoginLabel: last && !Number.isNaN(last.getTime()) ? last.toLocaleString("ja-JP", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "未ログイン",
+	        isSelf: u.id === authUser.id,
+	        canDisable: u.status === "active" && u.id !== authUser.id,
+	        canEnable: u.status === "disabled"
+	      };
+	    });
 
-    const out = {
-      rootStyle, step,
-      storageWarning: st.storageWarning || "",
-      clearStorageWarning: this.clearStorageWarning,
-      cancelLongTask: this.cancelLongTask,
-      isHome: st.stage === "home", isDbMain: st.stage === "db", isFlowLibMain: st.stage === "flowlib",
-      isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
-      isDiagram: st.view === "diagram", isDiagnose: st.view === "diagnose",
-      showChatSidebar: st.stage === "home",
-      showDbSidebar: st.stage === "db",
-      showFlowSidebar: st.stage === "flowlib",
-      showGenericSidebar: !["home", "db", "flowlib"].includes(st.stage),
-      domain: st.domain,
+	    const out = {
+	      rootStyle, step,
+	      storageWarning: st.storageWarning || "",
+	      clearStorageWarning: this.clearStorageWarning,
+	      cancelLongTask: this.cancelLongTask,
+	      isHome: st.stage === "home", isDbMain: st.stage === "db", isFlowLibMain: st.stage === "flowlib", isAdminMain: st.stage === "admin",
+	      isInput: st.stage === "input", isExtracting: st.stage === "extracting", isFlow: st.stage === "flow",
+	      isDiagram: st.view === "diagram", isDiagnose: st.view === "diagnose",
+	      showChatSidebar: st.stage === "home",
+	      showDbSidebar: st.stage === "db",
+	      showFlowSidebar: st.stage === "flowlib",
+	      showGenericSidebar: !["home", "db", "flowlib", "admin"].includes(st.stage),
+	      authGateOpen: st.authChecking || !st.authUser,
+	      authChecking: !!st.authChecking,
+	      authNotChecking: !st.authChecking,
+	      authBusy: !!st.authBusy,
+	      authDemoAccounts: !!st.authDemoAccounts,
+	      authForm: st.authForm,
+	      authError: st.authError || "",
+	      isAuthRegister: st.authMode === "register",
+	      authLoginTabStyle: authTab(st.authMode !== "register"),
+	      authRegisterTabStyle: authTab(st.authMode === "register"),
+	      authSubmitLabel: st.authBusy ? "処理中…" : (st.authMode === "register" ? "登録して開始" : "ログイン"),
+	      authSubmitStyle: { width: "100%", background: st.authBusy ? "#bcc4d1" : primary, color: "#fff", borderRadius: "10px", padding: "11px 12px", fontSize: "13.5px", fontWeight: 900, boxShadow: st.authBusy ? "none" : "0 5px 14px rgba(79,110,247,.28)", cursor: st.authBusy ? "not-allowed" : "pointer" },
+	      pickAuthMode: this.pickAuthMode, onAuthField: this.onAuthField, submitAuth: this.submitAuth, loginDemoAccount: this.loginDemoAccount, logout: this.logout,
+	      authUserName: authUser.name || "未ログイン",
+	      authUserRoleLabel: authUser.role === "admin" ? "管理者" : authUser.role === "user" ? "一般ユーザ" : "未ログイン",
+	      authInitial: (authUser.name || authUser.email || "?").slice(0, 1).toUpperCase(),
+	      isAdmin: authUser.role === "admin",
+	      adminUsers: st.adminUsers || [],
+	      adminUserRows: adminRows,
+	      adminUserCount: adminRows.length,
+	      adminLoading: !!st.adminLoading,
+	      adminError: st.adminError || "",
+	      adminNotice: st.adminNotice || "",
+	      adminPassword: st.adminPassword || "",
+	      adminCreate: st.adminCreate,
+	      goAdmin: this.goAdmin, reloadAdminUsers: this.reloadAdminUsers, onAdminCreateField: this.onAdminCreateField, adminCreateUser: this.adminCreateUser,
+	      adminUpdateUserField: this.adminUpdateUserField, onAdminPassword: this.onAdminPassword, adminResetPassword: this.adminResetPassword, adminDisableUser: this.adminDisableUser, adminEnableUser: this.adminEnableUser,
+	      domain: st.domain,
       domainMfgStyle: st.domain === "設備点検" ? segOn : segOff,
       domainItStyle: st.domain === "IT機器サポート" ? segOn : segOff,
       sourceChips,
@@ -6064,9 +6396,10 @@ class Component extends DCLogic {
       baseUrlPlaceholder: st.apiCfg.provider === "azure" ? "https://<リソース名>.openai.azure.com または .../openai/v1" : "https://api.openai.com/v1",
       dbOpen: st.dbOpen, dbCount: st.db.docs.length, dbFolderCount: st.db.folders.length, toggleDb: this.toggleDb,
       ...this.flowLibraryVals(st),
-      homeNavStyle: { margin: "10px 14px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", border: "1px solid " + (st.stage === "home" ? "#cfd9ff" : "#e0e4ec"), background: st.stage === "home" ? "#f3f6ff" : "#fff", color: st.stage === "home" ? primary : "#5a626f", borderRadius: "11px", padding: "10px 11px", fontWeight: 700, fontSize: "13px" },
-      dbNavStyle: sideNavStyle(st.stage === "db"),
-      flowNavStyle: sideNavStyle(st.stage === "flowlib"),
+	      homeNavStyle: { margin: "10px 14px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", border: "1px solid " + (st.stage === "home" ? "#cfd9ff" : "#e0e4ec"), background: st.stage === "home" ? "#f3f6ff" : "#fff", color: st.stage === "home" ? primary : "#5a626f", borderRadius: "11px", padding: "10px 11px", fontWeight: 700, fontSize: "13px" },
+	      dbNavStyle: sideNavStyle(st.stage === "db"),
+	      flowNavStyle: sideNavStyle(st.stage === "flowlib"),
+	      adminNavStyle: sideNavStyle(st.stage === "admin"),
       flowLibOpenBtnStyle: {
         display: "flex", alignItems: "center", gap: "7px", borderRadius: "10px", padding: "9px 13px", fontWeight: 700, fontSize: "12.5px",
         border: "1px solid " + (flowLibOpenDisabled ? "#e0e4ec" : "#dbe2ee"),

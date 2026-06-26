@@ -8,7 +8,8 @@
     "frontend": "node server/frontend.mjs",
     "backend": "node server/backend.mjs",
     "dev": "npm start",
-    "verify": "npm run verify:flow-search && npm run verify:backend-cors && npm audit --audit-level=high",
+    "verify": "npm run verify:flow-search && npm run verify:backend-cors && npm run verify:auth && npm audit --audit-level=high",
+    "verify:auth": "node scripts/verify-auth.mjs",
     "verify:backend-cors": "node scripts/verify-backend-cors.mjs",
     "verify:flow-search": "node scripts/verify-flow-search.mjs"
   },

@@ -114,8 +114,9 @@ test("backend CORS supports configured origins and preflights", async () => {
 
     assert.equal(preflightResponse.statusCode, 204);
     assert.equal(preflightResponse.headers["access-control-allow-origin"], "https://ops.example");
-    assert.equal(preflightResponse.headers["access-control-allow-methods"], "GET,POST,OPTIONS");
+    assert.equal(preflightResponse.headers["access-control-allow-methods"], "GET,POST,PATCH,OPTIONS");
     assert.equal(preflightResponse.headers["access-control-allow-headers"], "Content-Type");
+    assert.equal(preflightResponse.headers["access-control-allow-credentials"], "true");
 
     const getResponse = await request(port, {
       headers: { Origin: "http://localhost:8000" }

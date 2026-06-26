@@ -9,6 +9,7 @@ const DEFAULT_PORT = Number(process.env.FRONTEND_PORT || 8000);
 const DEFAULT_ROOT = path.resolve(__dirname, "..", "src");
 const DEFAULT_ENTRY = "フロー化ツール（A・パイプライン）.dc.html";
 const DEFAULT_VENDOR_ROOT = path.resolve(__dirname, "..", "node_modules");
+const DEFAULT_BACKEND_URL = process.env.BACKEND_PUBLIC_URL || `http://${process.env.BACKEND_HOST || "127.0.0.1"}:${process.env.BACKEND_PORT || 3001}`;
 
 const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -75,6 +76,11 @@ export function createFrontendServer({ root = DEFAULT_ROOT } = {}) {
     }
 
     const url = new URL(req.url || "/", "http://localhost");
+
+    if (url.pathname === "/app-config.js") {
+      send(res, 200, `window.TPF_BACKEND_URL = ${JSON.stringify(DEFAULT_BACKEND_URL)};\n`, "text/javascript; charset=utf-8");
+      return;
+    }
 
     const filePath = resolveVendorPath(url.pathname) || resolveRequestPath(root, url.pathname);
     if (!filePath) {
