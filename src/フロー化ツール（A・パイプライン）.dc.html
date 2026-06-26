@@ -281,6 +281,15 @@
           </sc-if>
           <div style="font-size:11.5px;color:#aab1bc;line-height:1.55;">キーはこのブラウザ内（localStorage）にのみ保存され、API呼び出し時に各プロバイダーへ直接送信されます。ブラウザからの呼び出しにはCORS許可が必要です。</div>
         </sc-if>
+        <div style="border:1px solid #eef1f5;background:#fbfcfe;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button onClick="{{ testApiConnection }}" disabled="{{ apiTestRunning }}" style="{{ apiTestBtnStyle }}">接続テスト</button>
+            <div style="font-size:11.5px;color:#8a93a0;line-height:1.45;flex:1;">現在の入力内容で短い応答を生成し、認証・URL・モデル設定を確認します。</div>
+          </div>
+          <sc-if value="{{ hasApiTest }}" hint-placeholder-val="">
+            <div style="{{ apiTestMsgStyle }}">{{ apiTestMessage }}</div>
+          </sc-if>
+        </div>
       </div>
       <div style="padding:14px 22px;border-top:1px solid #eef1f5;display:flex;justify-content:flex-end;gap:10px;">
         <button onClick="{{ toggleSettings }}" style="font-size:13px;color:#6b7480;padding:10px 14px;">キャンセル</button>
@@ -1837,9 +1846,10 @@ class Component extends DCLogic {
 	      adminPassword: "",
 	      adminCreate: { email: "", name: "", password: "", role: "user" },
 	      zoom: 1,
-      settingsOpen: false,
-      apiCfg: savedApiCfg,
-      db: JSON.parse(JSON.stringify(this.SAMPLE_DB)),
+	      settingsOpen: false,
+	      apiCfg: savedApiCfg,
+	      apiTest: null,
+	      db: JSON.parse(JSON.stringify(this.SAMPLE_DB)),
       dbOpen: false,
       dbForm: { folderName: "", folderParent: "", docTitle: "", docBody: "", docFolder: "" },
       dbCurrent: "",
@@ -3714,14 +3724,45 @@ class Component extends DCLogic {
     if (p === "azure" && !cfg.baseUrl) cfg.baseUrl = "https://<リソース名>.openai.azure.com";
     const next = this.normalizeApiCfg(cfg);
     this._apiCfgDraft = next;
-    this.setState({ apiCfg: next });
+    this.setState({ apiCfg: next, apiTest: null });
   };
   onCfgField = (e) => {
     const f = e.currentTarget.dataset.field;
     const next = this.normalizeApiCfg({ ...(this._apiCfgDraft || this.state.apiCfg), [f]: e.target.value });
     this._apiCfgDraft = next;
-    this.setState({ apiCfg: next });
+    this.setState({ apiCfg: next, apiTest: null });
   };
+  async testApiConnection() {
+    if (this.state.apiTest && this.state.apiTest.running) return;
+    const cfg = this.normalizeApiCfg(this._apiCfgDraft || this.state.apiCfg);
+    this._apiCfgDraft = cfg;
+    const providerName = cfg.provider === "openai" ? "OpenAI" : cfg.provider === "azure" ? "Azure OpenAI" : "内蔵Claude";
+    if (cfg.provider !== "claude" && !cfg.apiKey.trim()) {
+      this.setState({ apiCfg: cfg, apiTest: { ok: false, running: false, message: providerName + "のAPI Keyを入力してください。" } });
+      return;
+    }
+    if (cfg.provider === "azure" && (!cfg.baseUrl.trim() || !cfg.model.trim())) {
+      this.setState({ apiCfg: cfg, apiTest: { ok: false, running: false, message: "Azure OpenAIのBase URLとデプロイ名（モデル）を入力してください。" } });
+      return;
+    }
+    if (cfg.provider === "claude" && !(window.claude && window.claude.complete)) {
+      this.setState({ apiCfg: cfg, apiTest: { ok: false, running: false, message: "内蔵Claudeを利用できません。この環境で内蔵モデルが有効か確認してください。" } });
+      return;
+    }
+    this.setState({ apiCfg: cfg, apiTest: { ok: false, running: true, message: providerName + "へ接続テスト中…" } });
+    try {
+      const prompt = "接続テストです。日本語で「接続OK」とだけ返してください。";
+      const started = Date.now();
+      const raw = cfg.provider === "openai" ? await this.callOpenAI(prompt, cfg) : cfg.provider === "azure" ? await this.callAzure(prompt, cfg) : await window.claude.complete(prompt);
+      const text = String(raw || "").trim();
+      if (!text) throw new Error("応答本文が空でした。モデル名またはデプロイ設定を確認してください。");
+      const ms = Math.max(1, Date.now() - started);
+      const model = cfg.provider === "azure" ? (cfg.model || "デプロイ名未指定") : cfg.provider === "openai" ? (cfg.model || "gpt-4o-mini") : "内蔵モデル";
+      this.setState({ apiTest: { ok: true, running: false, message: providerName + " 接続OK（" + model + " / " + ms + "ms）: " + text.slice(0, 40) } });
+    } catch (e) {
+      this.setState({ apiTest: { ok: false, running: false, message: providerName + " 接続失敗: " + String((e && e.message) || e).slice(0, 220) } });
+    }
+  }
   saveSettings = () => {
     const cfg = this.persistApiCfg(this._apiCfgDraft || this.state.apiCfg);
     this._apiCfgDraft = cfg;
@@ -6732,7 +6773,7 @@ class Component extends DCLogic {
       extract: () => this.extract(), loadDemo: this.loadDemo,
       restart: this.restart, pickView: this.pickView, fcScrollRef: this.fcScrollRef, goHome: this.goHome, goDb: this.goDb, goFlowLib: this.goFlowLib,
       settingsOpen: st.settingsOpen, cfg: st.apiCfg,
-      toggleSettings: this.toggleSettings, onCfgField: this.onCfgField, pickProvider: this.pickProvider, saveSettings: this.saveSettings, newChat: this.newChat, loadChatSession: this.loadChatSession,
+      toggleSettings: this.toggleSettings, onCfgField: this.onCfgField, pickProvider: this.pickProvider, saveSettings: this.saveSettings, testApiConnection: () => this.testApiConnection(), newChat: this.newChat, loadChatSession: this.loadChatSession,
       isClaude: st.apiCfg.provider === "claude", isOpenai: st.apiCfg.provider === "openai", isAzure: st.apiCfg.provider === "azure",
       showApiFields: st.apiCfg.provider !== "claude",
       provClaudeStyle: st.apiCfg.provider === "claude" ? segOn : segOff,
@@ -6740,6 +6781,11 @@ class Component extends DCLogic {
       provAzureStyle: st.apiCfg.provider === "azure" ? segOn : segOff,
       providerLabel: st.apiCfg.provider === "openai" ? "OpenAI" : st.apiCfg.provider === "azure" ? "Azure OpenAI" : "内蔵Claude",
       baseUrlPlaceholder: st.apiCfg.provider === "azure" ? "https://<リソース名>.openai.azure.com または .../openai/v1" : "https://api.openai.com/v1",
+      apiTestRunning: !!(st.apiTest && st.apiTest.running),
+      hasApiTest: !!(st.apiTest && st.apiTest.message),
+      apiTestMessage: (st.apiTest && st.apiTest.message) || "",
+      apiTestBtnStyle: { fontSize: "12.5px", fontWeight: 800, color: "#fff", background: (st.apiTest && st.apiTest.running) ? "#aab1bc" : primary, padding: "9px 13px", borderRadius: "9px", flex: "none", cursor: (st.apiTest && st.apiTest.running) ? "wait" : "pointer" },
+      apiTestMsgStyle: { fontSize: "12px", lineHeight: 1.55, borderRadius: "9px", padding: "9px 10px", border: "1px solid " + ((st.apiTest && st.apiTest.ok) ? "#bfe8d4" : "#f0c7c1"), background: (st.apiTest && st.apiTest.ok) ? "#f0fbf6" : "#fff6f4", color: (st.apiTest && st.apiTest.ok) ? "#0f835c" : "#b04435" },
       dbOpen: st.dbOpen, dbCount: st.db.docs.length, dbFolderCount: st.db.folders.length, toggleDb: this.toggleDb,
       ...this.flowLibraryVals(st),
 	      homeNavStyle: { margin: "10px 14px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px", border: "1px solid " + (st.stage === "home" ? "#cfd9ff" : "#e0e4ec"), background: st.stage === "home" ? "#f3f6ff" : "#fff", color: st.stage === "home" ? primary : "#5a626f", borderRadius: "11px", padding: "10px 11px", fontWeight: 700, fontSize: "13px" },
