@@ -1276,6 +1276,11 @@
           <div style="font-size:30px;margin-bottom:8px;">📑</div>
           <div style="font-size:14.5px;font-weight:700;margin-bottom:5px;">CSVファイルをアップロード</div>
           <div style="font-size:12.5px;color:#8a93a0;line-height:1.6;margin-bottom:18px;">問い合わせ・対応履歴を1行1件で。大量のレコードはバッチに分けて分析し、<br>フローを少しずつ構築する様子をリアルタイムに表示します。</div>
+          <div style="max-width:620px;margin:0 auto 18px;text-align:left;background:#fff;border:1px solid #e6e9ef;border-radius:10px;padding:11px 13px;font-size:11.8px;color:#6b7480;line-height:1.7;">
+            <div style="font-weight:800;color:#2b333f;margin-bottom:3px;">CSV形式</div>
+            <div>1行目はヘッダー、2行目以降は1行1件のQ&A・問い合わせ・対応履歴にしてください。</div>
+            <div>推奨列: 日付 / 問い合わせ・症状 / 確認したこと / 判断・対応 / 結果。単なる名簿や数値表のように判断や対応が含まれないCSVは、フロー化できない場合があります。</div>
+          </div>
           <div style="display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;">
             <label style="display:inline-block;font-size:13.5px;font-weight:700;color:#fff;background:var(--primary);padding:11px 20px;border-radius:10px;box-shadow:0 4px 12px rgba(79,110,247,.3);cursor:pointer;">CSVファイルを選択<input type="file" accept=".csv,text/csv" onChange="{{ onCsvFile }}" style="display:none;" /></label>
             <button onClick="{{ loadSampleCsv }}" style="font-size:13px;color:var(--primary);font-weight:700;text-decoration:underline;text-underline-offset:3px;">サンプルCSVを使う</button>
@@ -3962,12 +3967,42 @@ class Component extends DCLogic {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     const rd = new FileReader();
-    rd.onload = () => this.ingestCsv(String(rd.result || ""), f.name);
+    rd.onload = () => this.ingestCsv(this.decodeCsvBuffer(rd.result), f.name);
     rd.onerror = () => this.setState({ error: "ファイルの読み込みに失敗しました。" });
-    rd.readAsText(f);
+    rd.readAsArrayBuffer(f);
   };
 
-  parseCSV(text) {
+  decodeCsvBuffer(buf) {
+    if (typeof buf === "string") return buf;
+    const bytes = buf instanceof ArrayBuffer ? new Uint8Array(buf) : new Uint8Array(buf || []);
+    if (!bytes.length) return "";
+    const decode = (enc) => {
+      try { return new TextDecoder(enc).decode(bytes); } catch (e) { return ""; }
+    };
+    const utf8 = decode("utf-8");
+    if (!utf8.includes("\uFFFD")) return utf8;
+    const sjis = decode("shift_jis");
+    const bad = (s) => (String(s || "").match(/\uFFFD/g) || []).length;
+    return sjis && bad(sjis) < bad(utf8) ? sjis : utf8;
+  }
+
+  detectCsvDelimiter(text) {
+    const first = String(text || "").split(/\r?\n/).find(line => line.trim()) || "";
+    const count = (sep) => {
+      let n = 0, inQ = false;
+      for (let i = 0; i < first.length; i++) {
+        const c = first[i];
+        if (c === '"') { if (inQ && first[i + 1] === '"') i++; else inQ = !inQ; }
+        else if (!inQ && c === sep) n++;
+      }
+      return n;
+    };
+    const ranked = [",", "\t", ";", "、"].map(sep => ({ sep, n: count(sep) })).sort((a, b) => b.n - a.n);
+    return ranked[0].n > 0 ? ranked[0].sep : ",";
+  }
+
+  parseCSV(text, delimiter) {
+    const sep = delimiter || this.detectCsvDelimiter(text);
     const rows = []; let i = 0, field = "", row = [], inQ = false;
     while (i < text.length) {
       const c = text[i];
@@ -3976,7 +4011,7 @@ class Component extends DCLogic {
         else field += c;
       } else {
         if (c === '"') inQ = true;
-        else if (c === ",") { row.push(field); field = ""; }
+        else if (c === sep) { row.push(field); field = ""; }
         else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; }
         else field += c;
       }
@@ -4846,7 +4881,7 @@ class Component extends DCLogic {
         await this.sleep(520);
       }
       this.throwIfCancelled(runId);
-      if (!flow) throw new Error("フローを生成できませんでした。CSVの内容や形式（ヘッダー行＋データ行）をご確認のうえ、もう一度お試しください。");
+      if (!flow) throw new Error("フローを生成できませんでした。CSVは1行目をヘッダー、2行目以降を1行1件のQ&A・問い合わせ・対応履歴にしてください。判断・確認・対応・結果が分かる列がないCSVはフロー化できない場合があります。");
       flow = this.normalizeFlowDbReferences(flow, { docRefs: docId ? ["doc:" + docId] : [] });
       flow = this.applyFlowSourceMeta(flow, this.flowSourceMeta(folderId, [], docId ? [docId] : []));
       this.setState({ stage: "flow", analyzing: false, view: "diagram", path: [], ...this.makeReg(flow, [], this.flowSourceMeta(folderId, [], docId ? [docId] : [])) });

@@ -80,6 +80,22 @@ c.state.kbSources = [
   },
 ];
 
+assert.ok(html.includes("推奨列: 日付 / 問い合わせ・症状 / 確認したこと / 判断・対応 / 結果"), "CSV upload UI should describe the expected record shape");
+c.ingestCsv("質問,回答,対応\n見積はどこに依頼する？,特約店へ引き継ぐ,担当特約店を案内\n", "qa.csv");
+assert.equal(c.state.inputMode, "csv", "valid CSV should switch to CSV input mode");
+assert.deepEqual(c.state.csvRows, ["質問：見積はどこに依頼する？ ｜ 回答：特約店へ引き継ぐ ｜ 対応：担当特約店を案内"], "CSV rows should be converted into labeled history records");
+c.ingestCsv("問い合わせ内容,回答内容\n見積はどこに依頼する？,担当特約店へ引き継ぎます。\n", "inquiry-answer.csv");
+assert.deepEqual(c.state.csvRows, ["問い合わせ内容：見積はどこに依頼する？ ｜ 回答内容：担当特約店へ引き継ぎます。"], "CSV should accept inquiry/answer headers");
+c.ingestCsv("問い合わせ内容\t回答内容\n見積はどこに依頼する？\t担当特約店へ引き継ぎます。\n", "inquiry-answer.tsv");
+assert.deepEqual(c.state.csvRows, ["問い合わせ内容：見積はどこに依頼する？ ｜ 回答内容：担当特約店へ引き継ぎます。"], "CSV import should tolerate tab-delimited exports");
+c.ingestCsv("問い合わせ内容、回答内容\n見積はどこに依頼する？、担当特約店へ引き継ぎます。\n", "inquiry-answer-jpcomma.csv");
+assert.deepEqual(c.state.csvRows, ["問い合わせ内容：見積はどこに依頼する？ ｜ 回答内容：担当特約店へ引き継ぎます。"], "CSV import should tolerate Japanese comma delimiters");
+const sjisBytes = new Uint8Array([150,226,141,135,130,185,147,224,151,101,44,137,241,147,154,147,224,151,101,10,140,169,144,207,130,205,130,199,130,177,130,201,136,203,151,138,130,183,130,233,129,72,44,146,83,147,150,147,193,150,241,147,88,130,214,136,248,130,171,140,112,130,172,130,220,130,183,129,66,10]);
+c.ingestCsv(sjisBytes.buffer, "sjis.csv");
+assert.deepEqual(c.state.csvRows, ["問い合わせ内容：見積はどこに依頼する？ ｜ 回答内容：担当特約店へ引き継ぎます。"], "CSV import should decode Shift_JIS exports");
+c.ingestCsv("質問,回答,対応\n", "empty.csv");
+assert.ok(c.state.error.includes("ヘッダー行＋データ行"), "CSV with only a header row should show the required shape");
+
 const persistedWrites = [];
 const originalSetItem = globalThis.localStorage.setItem;
 globalThis.localStorage.setItem = (key, value) => { persistedWrites.push([key, value]); };
