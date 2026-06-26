@@ -419,13 +419,20 @@ greetingChat.state.chatInput = "こんにちは";
 greetingChat.hasLLM = () => true;
 greetingChat.chatHarnessLoop = async () => { throw new Error("greeting-only chat should not invoke the agent harness"); };
 greetingChat.buildDbChatMessage = async () => { throw new Error("greeting-only chat should not search DB"); };
+let greetingLlmCalls = 0;
+greetingChat.llmComplete = async (prompt) => {
+  greetingLlmCalls += 1;
+  if (prompt.includes("入口ルーター")) return '{"route":"general","needs":[],"reason":"あいさつのみで、登録済みフロー/DBの確認対象ではない"}';
+  return "こんにちは。相談したい内容があれば入力してください。";
+};
 let greetingAnswer = "";
 greetingChat.finishChatMessage = async (msg) => { greetingAnswer = msg.answer || ""; greetingChat.setState({ chatLoading: false }); };
 await greetingChat.sendChat();
-assert.ok(greetingAnswer.includes("必要な場合だけ保存済みフローやナレッジDBを確認します"), "greeting-only chat should answer immediately without flow/DB search");
+assert.ok(greetingAnswer.includes("こんにちは"), "general chat should answer normally without flow/DB search");
+assert.equal(greetingLlmCalls, 2, "general chat should use route classification plus normal response, not the flow/DB harness");
 
 const businessGreeting = new globalThis.Component();
-assert.equal(businessGreeting.casualChatReply("こんにちは、見積の承認はどう進める？"), "", "greetings with a business question should still use the normal search path");
+assert.equal(businessGreeting.localChatRoute("こんにちは、見積の承認はどう進める？").route, "knowledge", "greetings with a business question should still use the normal search path");
 
 const extractPrompt = c.buildPrompt("価格表を見て、特約店経由なら営業は直接回答せず引き継ぐ。価格はDBの価格表を参照する。");
 assert.ok(extractPrompt.includes("フロー/DBの切り分け基準"), "flow extraction prompt should include flow-vs-db criteria");

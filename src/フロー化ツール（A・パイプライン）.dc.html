@@ -5133,19 +5133,82 @@ class Component extends DCLogic {
   onChatInput = (e) => this.setState({ chatInput: e.target.value });
   pickAnswerMode = (e) => this.setState({ chatAnswerMode: e.currentTarget.dataset.mode || "conditional" });
   quickReply = (e) => { const v = e.currentTarget.dataset.opt; if (v) this.sendChat(v, { forceScope: "flow" }); };
-  casualChatReply(q) {
-    const compact = String(q || "").trim().replace(/[\s　。、,.!！?？]+/g, "").toLowerCase();
-    if (!compact) return "";
-    if (/^(こんにちは|こんにちわ|こんばんは|おはよう|おはようございます|はじめまして|hi|hello|hey)$/.test(compact)) {
-      return "こんにちは。業務判断・手順・資料確認など、相談したい内容を入力してください。必要な場合だけ保存済みフローやナレッジDBを確認します。";
+  buildChatRoutePrompt(q, cands, hasKbEntries) {
+    return [
+      "あなたは業務相談ツールの入口ルーターです。回答本文は作らず、ユーザー入力をフロー/ナレッジDB調査へ流すべきかだけをJSONで判定してください。",
+      "",
+      "# 判定基準",
+      "- knowledge: 業務手順、判断分岐、故障切り分け、対応方針、保存済みフロー、マニュアル/仕様/価格/型番/納期/根拠資料など、登録済みフローまたはナレッジDBの確認が役立つ内容。",
+      "- general: あいさつ、雑談、感謝、入力テスト、この画面の一般的な使い方、登録済みフロー/DBと関係しない一般質問。",
+      "- あいさつを含んでいても、後半に業務手順・判断・資料確認の質問があれば knowledge。",
+      "- 判断に迷う場合は、登録済みフロー/DBで確認する価値があるかで決める。",
+      "",
+      '# 出力JSONのみ: {"route":"knowledge|general","needs":["flow","db"],"reason":"短い理由"}',
+      "",
+      "# 利用可能な保存済みフロー",
+      (cands && cands.length) ? this.flowListText(cands).slice(0, 3000) : "（なし）",
+      "",
+      "# ナレッジDB",
+      hasKbEntries ? this.kbSourceListText().slice(0, 2000) : "（登録なし）",
+      "",
+      "# 入力",
+      q
+    ].join("\n");
+  }
+  localChatRoute(q) {
+    const text = String(q || "").trim();
+    const compact = text.replace(/[\s　。、,.!！?？]+/g, "").toLowerCase();
+    if (!compact) return { route: "general", needs: [], reason: "空入力" };
+    if (/^(こんにちは|こんにちわ|こんばんは|おはよう|おはようございます|はじめまして|hi|hello|hey|ありがとう|ありがとうございます|どうもありがとう|助かりました|ok|了解|承知しました|テスト|test)$/.test(compact)) {
+      return { route: "general", needs: [], reason: "あいさつ・雑談・入力確認のみ" };
     }
-    if (/^(ありがとう|ありがとうございます|どうもありがとう|助かりました|ok|了解|承知しました)$/.test(compact)) {
-      return "どういたしまして。続けて確認したい内容があれば入力してください。";
+    const knowledge = /手順|方法|進め|承認|判断|分岐|対応|対処|確認|切り分け|故障|障害|エラー|不具合|フロー|マニュアル|説明書|仕様|型番|価格|単価|納期|在庫|資料|根拠|見積|問い合わせ|問合せ|製品|機種|条件|基準|例外|添付|同梱|付属|寸法|一覧|内訳|明細|ページ|DB|ナレッジ/i.test(text);
+    return knowledge ? { route: "knowledge", needs: ["flow", "db"], reason: "業務手順・判断・資料確認に関係する語がある" } : { route: "general", needs: [], reason: "登録済みフロー/DBの確認対象ではない" };
+  }
+  normalizeChatRoute(o, q) {
+    const fb = this.localChatRoute(q);
+    const src = (o && typeof o === "object") ? o : {};
+    const route = src.route === "knowledge" || src.route === "general" ? src.route : fb.route;
+    const needs = Array.isArray(src.needs) ? src.needs.map(String).filter(v => v === "flow" || v === "db").slice(0, 2) : fb.needs;
+    return { route, needs, reason: String(src.reason || fb.reason || "").slice(0, 160) };
+  }
+  async classifyChatRoute(q, cands, hasKbEntries) {
+    if (this.hasLLM()) {
+      try {
+        const raw = await this.llmComplete(this.buildChatRoutePrompt(q, cands, hasKbEntries));
+        return this.normalizeChatRoute(this.parseLoose(raw) || this.parseToolCall(raw) || {}, q);
+      } catch (e) {}
     }
-    if (/^(テスト|test)$/.test(compact)) {
-      return "入力は受け取れています。確認したい業務内容を入力すると、必要に応じてフローやナレッジDBを検索します。";
+    return this.normalizeChatRoute(null, q);
+  }
+  buildGeneralChatPrompt(q, baseChat, route) {
+    const recent = (baseChat || []).slice(-8).map(m => (m.role === "user" ? "ユーザー: " : "アシスタント: ") + (m.text || m.answer || "")).join("\n");
+    return [
+      "あなたは業務相談ツール内の通常チャットです。登録済みフローやナレッジDBの検索は使わず、ユーザー入力に自然に短く応答してください。",
+      "最新情報、外部サイト、登録資料の確認が必要な内容は、確認できないことを明確にしてください。",
+      "業務手順・判断・資料根拠の相談に移る場合は、その内容を入力すればフロー/DB確認に進めるとだけ案内してください。",
+      "",
+      "# 入口判定",
+      (route && route.reason) || "",
+      "",
+      "# 直近の会話",
+      recent || "（なし）",
+      "",
+      "# 入力",
+      q
+    ].join("\n");
+  }
+  async buildGeneralChatMessage(q, baseChat, route) {
+    let answer = "";
+    if (this.hasLLM()) {
+      try {
+        answer = String(await this.llmComplete(this.buildGeneralChatPrompt(q, baseChat, route)) || "").replace(/```[a-z]*|```/gi, "").trim();
+      } catch (e) {}
     }
-    return "";
+    if (!answer) {
+      answer = "入力は受け取れています。業務手順・判断・資料確認に関する相談であれば、その内容を入力すると必要に応じてフローやナレッジDBを確認します。";
+    }
+    return { role: "assistant", answer, steps: [], path: [], trace: [{ title: "フロー/DB検索は未実行: " + ((route && route.reason) || "登録済みフロー/DBの確認対象ではないため"), sub: false }] };
   }
   chatQuestionFor(index, chatArr) {
     for (let j = index - 1; j >= 0; j--) {
@@ -5903,21 +5966,25 @@ class Component extends DCLogic {
     if (!q || this.state.chatLoading || this.state.chatStreaming) return;
     const chatSessionId = this.ensureChatSession(q);
     this._pendingChatSessionId = chatSessionId;
-    const casualReply = opts.forceScope ? "" : this.casualChatReply(q);
-    if (casualReply) {
-      const baseChat = this.state.chat.slice();
-      this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "検索不要の入力として応答しています…", chat: baseChat.concat([{ role: "user", text: q }]) });
-      await this.finishChatMessage({ role: "assistant", answer: casualReply, steps: [], path: [], trace: [{ title: "検索不要: あいさつのみのためフロー/DB検索は実行していません。", sub: false }] }, []);
-      return;
-    }
     const cands = this.candidateFlows();
     const hasKbEntries = this.kbIndex().length > 0;
-    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容を読み取り、調査計画を立てています…" });
+    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容がフロー/DB確認に関係するか判定しています…" });
     try {
       let target = { id: this.state.curFlowId, flow: this.state.flow, chat: this.state.chat, title: this.state.flow && this.state.flow.title };
       let switched = false;
       const scope = opts.forceScope || "auto";
       const answerMode = opts.forceAnswerMode || this.state.chatAnswerMode || "conditional";
+      if (scope === "auto") {
+        const route = await this.classifyChatRoute(q, cands, hasKbEntries);
+        if (route.route === "general") {
+          const baseChat = this.state.chat.slice();
+          this.setState({ chat: baseChat.concat([{ role: "user", text: q }]), chatAgentStatus: "通常チャットとして応答しています…" });
+          const msg = await this.buildGeneralChatMessage(q, baseChat, route);
+          await this.finishChatMessage(msg, []);
+          return;
+        }
+      }
+      this.setChatAgentStatus("相談内容を読み取り、調査計画を立てています…");
       if (scope === "auto" && this.hasLLM() && (cands.length || hasKbEntries)) {
         const baseChat = this.state.chat.slice();
         this.setState({ chat: baseChat.concat([{ role: "user", text: q }]) });
