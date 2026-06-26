@@ -178,7 +178,7 @@
       <button data-id="" data-folder="" onClick="{{ dbOpenFolder }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ dbSidebarRootStyle }}">すべて</button>
       <div style="display:flex;flex-direction:column;gap:2px;margin-top:3px;">
         <sc-for list="{{ dbTreeRows }}" as="t" hint-placeholder-count="0">
-          <button data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbOpenFolder }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.sideRowStyle }}">
+          <button data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.sideRowStyle }}">
             <span data-id="{{ t.id }}" onClick="{{ dbToggleExpand }}" style="width:15px;text-align:center;color:#8a93a0;font-size:10px;flex:none;">{{ t.chevron }}</span>
             <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;">{{ t.name }}</span>
           </button>
@@ -304,7 +304,7 @@
         <div style="width:236px;flex:none;border-right:1px solid #eef1f5;overflow:auto;padding:10px 8px;background:#fbfcfe;">
           <div data-id="" data-folder="" onClick="{{ dbOpenFolder }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;margin-bottom:2px;background:{{ dbRootBg }};">📚 すべて</div>
           <sc-for list="{{ dbTreeRows }}" as="t" hint-placeholder-count="0">
-            <div data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbOpenFolder }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.rowStyle }}">
+            <div data-id="{{ t.id }}" data-folder="{{ t.id }}" data-dndtype="folder" data-dndid="{{ t.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ t.rowStyle }}">
               <span data-id="{{ t.id }}" onClick="{{ dbToggleExpand }}" style="width:15px;text-align:center;color:#8a93a0;font-size:10px;flex:none;">{{ t.chevron }}</span>
               <span style="flex:none;">📁</span>
               <sc-if value="{{ t.renaming }}" hint-placeholder-val="">
@@ -330,16 +330,7 @@
             <button onClick="{{ dbNewDoc }}" title="新規ドキュメント" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:var(--primary);border-radius:8px;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M12 12v6M9 15h6"></path></svg></button>
           </div>
           <div style="display:flex;align-items:center;gap:7px;padding:7px 16px;border-bottom:1px solid #f2f4f8;background:#fbfcfe;">
-            <span style="font-size:11px;color:#8a93a0;font-weight:700;flex:none;">📘 新規取り込みPDFの保存先</span>
-            <select value="{{ dbUploadFolder }}" onChange="{{ dbSetUploadFolder }}" style="flex:1;min-width:0;border:1.5px solid #e0e4ec;border-radius:8px;padding:6px 9px;font-size:12px;background:#fff;">
-              <sc-for list="{{ uploadFolderOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
-            </select>
             <span style="font-size:10.5px;color:#aab1bc;flex:none;">ドラッグで移動・Alt／⌥でコピー</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:7px;padding:7px 16px;border-bottom:1px solid #f2f4f8;">
-            <span style="font-size:11px;color:#0f835c;font-weight:700;flex:none;">🌐 共有を追加</span>
-            <input value="{{ pubInput }}" onInput="{{ onPubInput }}" placeholder="公開キー（pub_…）を貼り付け" style="flex:1;min-width:0;border:1.5px solid #d3ecdd;border-radius:8px;padding:6px 9px;font-size:12px;background:#fbfffc;" />
-            <button onClick="{{ addSubscription }}" title="参照に追加" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:#16a875;border-radius:8px;flex:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg></button>
           </div>
           <sc-if value="{{ dbEditOpen }}" hint-placeholder-val="">
             <div style="flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
@@ -398,7 +389,7 @@
                 <div style="height:1px;background:#eef1f5;margin:6px 4px 10px;"></div>
               </sc-if>
               <sc-for list="{{ dbCurFolders }}" as="f" hint-placeholder-count="0">
-                <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onDoubleClick="{{ dbOpenFolder }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
+                <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
                   <span style="font-size:18px;flex:none;">📁</span>
                   <div style="flex:1;min-width:0;">
                     <sc-if value="{{ f.renaming }}" hint-placeholder-val="">
@@ -409,10 +400,6 @@
                       <div style="font-size:11px;color:#8a93a0;">{{ f.subCount }} フォルダ ・ 📘{{ f.srcCount }} ・ 📄{{ f.docCount }}</div>
                     </sc-if>
                   </div>
-                  <sc-if value="{{ f.published }}" hint-placeholder-val=""><button data-id="{{ f.id }}" onClick="{{ unpublishFolder }}" title="公開中（押して非公開）" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"></path></svg></button></sc-if>
-                  <sc-if value="{{ f.notPublished }}" hint-placeholder-val="{{ true }}"><button data-id="{{ f.id }}" onClick="{{ publishFolder }}" title="公開する" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#aab1bc;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"></path></svg></button></sc-if>
-                  <button data-type="folder" data-id="{{ f.id }}" data-name="{{ f.name }}" onClick="{{ dbStartRename }}" title="名前変更" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#6b7480;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
-                  <button data-id="{{ f.id }}" onClick="{{ delFolder }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
                 </div>
               </sc-for>
               <sc-for list="{{ dbCurSources }}" as="s" hint-placeholder-count="0">
@@ -420,7 +407,7 @@
                   <div data-id="{{ s.id }}" onClick="{{ dbToggleSrc }}" style="display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:grab;background:#fbfcfe;">
                     <span style="font-size:16px;flex:none;">📘</span>
                     <div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.name }}</div><div style="font-size:11px;color:#8a93a0;">{{ s.pageCount }} ページ</div></div>
-                    <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" title="このPDFから思考プロセスを抽出" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
+                    <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" disabled="{{ s.thoughtExtractDisabled }}" title="{{ s.thoughtExtractTitle }}" style="{{ s.thoughtExtractStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
                     <button data-id="{{ s.id }}" onClick="{{ delKbSource }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
                     <span style="color:#aab1bc;font-size:11px;flex:none;">{{ s.chevron }}</span>
                   </div>
@@ -641,6 +628,31 @@
       <div style="padding:13px 22px;border-top:1px solid #eef1f5;display:flex;justify-content:space-between;align-items:center;">
         <button onClick="{{ approveAllProposals }}" style="font-size:12.5px;font-weight:700;color:var(--primary);">すべて承認</button>
         <button onClick="{{ closeProposals }}" style="font-size:13.5px;font-weight:700;color:#fff;background:var(--primary);padding:10px 20px;border-radius:10px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- FOLDER CONTEXT MENU -->
+  <sc-if value="{{ dbFolderMenuOpen }}" hint-placeholder-val="">
+  <div onClick="{{ dbCloseFolderMenu }}" style="position:fixed;inset:0;z-index:79;background:transparent;"></div>
+  <div style="{{ dbFolderMenuStyle }}">
+    <button onClick="{{ dbMenuRenameFolder }}" style="width:100%;text-align:left;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:700;color:#2b333f;">名前変更</button>
+    <button onClick="{{ dbMenuDeleteFolder }}" style="width:100%;text-align:left;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:700;color:#c0392b;">削除</button>
+    <button onClick="{{ dbMenuTogglePublish }}" style="width:100%;text-align:left;padding:8px 10px;border-radius:7px;font-size:12.5px;font-weight:700;color:#0f835c;">{{ dbFolderMenuPublishLabel }}</button>
+    <button onClick="{{ dbMenuExtractFolder }}" disabled="{{ dbFolderMenuExtractDisabled }}" style="{{ dbFolderMenuExtractStyle }}">{{ dbFolderMenuExtractLabel }}</button>
+  </div>
+  </sc-if>
+
+  <!-- DELETE CONFIRM -->
+  <sc-if value="{{ dbDeleteConfirmOpen }}" hint-placeholder-val="">
+  <div style="position:fixed;inset:0;background:rgba(20,26,38,.45);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(16,24,40,.3);overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid #eef1f5;font-size:15px;font-weight:800;color:#1f2733;">フォルダを削除</div>
+      <div style="padding:18px 20px;font-size:13px;color:#2b333f;line-height:1.7;">「{{ dbDeleteName }}」を本当に削除しますか？配下のフォルダ、メモ、PDFも削除されます。</div>
+      <div style="padding:12px 20px;border-top:1px solid #eef1f5;display:flex;justify-content:flex-end;gap:9px;">
+        <button onClick="{{ dbCancelDelete }}" style="font-size:13px;font-weight:700;color:#6b7480;padding:9px 13px;border-radius:9px;">キャンセル</button>
+        <button onClick="{{ dbConfirmDelete }}" style="font-size:13px;font-weight:800;color:#fff;background:#c0392b;padding:9px 16px;border-radius:9px;">削除</button>
       </div>
     </div>
   </div>
@@ -880,14 +892,6 @@
           <span style="color:#cbd2dd;">/</span>
         </sc-for>
       </div>
-      <span style="font-size:11px;color:#8a93a0;font-weight:700;flex:none;">保存先</span>
-      <select value="{{ dbUploadFolder }}" onChange="{{ dbSetUploadFolder }}" style="min-width:220px;border:1.5px solid #e0e4ec;border-radius:8px;padding:7px 9px;font-size:12px;background:#fff;">
-        <sc-for list="{{ uploadFolderOpts }}" as="o" hint-placeholder-count="0"><option value="{{ o.id }}">{{ o.label }}</option></sc-for>
-      </select>
-      <input value="{{ pubInput }}" onInput="{{ onPubInput }}" placeholder="公開キー pub_..." style="width:190px;border:1.5px solid #d3ecdd;border-radius:8px;padding:7px 9px;font-size:12px;background:#fbfffc;" />
-      <button onClick="{{ addSubscription }}" title="共有を追加" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:#16a875;border-radius:8px;flex:none;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
-      </button>
     </div>
     <div style="display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;flex:1;min-height:0;padding:18px;">
       <section style="background:#fff;border:1px solid #e6e9ef;border-radius:14px;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
@@ -914,14 +918,12 @@
               </sc-for>
             </sc-if>
             <sc-for list="{{ dbCurFolders }}" as="f" hint-placeholder-count="0">
-              <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onDoubleClick="{{ dbOpenFolder }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
+              <div data-id="{{ f.id }}" data-folder="{{ f.id }}" data-dndtype="folder" data-dndid="{{ f.id }}" draggable="true" onClick="{{ dbFolderSingleClick }}" onContextMenu="{{ dbFolderContextMenu }}" onDragStart="{{ dndStart }}" onDragEnd="{{ dndEnd }}" onDragOver="{{ dndOver }}" onDragEnter="{{ dndEnter }}" onDrop="{{ dndDrop }}" style="{{ f.rowStyle }}">
                 <span style="font-size:18px;flex:none;">📁</span>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:13.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.name }}</div>
                   <div style="font-size:11px;color:#8a93a0;">{{ f.subCount }} フォルダ ・ 📘{{ f.srcCount }} ・ 📄{{ f.docCount }}</div>
                 </div>
-                <button data-type="folder" data-id="{{ f.id }}" data-name="{{ f.name }}" onClick="{{ dbStartRename }}" title="名前変更" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#6b7480;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button>
-                <button data-id="{{ f.id }}" onClick="{{ delFolder }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
               </div>
             </sc-for>
             <sc-for list="{{ dbCurSources }}" as="s" hint-placeholder-count="0">
@@ -929,7 +931,7 @@
                 <div data-id="{{ s.id }}" onClick="{{ dbToggleSrc }}" style="display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:grab;background:#fbfcfe;">
                   <span style="font-size:16px;flex:none;">📘</span>
                   <div style="flex:1;min-width:0;"><div style="font-size:13.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ s.name }}</div><div style="font-size:11px;color:#8a93a0;">{{ s.pageCount }} ページ</div></div>
-                  <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" title="このPDFから思考プロセスを抽出" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#0f835c;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
+                  <button data-id="{{ s.id }}" onClick="{{ buildFlowFromDbSource }}" disabled="{{ s.thoughtExtractDisabled }}" title="{{ s.thoughtExtractTitle }}" style="{{ s.thoughtExtractStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="14" width="6" height="6" rx="1"></rect><path d="M7 10v4a2 2 0 0 0 2 2h5"></path></svg></button>
                   <button data-id="{{ s.id }}" onClick="{{ delKbSource }}" title="削除" style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;flex:none;color:#c0392b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path><path d="M10 11v6M14 11v6"></path></svg></button>
                   <span style="color:#aab1bc;font-size:11px;flex:none;">{{ s.chevron }}</span>
                 </div>
@@ -1819,6 +1821,9 @@ class Component extends DCLogic {
       dbForm: { folderName: "", folderParent: "", docTitle: "", docBody: "", docFolder: "" },
       dbCurrent: "",
       dbExpanded: {},
+      dbSelectedFolder: "",
+      dbFolderMenu: null,
+      dbDeleteConfirm: null,
       dbEditDoc: null,
       dbRename: null,
       dbRenameVal: "",
@@ -2200,21 +2205,28 @@ class Component extends DCLogic {
   // ---- 公開（フォルダを公開キー付きで共有）・購読 ----
   readPubReg() { return this.readJson("tpf_pub_v1", {}); }
   writePubReg(r) { this.writeJson("tpf_pub_v1", r, "公開設定"); }
-  publishFolder = (e) => {
-    e.stopPropagation && e.stopPropagation();
-    const fid = e.currentTarget.dataset.id; const folders = this.state.db.folders; const f = folders.find(x => x.id === fid); if (!f) return;
+  setFolderPublished(fid, publish) {
+    const folders = this.state.db.folders; const f = folders.find(x => x.id === fid); if (!f) return;
+    if (!publish && !f.pubKey) return;
+    if (!publish) {
+      const reg = this.readPubReg(); delete reg[f.pubKey]; this.writePubReg(reg);
+      const nf = folders.map(x => x.id === fid ? { ...x, pubKey: undefined } : x);
+      const db = { ...this.state.db, folders: nf }; this.persistDb(db); this.setState({ db });
+      return;
+    }
     const key = f.pubKey || ("pub_" + Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 6));
     const reg = this.readPubReg(); reg[key] = { ownerWs: this.state.curWs, folderId: fid, name: f.name, createdAt: Date.now() }; this.writePubReg(reg);
     const nf = folders.map(x => x.id === fid ? { ...x, pubKey: key } : x);
     const db = { ...this.state.db, folders: nf }; this.persistDb(db);
     this.setState({ db, pubNotice: { name: f.name, key } });
+  }
+  publishFolder = (e) => {
+    e.stopPropagation && e.stopPropagation();
+    this.setFolderPublished(e.currentTarget.dataset.id, true);
   };
   unpublishFolder = (e) => {
     e.stopPropagation && e.stopPropagation();
-    const fid = e.currentTarget.dataset.id; const folders = this.state.db.folders; const f = folders.find(x => x.id === fid); if (!f || !f.pubKey) return;
-    const reg = this.readPubReg(); delete reg[f.pubKey]; this.writePubReg(reg);
-    const nf = folders.map(x => x.id === fid ? { ...x, pubKey: undefined } : x);
-    const db = { ...this.state.db, folders: nf }; this.persistDb(db); this.setState({ db });
+    this.setFolderPublished(e.currentTarget.dataset.id, false);
   };
   closePubNotice = () => this.setState({ pubNotice: null });
   clearIngestErr = () => this.setState({ dbIngest: null });
@@ -2433,6 +2445,73 @@ class Component extends DCLogic {
   dbToggleSrcPage = (e) => { e.stopPropagation && e.stopPropagation(); const r = e.currentTarget.dataset.ref; this.setState({ dbSrcPageExpand: { ...this.state.dbSrcPageExpand, [r]: !this.state.dbSrcPageExpand[r] } }); };
   delKbSource = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; const kbSources = (this.state.kbSources || []).filter(s => s.id !== id); this.persistKbSources(kbSources); this.setState({ kbSources }); };
   dbSetUploadFolder = (e) => this.setState({ dbUploadFolder: e.target.value });
+  dbCloseFolderMenu = () => this.setState({ dbFolderMenu: null });
+  dbSelectFolder(id) {
+    const fid = id || "";
+    this.setState({ dbSelectedFolder: fid, dbCurrent: fid, dbUploadFolder: fid, dbEditDoc: null, dbRename: null, dbFolderMenu: null, dbExpanded: { ...this.state.dbExpanded, [fid]: true } });
+  }
+  dbFolderSingleClick = (e) => {
+    const id = e.currentTarget.dataset.id || "";
+    this.dbSelectFolder(id);
+  };
+  dbFolderContextMenu = (e) => {
+    e.preventDefault(); e.stopPropagation && e.stopPropagation();
+    const id = e.currentTarget.dataset.id || "";
+    if (!id) return this.setState({ dbFolderMenu: null, dbSelectedFolder: "" });
+    const rect = e.currentTarget.getBoundingClientRect();
+    this.setState({
+      dbSelectedFolder: id,
+      dbCurrent: id,
+      dbUploadFolder: id,
+      dbEditDoc: null,
+      dbRename: null,
+      dbFolderMenu: { id, x: Math.round(e.clientX || (rect.left + 16)), y: Math.round(e.clientY || (rect.top + 16)) },
+      dbExpanded: { ...this.state.dbExpanded, [id]: true },
+    });
+  };
+  selectedFolderSourceIds(folderId) {
+    const ids = this.folderDescendantSet(folderId);
+    return (this.state.kbSources || []).filter(s => ids[s.folderId || ""]).map(s => s.id);
+  }
+  folderThoughtExtracted(folderId) {
+    const sourceIds = this.selectedFolderSourceIds(folderId);
+    if (!sourceIds.length) return false;
+    return sourceIds.some(id => (this.state.savedFlows || []).some(f => f.wsId === this.state.curWs && f.flow && this.flowUsesSource(f.flow, id)));
+  }
+  dbMenuRenameFolder = () => {
+    const id = this.state.dbFolderMenu && this.state.dbFolderMenu.id;
+    const f = (this.state.db.folders || []).find(x => x.id === id);
+    if (!f) return this.dbCloseFolderMenu();
+    this.setState({ dbRename: { type: "folder", id }, dbRenameVal: f.name || "", dbSelectedFolder: id, dbFolderMenu: null });
+  };
+  dbMenuDeleteFolder = () => {
+    const id = this.state.dbFolderMenu && this.state.dbFolderMenu.id;
+    const f = (this.state.db.folders || []).find(x => x.id === id);
+    if (!f) return this.dbCloseFolderMenu();
+    this.setState({ dbDeleteConfirm: { type: "folder", id, name: f.name || "フォルダ" }, dbSelectedFolder: id, dbFolderMenu: null });
+  };
+  dbCancelDelete = () => this.setState({ dbDeleteConfirm: null });
+  dbConfirmDelete = () => {
+    const c = this.state.dbDeleteConfirm;
+    if (!c) return;
+    if (c.type === "folder") this.deleteFolderById(c.id);
+    this.setState({ dbDeleteConfirm: null });
+  };
+  dbMenuTogglePublish = () => {
+    const id = this.state.dbFolderMenu && this.state.dbFolderMenu.id;
+    const f = (this.state.db.folders || []).find(x => x.id === id);
+    if (!f) return this.dbCloseFolderMenu();
+    this.setFolderPublished(id, !f.pubKey);
+    this.setState({ dbSelectedFolder: id, dbFolderMenu: null });
+  };
+  dbMenuExtractFolder = () => {
+    const id = this.state.dbFolderMenu && this.state.dbFolderMenu.id;
+    if (!id || this.folderThoughtExtracted(id)) return this.dbCloseFolderMenu();
+    const ids = this.folderDescendantSet(id);
+    const src = (this.state.kbSources || []).find(s => ids[s.folderId || ""]);
+    this.setState({ dbFolderMenu: null, dbSelectedFolder: id });
+    if (src) this.startFlowFromDbSource(src);
+  };
   // ---- ドラッグ＆ドロップ（エクスプローラ同等の移動・コピー） ----
   dndStart = (e) => { const type = e.currentTarget.dataset.dndtype; const id = e.currentTarget.dataset.dndid; this.setState({ dnd: { type, id } }); try { e.dataTransfer.effectAllowed = "copyMove"; e.dataTransfer.setData("text/plain", id); } catch (x) {} };
   dndEnd = () => this.setState({ dnd: null, dndOverId: null });
@@ -2514,7 +2593,7 @@ class Component extends DCLogic {
 
   // ---- DB manager (explorer風) ----
   toggleDb = () => this.goDb();
-  dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id || ""; this.setState({ dbCurrent: id, dbUploadFolder: id, dbEditDoc: null, dbRename: null, dbExpanded: { ...this.state.dbExpanded, [id]: true } }); };
+  dbOpenFolder = (e) => { const id = e.currentTarget.dataset.id || ""; this.dbSelectFolder(id); };
   dbToggleExpand = (e) => { e.stopPropagation && e.stopPropagation(); const id = e.currentTarget.dataset.id; this.setState({ dbExpanded: { ...this.state.dbExpanded, [id]: !this.state.dbExpanded[id] } }); };
   dbNewFolder = () => {
     const id = this.uid("f_");
@@ -2546,15 +2625,20 @@ class Component extends DCLogic {
     this.persistDb(db); this.setState({ db, dbRename: null });
   };
   dbRenameKey = (e) => { if (e.key === "Enter") { e.preventDefault(); this.dbCommitRename(); } else if (e.key === "Escape") { this.setState({ dbRename: null }); } };
-  delFolder = (e) => {
-    e.stopPropagation && e.stopPropagation();
-    const id = e.currentTarget.dataset.id; const all = this.state.db.folders; const del = {};
+  deleteFolderById(id) {
+    const all = this.state.db.folders; const del = {};
     const collect = (fid) => { del[fid] = 1; all.filter(f => f.parent === fid).forEach(c => collect(c.id)); };
     collect(id);
     const folders = all.filter(f => !del[f.id]); const docs = this.state.db.docs.filter(d => !del[d.folderId]);
     const db = { folders, docs }; this.persistDb(db);
     const kbSources = (this.state.kbSources || []).filter(s => !del[s.folderId || ""]); this.persistKbSources(kbSources);
-    this.setState({ db, kbSources, dbCurrent: del[this.state.dbCurrent] ? "" : this.state.dbCurrent, dbUploadFolder: del[this.state.dbUploadFolder] ? "" : this.state.dbUploadFolder });
+    this.setState({ db, kbSources, dbCurrent: del[this.state.dbCurrent] ? "" : this.state.dbCurrent, dbUploadFolder: del[this.state.dbUploadFolder] ? "" : this.state.dbUploadFolder, dbSelectedFolder: del[this.state.dbSelectedFolder] ? "" : this.state.dbSelectedFolder, dbFolderMenu: null });
+  }
+  delFolder = (e) => {
+    e.stopPropagation && e.stopPropagation();
+    const id = e.currentTarget.dataset.id;
+    const f = (this.state.db.folders || []).find(x => x.id === id);
+    this.setState({ dbDeleteConfirm: { type: "folder", id, name: (f && f.name) || "フォルダ" }, dbFolderMenu: null, dbSelectedFolder: id || this.state.dbSelectedFolder });
   };
   delDoc = (e) => {
     e.stopPropagation && e.stopPropagation();
@@ -2568,15 +2652,16 @@ class Component extends DCLogic {
     const sex = st.dbSrcExpand || {}, spx = st.dbSrcPageExpand || {}; const over = st.dndOverId;
     const folders = st.db.folders, docs = st.db.docs; const byF = {}; folders.forEach(f => byF[f.id] = f);
     const ren = st.dbRename;
+    const selected = st.dbSelectedFolder || cur || "";
     const tree = [];
     const walk = (parent, depth) => {
       folders.filter(f => (f.parent || "") === parent).forEach(f => {
         const hasChildren = folders.some(c => c.parent === f.id);
         tree.push({
           id: f.id, name: f.name, hasChildren, chevron: hasChildren ? (exp[f.id] ? "▾" : "▸") : "",
-          selected: f.id === cur,
-          rowStyle: { display: "flex", alignItems: "center", gap: "2px", padding: "5px 8px", paddingLeft: (8 + depth * 15) + "px", borderRadius: "7px", cursor: "pointer", fontSize: "13px", background: over === f.id ? "#dbe6ff" : (f.id === cur ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : "none", color: f.id === cur ? "#3b54c4" : "#2b333f", fontWeight: f.id === cur ? 700 : 500 },
-          sideRowStyle: { width: "100%", display: "flex", alignItems: "center", gap: "5px", padding: "6px 8px", paddingLeft: (8 + depth * 12) + "px", borderRadius: "8px", cursor: "pointer", fontSize: "12.5px", background: over === f.id ? "#dbe6ff" : (f.id === cur ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : "none", color: f.id === cur ? "#3b54c4" : "#2b333f", fontWeight: f.id === cur ? 800 : 600 },
+          selected: f.id === selected,
+          rowStyle: { display: "flex", alignItems: "center", gap: "2px", padding: "5px 8px", paddingLeft: (8 + depth * 15) + "px", borderRadius: "7px", cursor: "pointer", fontSize: "13px", background: over === f.id ? "#dbe6ff" : (f.id === selected ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : (f.id === selected ? "inset 3px 0 0 #4f6ef7" : "none"), color: f.id === selected ? "#3b54c4" : "#2b333f", fontWeight: f.id === selected ? 700 : 500 },
+          sideRowStyle: { width: "100%", display: "flex", alignItems: "center", gap: "5px", padding: "6px 8px", paddingLeft: (8 + depth * 12) + "px", borderRadius: "8px", cursor: "pointer", fontSize: "12.5px", background: over === f.id ? "#dbe6ff" : (f.id === selected ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : (f.id === selected ? "inset 3px 0 0 #4f6ef7" : "none"), color: f.id === selected ? "#3b54c4" : "#2b333f", fontWeight: f.id === selected ? 800 : 600 },
           renaming: !!(ren && ren.type === "folder" && ren.id === f.id),
           notRenaming: !(ren && ren.type === "folder" && ren.id === f.id),
         });
@@ -2587,8 +2672,10 @@ class Component extends DCLogic {
     const crumbs = [{ id: "", name: "すべて" }];
     { let c = byF[cur]; const stack = []; let g = 0; while (c && g < 20) { stack.unshift({ id: c.id, name: c.name }); c = c.parent ? byF[c.parent] : null; g++; } crumbs.push(...stack); }
     const fr = (f) => !!(ren && ren.type === "folder" && ren.id === f.id);
-    const curFolders = folders.filter(f => (f.parent || "") === cur).map(f => ({ id: f.id, name: f.name, published: !!f.pubKey, notPublished: !f.pubKey, docCount: docs.filter(d => d.folderId === f.id).length, srcCount: (st.kbSources || []).filter(s => (s.folderId || "") === f.id).length, subCount: folders.filter(c => c.parent === f.id).length, renaming: fr(f), notRenaming: !fr(f), rowStyle: { display: "flex", alignItems: "center", gap: "10px", padding: "9px 12px", borderRadius: "8px", cursor: "grab", background: over === f.id ? "#e3ecff" : "transparent", boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : "none" } }));
-    const curSources = (st.kbSources || []).filter(s => (s.folderId || "") === cur).map(s => ({ id: s.id, name: s.name, pageCount: (s.pages || []).length, expanded: !!sex[s.id], chevron: sex[s.id] ? "▾" : "▸", pages: (sex[s.id] ? (s.pages || []) : []).map(p => { const ref = "src:" + s.id + ":" + p.page; const ex = !!spx[ref]; return { ref, page: p.page, summary: p.summary || (p.md || "").slice(0, 60), hasKw: !!(p.keywords && p.keywords.length), kw: (p.keywords || []).join("、"), expanded: ex, chevron: ex ? "▾" : "▸", md: p.md || "" }; }) }));
+    const curFolders = folders.filter(f => (f.parent || "") === cur).map(f => ({ id: f.id, name: f.name, published: !!f.pubKey, notPublished: !f.pubKey, docCount: docs.filter(d => d.folderId === f.id).length, srcCount: (st.kbSources || []).filter(s => (s.folderId || "") === f.id).length, subCount: folders.filter(c => c.parent === f.id).length, renaming: fr(f), notRenaming: !fr(f), selected: f.id === selected, rowStyle: { display: "flex", alignItems: "center", gap: "10px", padding: "9px 12px", borderRadius: "8px", cursor: "pointer", background: over === f.id ? "#e3ecff" : (f.id === selected ? "#eef1ff" : "transparent"), boxShadow: over === f.id ? "inset 0 0 0 2px #4f6ef7" : (f.id === selected ? "inset 3px 0 0 #4f6ef7" : "none"), color: f.id === selected ? "#233b9f" : "#2b333f" } }));
+    const curSources = (st.kbSources || []).filter(s => (s.folderId || "") === cur).map(s => { const flowed = this.sourceThoughtExtracted(s.id); return { id: s.id, name: s.name, pageCount: (s.pages || []).length, expanded: !!sex[s.id], chevron: sex[s.id] ? "▾" : "▸", thoughtExtracted: flowed, thoughtExtractDisabled: flowed, thoughtExtractTitle: flowed ? "このPDFは抽出済みです" : "このPDFから思考プロセスを抽出", thoughtExtractStyle: { width: "28px", height: "28px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "7px", flex: "none", color: flowed ? "#aab1bc" : "#0f835c", cursor: flowed ? "not-allowed" : "pointer", opacity: flowed ? 0.55 : 1 }, pages: (sex[s.id] ? (s.pages || []) : []).map(p => { const ref = "src:" + s.id + ":" + p.page; const ex = !!spx[ref]; return { ref, page: p.page, summary: p.summary || (p.md || "").slice(0, 60), hasKw: !!(p.keywords && p.keywords.length), kw: (p.keywords || []).join("、"), expanded: ex, chevron: ex ? "▾" : "▸", md: p.md || "" }; }) }; });
+    const menuFolder = st.dbFolderMenu && st.dbFolderMenu.id ? folders.find(f => f.id === st.dbFolderMenu.id) : null;
+    const menuAlready = menuFolder ? this.folderThoughtExtracted(menuFolder.id) : false;
     const curDocs = docs.filter(d => d.folderId === cur).map(d => { const r = !!(ren && ren.type === "doc" && ren.id === d.id); return { id: d.id, title: d.title, snippet: (d.body || "").slice(0, 64), renaming: r, notRenaming: !r }; });
     const editDoc = st.dbEditDoc ? docs.find(d => d.id === st.dbEditDoc) : null;
     return {
@@ -2604,6 +2691,14 @@ class Component extends DCLogic {
       dbCurSources: curSources, hasCurSources: curSources.length > 0,
       dbUploadFolder: st.dbUploadFolder || "",
       uploadFolderOpts: [{ id: "", label: "📚 すべて（ルート）" }].concat(this.folderTree().map(f => ({ id: f.id, label: "　".repeat(f.depth) + "📁 " + f.name }))),
+      dbFolderMenuOpen: !!menuFolder,
+      dbFolderMenuStyle: st.dbFolderMenu ? { position: "fixed", left: st.dbFolderMenu.x + "px", top: st.dbFolderMenu.y + "px", zIndex: 80, minWidth: "190px", background: "#fff", border: "1px solid #dbe2ee", borderRadius: "10px", boxShadow: "0 14px 32px rgba(16,24,40,.18)", padding: "6px" } : {},
+      dbFolderMenuPublishLabel: menuFolder && menuFolder.pubKey ? "非公開にする" : "公開設定",
+      dbFolderMenuExtractDisabled: menuAlready || !this.selectedFolderSourceIds(menuFolder && menuFolder.id).length,
+      dbFolderMenuExtractLabel: menuAlready ? "抽出済み" : "思考プロセス抽出",
+      dbFolderMenuExtractStyle: { width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: "7px", fontSize: "12.5px", fontWeight: 700, color: menuAlready ? "#aab1bc" : "#3b54c4", cursor: (menuAlready || !this.selectedFolderSourceIds(menuFolder && menuFolder.id).length) ? "not-allowed" : "pointer", opacity: (menuAlready || !this.selectedFolderSourceIds(menuFolder && menuFolder.id).length) ? 0.6 : 1 },
+      dbDeleteConfirmOpen: !!st.dbDeleteConfirm,
+      dbDeleteName: (st.dbDeleteConfirm && st.dbDeleteConfirm.name) || "",
       showShared: cur === "" && (st.subs || []).length > 0,
       sharedDbs: (cur === "" ? (st.subs || []) : []).map(key => { const p = this.resolvePub(key); if (!p) return { key, missing: true, name: key, sources: [], docs: [] }; return { key, missing: false, name: p.name, sources: p.sources.map(s => { const sx = "shsrc:" + key + ":" + s.id; const ex = !!sex[sx]; return { sx, name: s.name, pageCount: (s.pages || []).length, expanded: ex, chevron: ex ? "▾" : "▸", pages: (ex ? (s.pages || []) : []).map(pg => { const ref = "shsrc:" + key + ":" + s.id + ":" + pg.page; const pex = !!spx[ref]; return { ref, page: pg.page, summary: pg.summary || (pg.md || "").slice(0, 60), hasKw: !!(pg.keywords && pg.keywords.length), kw: (pg.keywords || []).join("、"), expanded: pex, chevron: pex ? "▾" : "▸", md: pg.md || "" }; }) }; }), docs: p.docs.map(d => { const dx = "shdoc:" + key + ":" + d.id; const ex = !!sex[dx]; return { dx, title: d.title || "メモ", snippet: (d.body || "").slice(0, 64), expanded: ex, chevron: ex ? "▾" : "▸", body: d.body || "" }; }) }; }),
     };
@@ -4061,11 +4156,15 @@ class Component extends DCLogic {
     (src.pages || []).forEach(p => { pageRef[p.page] = "src:" + src.id + ":" + p.page; });
     return { sourceId: src.id, sourceName: src.name, folderId: src.folderId || "", pageRef, docCount: (src.pages || []).length };
   }
-  buildFlowFromDbSource = async (e) => {
-    e.stopPropagation && e.stopPropagation();
-    const id = e.currentTarget.dataset.id;
-    const src = (this.state.kbSources || []).find(s => s.id === id);
+  sourceThoughtExtracted(sourceId) {
+    return !!sourceId && (this.state.savedFlows || []).some(f => f.wsId === this.state.curWs && f.flow && this.flowUsesSource(f.flow, sourceId));
+  }
+  startFlowFromDbSource = async (src) => {
     if (!src) return;
+    if (this.sourceThoughtExtracted(src.id)) {
+      this.setState({ dbIngest: { error: "このPDFはすでに思考プロセスを抽出済みです。" } });
+      return;
+    }
     if (!this.hasLLM()) { this.setState({ dbIngest: { error: "AIが未設定です。右上の「API設定」でキーを入力してください。" } }); return; }
     const pages = (src.pages || []).map(p => ({ page: p.page, text: p.md || p.summary || "" }));
     const index = (src.pages || []).map(p => ({ page: p.page, summary: p.summary || "", keywords: p.keywords || [], aliases: p.aliases || [], conditions: p.conditions || [], category: p.category || "other", md: p.md || "" }));
@@ -4078,6 +4177,12 @@ class Component extends DCLogic {
     } catch (err) {
       this.setState({ stage: "input", analyzing: false, pdfError: (err && err.message) || "保存済みPDFからのフロー生成に失敗しました。" });
     }
+  };
+  buildFlowFromDbSource = async (e) => {
+    e.stopPropagation && e.stopPropagation();
+    const id = e.currentTarget.dataset.id;
+    const src = (this.state.kbSources || []).find(s => s.id === id);
+    this.startFlowFromDbSource(src);
   };
   async extractDocPages(doc, onProg) {
     const n = doc.numPages; const pages = [];
@@ -6413,7 +6518,10 @@ class Component extends DCLogic {
         cursor: flowLibOpenDisabled ? "not-allowed" : "pointer"
       },
       inputSaveHint: "取り込んだPDF・履歴データ・生成フローは「" + this.folderLabel(this.currentSaveFolderId()) + "」に紐づけて保存されます。",
-      dbOpenFolder: this.dbOpenFolder, dbToggleExpand: this.dbToggleExpand, dbNewFolder: this.dbNewFolder, dbNewDoc: this.dbNewDoc,
+      dbOpenFolder: this.dbOpenFolder, dbFolderSingleClick: this.dbFolderSingleClick, dbFolderContextMenu: this.dbFolderContextMenu, dbCloseFolderMenu: this.dbCloseFolderMenu,
+      dbMenuRenameFolder: this.dbMenuRenameFolder, dbMenuDeleteFolder: this.dbMenuDeleteFolder, dbMenuTogglePublish: this.dbMenuTogglePublish, dbMenuExtractFolder: this.dbMenuExtractFolder,
+      dbCancelDelete: this.dbCancelDelete, dbConfirmDelete: this.dbConfirmDelete,
+      dbToggleExpand: this.dbToggleExpand, dbNewFolder: this.dbNewFolder, dbNewDoc: this.dbNewDoc,
       dbOpenDoc: this.dbOpenDoc, dbCloseDoc: this.dbCloseDoc, dbDocField: this.dbDocField,
       dbToggleSrc: this.dbToggleSrc, dbToggleSrcPage: this.dbToggleSrcPage, delKbSource: this.delKbSource,
       dndStart: this.dndStart, dndOver: this.dndOver, dndEnter: this.dndEnter, dndDrop: this.dndDrop, dndEnd: this.dndEnd, dbSetUploadFolder: this.dbSetUploadFolder,

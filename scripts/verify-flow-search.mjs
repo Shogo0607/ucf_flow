@@ -42,6 +42,7 @@ c.state.savedFlows = [
       root: "n1",
       sourceFolderId: "f_quote",
       sourceFolderPath: "営業 / 見積",
+      sourceIds: ["kb_quote"],
       nodes: {
         n1: { kind: "decision", text: "値引き率は承認範囲内か？", why: "見積承認の要否を分ける", yes: "n2", no: "n3" },
         n2: { kind: "result", text: "営業担当で見積提出する" },
@@ -291,6 +292,40 @@ assert.equal(pageVals.isDbMain, true, "renderVals should expose the database mai
 assert.equal(pageVals.showDbSidebar, true, "database screen should show database-specific sidebar content");
 assert.equal(pageVals.showChatSidebar, false, "consultation history should not show on the database screen");
 assert.equal(c.state.dbOpen, false, "database navigation should not open the legacy modal");
+assert.equal(html.includes("公開キー pub_..."), false, "database screen should not show public-key input");
+assert.equal(html.includes("新規取り込みPDFの保存先"), false, "database screen should not show legacy upload destination selector");
+assert.ok(html.includes("dbFolderContextMenu"), "folder rows should expose right-click menu handling");
+assert.ok(html.includes("dbDeleteConfirmOpen"), "folder deletion should use a confirmation modal");
+assert.ok(!html.includes('data-type="folder" data-id="{{ f.id }}" data-name="{{ f.name }}" onClick="{{ dbStartRename }}"'), "folder rows should not expose inline rename icons");
+assert.ok(!html.includes('data-id="{{ f.id }}" onClick="{{ delFolder }}" title="削除"'), "folder rows should not expose inline delete icons");
+c.dbFolderSingleClick({ currentTarget: { dataset: { id: "f_sales" } } });
+assert.equal(c.state.dbSelectedFolder, "f_sales", "single-click should mark the folder as selected");
+assert.equal(c.state.dbCurrent, "f_sales", "single-click should navigate to the selected folder");
+c.dbFolderContextMenu({
+  preventDefault() {},
+  stopPropagation() {},
+  clientX: 20,
+  clientY: 30,
+  currentTarget: { dataset: { id: "f_quote" }, getBoundingClientRect: () => ({ left: 0, top: 0 }) },
+});
+assert.equal(c.state.dbSelectedFolder, "f_quote", "right-click should select the target folder");
+pageVals = c.renderVals();
+assert.equal(pageVals.dbFolderMenuOpen, true, "right-click should open a folder context menu");
+c.dbMenuDeleteFolder();
+pageVals = c.renderVals();
+assert.equal(pageVals.dbDeleteConfirmOpen, true, "folder deletion from context menu should ask for confirmation");
+c.dbCancelDelete();
+pageVals = c.renderVals();
+assert.equal(pageVals.dbCurSources[0].thoughtExtractDisabled, true, "already extracted PDF sources should disable thinking-process extraction");
+c.dbFolderContextMenu({
+  preventDefault() {},
+  stopPropagation() {},
+  clientX: 20,
+  clientY: 30,
+  currentTarget: { dataset: { id: "f_quote" }, getBoundingClientRect: () => ({ left: 0, top: 0 }) },
+});
+pageVals = c.renderVals();
+assert.equal(pageVals.dbFolderMenuExtractDisabled, true, "folders containing extracted sources should disable repeated extraction");
 c.goFlowLib();
 pageVals = c.renderVals();
 assert.equal(c.state.stage, "flowlib", "thinking process navigation should use a main stage");
@@ -302,7 +337,7 @@ assert.ok(html.includes('data-pane="flow-lib-ai-chat"'), "thinking process flow 
 assert.equal(html.includes(">差分を提案</button>"), false, "proactive diff proposal button should not be shown");
 assert.equal(html.includes('title="既存フローへの差分を提案"'), false, "database source rows should not show a flow-diff proposal button");
 assert.equal(html.includes('title="このPDFから既存フローへの差分を提案"'), false, "source rows should not show a PDF flow-diff proposal button");
-assert.ok(html.includes('title="このPDFから思考プロセスを抽出"'), "source rows should expose explicit thinking-process extraction");
+assert.ok(html.includes("thoughtExtractTitle"), "source rows should expose stateful thinking-process extraction controls");
 c.goHome();
 pageVals = c.renderVals();
 assert.equal(pageVals.showChatSidebar, true, "consultation history should show only on AI consultation");
