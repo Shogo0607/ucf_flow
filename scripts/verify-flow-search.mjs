@@ -317,6 +317,19 @@ assert.equal(c.state.dbSelectedFolder, "f_quote", "right-click should select the
 assert.equal(c.state.dbCurrent, "", "right-click should not navigate to the selected folder");
 pageVals = c.renderVals();
 assert.equal(pageVals.dbFolderMenuOpen, true, "right-click should open a folder context menu");
+c.dbMenuRenameFolder();
+pageVals = c.renderVals();
+assert.equal(pageVals.dbRenameDialogOpen, true, "folder rename should open a modal dialog");
+c.dbRenameInput({ target: { value: "見積リネーム" } });
+c.dbCommitRename();
+assert.equal(c.state.db.folders.find(f => f.id === "f_quote").name, "見積リネーム", "folder rename modal should persist the new name");
+c.dbFolderContextMenu({
+  preventDefault() {},
+  stopPropagation() {},
+  clientX: 20,
+  clientY: 30,
+  currentTarget: { dataset: { id: "f_quote" }, getBoundingClientRect: () => ({ left: 0, top: 0 }) },
+});
 c.dbMenuDeleteFolder();
 pageVals = c.renderVals();
 assert.equal(pageVals.dbDeleteConfirmOpen, true, "folder deletion from context menu should ask for confirmation");
@@ -348,6 +361,20 @@ assert.ok(html.includes("thoughtExtractTitle"), "source rows should expose state
 c.goHome();
 pageVals = c.renderVals();
 assert.equal(pageVals.showChatSidebar, true, "consultation history should show only on AI consultation");
+
+const emptyChat = new globalThis.Component();
+emptyChat.state.db = { folders: [], docs: [] };
+emptyChat.state.kbSources = [];
+emptyChat.state.savedFlows = [];
+emptyChat.state.flow = null;
+emptyChat.state.curFlowId = null;
+emptyChat.state.chatInput = "こんにちは";
+emptyChat.hasLLM = () => true;
+emptyChat.chatHarnessLoop = async () => { throw new Error("empty chat should not invoke the agent harness"); };
+let emptyAnswer = "";
+emptyChat.finishChatMessage = async (msg) => { emptyAnswer = msg.answer || ""; emptyChat.setState({ chatLoading: false }); };
+await emptyChat.sendChat();
+assert.ok(emptyAnswer.includes("相談に使える保存済みフローまたはナレッジDBがまだありません"), "empty chat should show a setup guidance message instead of a generic processing failure");
 
 const extractPrompt = c.buildPrompt("価格表を見て、特約店経由なら営業は直接回答せず引き継ぐ。価格はDBの価格表を参照する。");
 assert.ok(extractPrompt.includes("フロー/DBの切り分け基準"), "flow extraction prompt should include flow-vs-db criteria");

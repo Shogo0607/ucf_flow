@@ -644,6 +644,23 @@
   </div>
   </sc-if>
 
+  <!-- RENAME FOLDER -->
+  <sc-if value="{{ dbRenameDialogOpen }}" hint-placeholder-val="">
+  <div style="position:fixed;inset:0;background:rgba(20,26,38,.45);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(16,24,40,.3);overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid #eef1f5;font-size:15px;font-weight:800;color:#1f2733;">フォルダ名を変更</div>
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:9px;">
+        <label style="font-size:12px;font-weight:800;color:#6b7480;">名前</label>
+        <input value="{{ dbRenameVal }}" onInput="{{ dbRenameInput }}" onKeyDown="{{ dbRenameKey }}" autofocus="true" style="border:1.5px solid #dbe2ee;border-radius:9px;padding:10px 11px;font-size:13.5px;font-weight:700;color:#1f2733;background:#fbfcfe;" />
+      </div>
+      <div style="padding:12px 20px;border-top:1px solid #eef1f5;display:flex;justify-content:flex-end;gap:9px;">
+        <button onClick="{{ dbCancelRename }}" style="font-size:13px;font-weight:700;color:#6b7480;padding:9px 13px;border-radius:9px;">キャンセル</button>
+        <button onClick="{{ dbCommitRename }}" style="font-size:13px;font-weight:800;color:#fff;background:var(--primary);padding:9px 16px;border-radius:9px;">変更</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
   <!-- DELETE CONFIRM -->
   <sc-if value="{{ dbDeleteConfirmOpen }}" hint-placeholder-val="">
   <div style="position:fixed;inset:0;background:rgba(20,26,38,.45);z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;">
@@ -1826,6 +1843,7 @@ class Component extends DCLogic {
       dbDeleteConfirm: null,
       dbEditDoc: null,
       dbRename: null,
+      dbRenameDialog: false,
       dbRenameVal: "",
       flowLibOpen: false,
       flowLibCurrent: "",
@@ -2448,11 +2466,11 @@ class Component extends DCLogic {
   dbCloseFolderMenu = () => this.setState({ dbFolderMenu: null });
   dbSelectFolder(id) {
     const fid = id || "";
-    this.setState({ dbSelectedFolder: fid, dbUploadFolder: fid, dbRename: null, dbFolderMenu: null });
+    this.setState({ dbSelectedFolder: fid, dbUploadFolder: fid, dbRename: null, dbRenameDialog: false, dbFolderMenu: null });
   }
   dbNavigateFolder(id) {
     const fid = id || "";
-    this.setState({ dbSelectedFolder: fid, dbCurrent: fid, dbUploadFolder: fid, dbEditDoc: null, dbRename: null, dbFolderMenu: null, dbExpanded: { ...this.state.dbExpanded, [fid]: true } });
+    this.setState({ dbSelectedFolder: fid, dbCurrent: fid, dbUploadFolder: fid, dbEditDoc: null, dbRename: null, dbRenameDialog: false, dbFolderMenu: null, dbExpanded: { ...this.state.dbExpanded, [fid]: true } });
   }
   dbFolderSingleClick = (e) => {
     const id = e.currentTarget.dataset.id || "";
@@ -2467,6 +2485,7 @@ class Component extends DCLogic {
       dbSelectedFolder: id,
       dbUploadFolder: id,
       dbRename: null,
+      dbRenameDialog: false,
       dbFolderMenu: { id, x: Math.round(e.clientX || (rect.left + 16)), y: Math.round(e.clientY || (rect.top + 16)) },
     });
   };
@@ -2483,7 +2502,7 @@ class Component extends DCLogic {
     const id = this.state.dbFolderMenu && this.state.dbFolderMenu.id;
     const f = (this.state.db.folders || []).find(x => x.id === id);
     if (!f) return this.dbCloseFolderMenu();
-    this.setState({ dbRename: { type: "folder", id }, dbRenameVal: f.name || "", dbSelectedFolder: id, dbFolderMenu: null });
+    this.setState({ dbRename: { type: "folder", id }, dbRenameDialog: true, dbRenameVal: f.name || "", dbSelectedFolder: id, dbFolderMenu: null });
   };
   dbMenuDeleteFolder = () => {
     const id = this.state.dbFolderMenu && this.state.dbFolderMenu.id;
@@ -2623,9 +2642,10 @@ class Component extends DCLogic {
     let db;
     if (r.type === "folder") db = { ...this.state.db, folders: this.state.db.folders.map(f => f.id === r.id ? { ...f, name: v } : f) };
     else db = { ...this.state.db, docs: this.state.db.docs.map(d => d.id === r.id ? { ...d, title: v } : d) };
-    this.persistDb(db); this.setState({ db, dbRename: null });
+    this.persistDb(db); this.setState({ db, dbRename: null, dbRenameDialog: false });
   };
-  dbRenameKey = (e) => { if (e.key === "Enter") { e.preventDefault(); this.dbCommitRename(); } else if (e.key === "Escape") { this.setState({ dbRename: null }); } };
+  dbCancelRename = () => this.setState({ dbRename: null, dbRenameDialog: false });
+  dbRenameKey = (e) => { if (e.key === "Enter") { e.preventDefault(); this.dbCommitRename(); } else if (e.key === "Escape") { this.dbCancelRename(); } };
   deleteFolderById(id) {
     const all = this.state.db.folders; const del = {};
     const collect = (fid) => { del[fid] = 1; all.filter(f => f.parent === fid).forEach(c => collect(c.id)); };
@@ -2698,6 +2718,7 @@ class Component extends DCLogic {
       dbFolderMenuExtractDisabled: menuAlready || !this.selectedFolderSourceIds(menuFolder && menuFolder.id).length,
       dbFolderMenuExtractLabel: menuAlready ? "抽出済み" : "思考プロセス抽出",
       dbFolderMenuExtractStyle: { width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: "7px", fontSize: "12.5px", fontWeight: 700, color: menuAlready ? "#aab1bc" : "#3b54c4", cursor: (menuAlready || !this.selectedFolderSourceIds(menuFolder && menuFolder.id).length) ? "not-allowed" : "pointer", opacity: (menuAlready || !this.selectedFolderSourceIds(menuFolder && menuFolder.id).length) ? 0.6 : 1 },
+      dbRenameDialogOpen: !!(st.dbRenameDialog && st.dbRename && st.dbRename.type === "folder"),
       dbDeleteConfirmOpen: !!st.dbDeleteConfirm,
       dbDeleteName: (st.dbDeleteConfirm && st.dbDeleteConfirm.name) || "",
       showShared: cur === "" && (st.subs || []).length > 0,
@@ -5777,13 +5798,14 @@ class Component extends DCLogic {
 	    const chatSessionId = this.ensureChatSession(q);
 	    this._pendingChatSessionId = chatSessionId;
 	    const cands = this.candidateFlows();
+	    const hasKbEntries = this.kbIndex().length > 0;
 	    this.setState({ chatInput: "", chatLoading: true, chatAgentStatus: "相談内容を読み取り、調査計画を立てています…" });
     try {
       let target = { id: this.state.curFlowId, flow: this.state.flow, chat: this.state.chat, title: this.state.flow && this.state.flow.title };
       let switched = false;
       const scope = opts.forceScope || "auto";
       const answerMode = opts.forceAnswerMode || this.state.chatAnswerMode || "conditional";
-      if (scope === "auto" && this.hasLLM()) {
+      if (scope === "auto" && this.hasLLM() && (cands.length || hasKbEntries)) {
         const baseChat = this.state.chat.slice();
         this.setState({ chat: baseChat.concat([{ role: "user", text: q }]) });
         try {
@@ -5807,7 +5829,7 @@ class Component extends DCLogic {
       if (!target.flow) {
         const baseChat = this.state.chat.slice();
         this.setState({ chat: baseChat.concat([{ role: "user", text: q }]) });
-        if (this.hasLLM() && this.kbIndex().length > 0) {
+        if (this.hasLLM() && hasKbEntries) {
           const msg = await this.buildDbChatMessage(q, "ナレッジDBを対象に検索しました。", s => this.setChatAgentStatus(s));
           await this.finishChatMessage(msg, []);
         } else {
@@ -6547,7 +6569,7 @@ class Component extends DCLogic {
         };
       }),
       pubInput: st.pubInput || "", hasPubNotice: !!st.pubNotice, pubNoticeKey: st.pubNotice ? st.pubNotice.key : "", pubNoticeName: (st.pubNotice && st.pubNotice.name) || "", pubNoticeError: (st.pubNotice && st.pubNotice.error) || "", pubNoticeOk: !!(st.pubNotice && !st.pubNotice.error),
-      dbStartRename: this.dbStartRename, dbRenameInput: this.dbRenameInput, dbCommitRename: this.dbCommitRename, dbRenameKey: this.dbRenameKey,
+      dbStartRename: this.dbStartRename, dbRenameInput: this.dbRenameInput, dbCommitRename: this.dbCommitRename, dbCancelRename: this.dbCancelRename, dbRenameKey: this.dbRenameKey,
       delFolder: this.delFolder, delDoc: this.delDoc, dbRenameVal: st.dbRenameVal,
       ...this.dbExplorerVals(st),
       nodeModalOpen: !!st.nodeModalId,
