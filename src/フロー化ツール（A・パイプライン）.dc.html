@@ -5170,29 +5170,29 @@ class Component extends DCLogic {
     if (/^(こんにちは|こんにちわ|こんばんは|おはよう|おはようございます|はじめまして|hi|hello|hey|ありがとう|ありがとうございます|どうもありがとう|助かりました|ok|了解|承知しました|テスト|test)$/.test(compact)) {
       return { route: "general", needs: [], reason: "あいさつ・雑談・入力確認のみ" };
     }
-    if (/^(どんな内容|何が|なにが).*(回答|相談|できる)|^(使い方|つかいかた).*(教えて|知りたい)|^(help|ヘルプ)$/i.test(text)) {
+    if (/(どんな|どういう|どのような|何の|なにの|あなたは).*(質問|内容|相談).*(回答|答え|できる|できます|できるの|できるか)|回答できる|答えられる|^(使い方|つかいかた).*(教えて|知りたい)|^(help|ヘルプ)$/i.test(text)) {
       return { route: "general", needs: [], reason: "ツールの機能説明を求めている" };
     }
     return { route: "knowledge", needs: ["flow", "db"], reason: "AI未設定のため、明らかなgeneral以外は通常の相談処理へ回す" };
   }
-  normalizeChatRoute(o, q, fallback) {
+  normalizeChatRoute(o, q, fallback, source) {
     const fb = fallback || this.localChatRoute(q);
     const src = (o && typeof o === "object") ? o : {};
     const route = src.route === "knowledge" || src.route === "general" ? src.route : fb.route;
     const needs = Array.isArray(src.needs) ? src.needs.map(String).filter(v => v === "flow" || v === "db").slice(0, 2) : fb.needs;
     const plan = Array.isArray(src.plan) ? src.plan.map(String).filter(Boolean).slice(0, 4) : [];
-    return { route, needs, plan, reason: String(src.reason || fb.reason || "").slice(0, 160) };
+    return { route, needs, plan, reason: String(src.reason || fb.reason || "").slice(0, 160), source: source || fb.source || "local" };
   }
   async classifyChatRoute(q, cands, hasKbEntries) {
     if (this.hasLLM()) {
       try {
         const raw = await this.llmComplete(this.buildChatRoutePrompt(q, cands, hasKbEntries));
-        return this.normalizeChatRoute(this.parseLoose(raw) || this.parseToolCall(raw) || {}, q, { route: "general", needs: [], reason: "入口planningの結果を解釈できませんでした" });
+        return this.normalizeChatRoute(this.parseLoose(raw) || this.parseToolCall(raw) || {}, q, { route: "general", needs: [], reason: "入口planningの結果を解釈できませんでした" }, "llm");
       } catch (e) {
-        return { route: "general", needs: [], plan: [], reason: "入口planningを実行できませんでした" };
+        return { route: "general", needs: [], plan: [], reason: "入口planningを実行できませんでした: " + ((e && e.message) || e), source: "llm_error" };
       }
     }
-    return this.normalizeChatRoute(null, q, this.localChatRoute(q));
+    return this.normalizeChatRoute(null, q, { ...this.localChatRoute(q), source: "no_llm" }, "no_llm");
   }
   buildGeneralChatPrompt(q, baseChat, route) {
     const recent = (baseChat || []).slice(-8).map(m => (m.role === "user" ? "ユーザー: " : "アシスタント: ") + (m.text || m.answer || "")).join("\n");
@@ -5216,15 +5216,31 @@ class Component extends DCLogic {
   }
   async buildGeneralChatMessage(q, baseChat, route) {
     let answer = "";
+    const trace = [];
+    trace.push({
+      title: "入口planning: " + ((route && route.source) === "llm" ? "LLMで判定" : (route && route.source) === "no_llm" ? "AI未設定のためローカル判定" : "LLM planning未完了") + " / route=" + ((route && route.route) || "general") + " / " + ((route && route.reason) || ""),
+      sub: false
+    });
     if (this.hasLLM()) {
       try {
+        trace.push({ title: "通常チャット: LLMに応答生成を依頼", sub: false });
         answer = String(await this.llmComplete(this.buildGeneralChatPrompt(q, baseChat, route)) || "").replace(/```[a-z]*|```/gi, "").trim();
-      } catch (e) {}
+      } catch (e) {
+        trace.push({ title: "通常チャット: LLM応答生成に失敗 - " + ((e && e.message) || e), sub: false });
+      }
     }
     if (!answer) {
-      answer = "入力は受け取れています。業務手順・判断・資料確認に関する相談であれば、その内容を入力すると必要に応じてフローやナレッジDBを確認します。";
+      const local = this.localChatRoute(q);
+      if (local.reason === "ツールの機能説明を求めている") {
+        answer = "このツールでは、保存済みフローを使った業務手順・判断分岐の確認、ナレッジDBを使った資料根拠・仕様・条件の確認、登録内容に関する相談に回答できます。現在AIが利用できないため、通常チャットの自由回答は簡易案内になります。";
+      } else if (local.reason === "あいさつ・雑談・入力確認のみ") {
+        answer = "こんにちは。業務手順・判断・資料確認に関する相談内容を入力すると、AI設定が有効な場合は入口planningのうえ、必要に応じてフローやナレッジDBを確認します。";
+      } else {
+        answer = "AIが利用できないため通常チャットの回答を生成できません。右上の「API設定」で内蔵Claude、OpenAI、またはAzure OpenAIが利用可能か確認してください。";
+      }
     }
-    return { role: "assistant", answer, steps: [], path: [], trace: [{ title: "フロー/DB検索は未実行: " + ((route && route.reason) || "登録済みフロー/DBの確認対象ではないため"), sub: false }] };
+    trace.push({ title: "フロー/DB検索は未実行: " + ((route && route.reason) || "登録済みフロー/DBの確認対象ではないため"), sub: false });
+    return { role: "assistant", answer, steps: [], path: [], trace };
   }
   chatQuestionFor(index, chatArr) {
     for (let j = index - 1; j >= 0; j--) {

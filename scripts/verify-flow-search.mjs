@@ -430,10 +430,13 @@ greetingChat.llmComplete = async (prompt) => {
   return "こんにちは。相談したい内容があれば入力してください。";
 };
 let greetingAnswer = "";
-greetingChat.finishChatMessage = async (msg) => { greetingAnswer = msg.answer || ""; greetingChat.setState({ chatLoading: false }); };
+let greetingTrace = [];
+greetingChat.finishChatMessage = async (msg) => { greetingAnswer = msg.answer || ""; greetingTrace = msg.trace || []; greetingChat.setState({ chatLoading: false }); };
 await greetingChat.sendChat();
 assert.ok(greetingAnswer.includes("こんにちは"), "general chat should answer normally without flow/DB search");
 assert.equal(greetingLlmCalls, 2, "general chat should use route classification plus normal response, not the flow/DB harness");
+assert.ok(greetingTrace.some(t => String(t.title || "").includes("LLMで判定")), "LLM-backed general chat should expose that planning used LLM");
+assert.ok(greetingTrace.some(t => String(t.title || "").includes("LLMに応答生成を依頼")), "LLM-backed general chat should expose that response generation used LLM");
 
 const businessGreeting = new globalThis.Component();
 assert.equal(businessGreeting.localChatRoute("こんにちは、見積の承認はどう進める？").route, "knowledge", "greetings with a business question should still use the normal search path");
@@ -456,6 +459,27 @@ let capabilityAnswer = "";
 capabilityChat.finishChatMessage = async (msg) => { capabilityAnswer = msg.answer || ""; capabilityChat.setState({ chatLoading: false }); };
 await capabilityChat.sendChat();
 assert.ok(capabilityAnswer.includes("保存済みフロー") && capabilityAnswer.includes("ナレッジDB"), "capability question should be answered as general chat");
+
+const noLlmCapabilityChat = new globalThis.Component();
+noLlmCapabilityChat.state.db = c.state.db;
+noLlmCapabilityChat.state.kbSources = c.state.kbSources;
+noLlmCapabilityChat.state.savedFlows = seededSavedFlows;
+noLlmCapabilityChat.state.flow = null;
+noLlmCapabilityChat.state.curFlowId = null;
+noLlmCapabilityChat.state.chatInput = "あなたはどんな質問について回答できますか？";
+let noLlmCapabilityAnswer = "";
+let noLlmCapabilityTrace = [];
+noLlmCapabilityChat.finishChatMessage = async (msg) => { noLlmCapabilityAnswer = msg.answer || ""; noLlmCapabilityTrace = msg.trace || []; noLlmCapabilityChat.setState({ chatLoading: false }); };
+await noLlmCapabilityChat.sendChat();
+assert.ok(noLlmCapabilityAnswer.includes("保存済みフロー") && noLlmCapabilityAnswer.includes("現在AIが利用できない"), "no-LLM capability question should receive a useful capability answer, not the generic receipt fallback");
+assert.ok(noLlmCapabilityTrace.some(t => String(t.title || "").includes("AI未設定のためローカル判定")), "no-LLM general route should expose that LLM planning was not used");
+
+const noLlmGreetingChat = new globalThis.Component();
+noLlmGreetingChat.state.chatInput = "こんにちは";
+let noLlmGreetingAnswer = "";
+noLlmGreetingChat.finishChatMessage = async (msg) => { noLlmGreetingAnswer = msg.answer || ""; noLlmGreetingChat.setState({ chatLoading: false }); };
+await noLlmGreetingChat.sendChat();
+assert.ok(!noLlmGreetingAnswer.includes("入力は受け取れています"), "no-LLM greeting should not fall back to the generic receipt message");
 
 const extractPrompt = c.buildPrompt("価格表を見て、特約店経由なら営業は直接回答せず引き継ぐ。価格はDBの価格表を参照する。");
 assert.ok(extractPrompt.includes("フロー/DBの切り分け基準"), "flow extraction prompt should include flow-vs-db criteria");
