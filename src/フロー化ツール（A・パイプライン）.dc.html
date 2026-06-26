@@ -5135,15 +5135,23 @@ class Component extends DCLogic {
   quickReply = (e) => { const v = e.currentTarget.dataset.opt; if (v) this.sendChat(v, { forceScope: "flow" }); };
   buildChatRoutePrompt(q, cands, hasKbEntries) {
     return [
-      "あなたは業務相談ツールの入口ルーターです。回答本文は作らず、ユーザー入力をフロー/ナレッジDB調査へ流すべきかだけをJSONで判定してください。",
+      "あなたは業務相談ツールの入口プランナーです。回答本文は作らず、ユーザー入力をどう扱うべきかを計画してJSONで判定してください。",
       "",
-      "# 判定基準",
+      "# 目的",
+      "- 入力が登録済みフロー/ナレッジDBの確認を必要とする相談か、通常チャットで答えるべき内容かを判断する。",
+      "- 単語の有無だけで判定しない。ユーザーが何を求めているか、保存済みフロー/DBを調べる必要があるかを計画して決める。",
+      "",
+      "# route",
       "- knowledge: 業務手順、判断分岐、故障切り分け、対応方針、保存済みフロー、マニュアル/仕様/価格/型番/納期/根拠資料など、登録済みフローまたはナレッジDBの確認が役立つ内容。",
       "- general: あいさつ、雑談、感謝、入力テスト、この画面の一般的な使い方、登録済みフロー/DBと関係しない一般質問。",
-      "- あいさつを含んでいても、後半に業務手順・判断・資料確認の質問があれば knowledge。",
-      "- 判断に迷う場合は、登録済みフロー/DBで確認する価値があるかで決める。",
       "",
-      '# 出力JSONのみ: {"route":"knowledge|general","needs":["flow","db"],"reason":"短い理由"}',
+      "# 重要な例",
+      "- 「どんな内容について回答できる？」「何ができる？」「使い方を教えて」は general。ツールの説明として通常チャットで答える。",
+      "- 「登録済みの見積承認フローでどう進める？」「UX2の付属品を資料で確認して」は knowledge。",
+      "- あいさつを含んでいても、後半に業務手順・判断・資料確認の質問があれば knowledge。",
+      "- 判断に迷う場合でも、保存済みフロー/DBを読まないと答えられないかを基準にする。単なる機能説明や雑談なら general。",
+      "",
+      '# 出力JSONのみ: {"plan":["入力意図の短い観察","フロー/DB確認が必要かの判断"],"route":"knowledge|general","needs":["flow","db"],"reason":"短い理由"}',
       "",
       "# 利用可能な保存済みフロー",
       (cands && cands.length) ? this.flowListText(cands).slice(0, 3000) : "（なし）",
@@ -5162,24 +5170,29 @@ class Component extends DCLogic {
     if (/^(こんにちは|こんにちわ|こんばんは|おはよう|おはようございます|はじめまして|hi|hello|hey|ありがとう|ありがとうございます|どうもありがとう|助かりました|ok|了解|承知しました|テスト|test)$/.test(compact)) {
       return { route: "general", needs: [], reason: "あいさつ・雑談・入力確認のみ" };
     }
-    const knowledge = /手順|方法|進め|承認|判断|分岐|対応|対処|確認|切り分け|故障|障害|エラー|不具合|フロー|マニュアル|説明書|仕様|型番|価格|単価|納期|在庫|資料|根拠|見積|問い合わせ|問合せ|製品|機種|条件|基準|例外|添付|同梱|付属|寸法|一覧|内訳|明細|ページ|DB|ナレッジ/i.test(text);
-    return knowledge ? { route: "knowledge", needs: ["flow", "db"], reason: "業務手順・判断・資料確認に関係する語がある" } : { route: "general", needs: [], reason: "登録済みフロー/DBの確認対象ではない" };
+    if (/^(どんな内容|何が|なにが).*(回答|相談|できる)|^(使い方|つかいかた).*(教えて|知りたい)|^(help|ヘルプ)$/i.test(text)) {
+      return { route: "general", needs: [], reason: "ツールの機能説明を求めている" };
+    }
+    return { route: "knowledge", needs: ["flow", "db"], reason: "AI未設定のため、明らかなgeneral以外は通常の相談処理へ回す" };
   }
-  normalizeChatRoute(o, q) {
-    const fb = this.localChatRoute(q);
+  normalizeChatRoute(o, q, fallback) {
+    const fb = fallback || this.localChatRoute(q);
     const src = (o && typeof o === "object") ? o : {};
     const route = src.route === "knowledge" || src.route === "general" ? src.route : fb.route;
     const needs = Array.isArray(src.needs) ? src.needs.map(String).filter(v => v === "flow" || v === "db").slice(0, 2) : fb.needs;
-    return { route, needs, reason: String(src.reason || fb.reason || "").slice(0, 160) };
+    const plan = Array.isArray(src.plan) ? src.plan.map(String).filter(Boolean).slice(0, 4) : [];
+    return { route, needs, plan, reason: String(src.reason || fb.reason || "").slice(0, 160) };
   }
   async classifyChatRoute(q, cands, hasKbEntries) {
     if (this.hasLLM()) {
       try {
         const raw = await this.llmComplete(this.buildChatRoutePrompt(q, cands, hasKbEntries));
-        return this.normalizeChatRoute(this.parseLoose(raw) || this.parseToolCall(raw) || {}, q);
-      } catch (e) {}
+        return this.normalizeChatRoute(this.parseLoose(raw) || this.parseToolCall(raw) || {}, q, { route: "general", needs: [], reason: "入口planningの結果を解釈できませんでした" });
+      } catch (e) {
+        return { route: "general", needs: [], plan: [], reason: "入口planningを実行できませんでした" };
+      }
     }
-    return this.normalizeChatRoute(null, q);
+    return this.normalizeChatRoute(null, q, this.localChatRoute(q));
   }
   buildGeneralChatPrompt(q, baseChat, route) {
     const recent = (baseChat || []).slice(-8).map(m => (m.role === "user" ? "ユーザー: " : "アシスタント: ") + (m.text || m.answer || "")).join("\n");
@@ -5189,7 +5202,10 @@ class Component extends DCLogic {
       "業務手順・判断・資料根拠の相談に移る場合は、その内容を入力すればフロー/DB確認に進めるとだけ案内してください。",
       "",
       "# 入口判定",
-      (route && route.reason) || "",
+      [
+        (route && route.reason) || "",
+        (route && route.plan && route.plan.length) ? ("plan: " + route.plan.join(" / ")) : ""
+      ].filter(Boolean).join("\n"),
       "",
       "# 直近の会話",
       recent || "（なし）",

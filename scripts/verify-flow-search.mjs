@@ -403,6 +403,10 @@ emptyChat.state.flow = null;
 emptyChat.state.curFlowId = null;
 emptyChat.state.chatInput = "見積の承認はどう進める？";
 emptyChat.hasLLM = () => true;
+emptyChat.llmComplete = async (prompt) => {
+  if (prompt.includes("入口プランナー")) return '{"plan":["見積承認の進め方を聞いている","業務フロー確認の対象"],"route":"knowledge","needs":["flow"],"reason":"業務手順の質問"}';
+  return "{}";
+};
 emptyChat.chatHarnessLoop = async () => { throw new Error("empty chat should not invoke the agent harness"); };
 let emptyAnswer = "";
 emptyChat.finishChatMessage = async (msg) => { emptyAnswer = msg.answer || ""; emptyChat.setState({ chatLoading: false }); };
@@ -422,7 +426,7 @@ greetingChat.buildDbChatMessage = async () => { throw new Error("greeting-only c
 let greetingLlmCalls = 0;
 greetingChat.llmComplete = async (prompt) => {
   greetingLlmCalls += 1;
-  if (prompt.includes("入口ルーター")) return '{"route":"general","needs":[],"reason":"あいさつのみで、登録済みフロー/DBの確認対象ではない"}';
+  if (prompt.includes("入口プランナー")) return '{"plan":["あいさつのみ","フロー/DB確認は不要"],"route":"general","needs":[],"reason":"あいさつのみで、登録済みフロー/DBの確認対象ではない"}';
   return "こんにちは。相談したい内容があれば入力してください。";
 };
 let greetingAnswer = "";
@@ -433,6 +437,25 @@ assert.equal(greetingLlmCalls, 2, "general chat should use route classification 
 
 const businessGreeting = new globalThis.Component();
 assert.equal(businessGreeting.localChatRoute("こんにちは、見積の承認はどう進める？").route, "knowledge", "greetings with a business question should still use the normal search path");
+
+const capabilityChat = new globalThis.Component();
+capabilityChat.state.db = c.state.db;
+capabilityChat.state.kbSources = c.state.kbSources;
+capabilityChat.state.savedFlows = seededSavedFlows;
+capabilityChat.state.flow = null;
+capabilityChat.state.curFlowId = null;
+capabilityChat.state.chatInput = "どんな内容について回答できる？";
+capabilityChat.hasLLM = () => true;
+capabilityChat.chatHarnessLoop = async () => { throw new Error("capability question should not invoke the flow/DB harness"); };
+capabilityChat.buildDbChatMessage = async () => { throw new Error("capability question should not search DB"); };
+capabilityChat.llmComplete = async (prompt) => {
+  if (prompt.includes("入口プランナー")) return '{"plan":["ツールの回答範囲を聞いている","保存済みフロー/DBを読む必要はない"],"route":"general","needs":[],"reason":"機能説明の質問"}';
+  return "保存済みフローを使った手順・判断の確認、ナレッジDBを使った資料根拠の確認、登録内容に関係しない一般的な使い方の質問に回答できます。";
+};
+let capabilityAnswer = "";
+capabilityChat.finishChatMessage = async (msg) => { capabilityAnswer = msg.answer || ""; capabilityChat.setState({ chatLoading: false }); };
+await capabilityChat.sendChat();
+assert.ok(capabilityAnswer.includes("保存済みフロー") && capabilityAnswer.includes("ナレッジDB"), "capability question should be answered as general chat");
 
 const extractPrompt = c.buildPrompt("価格表を見て、特約店経由なら営業は直接回答せず引き継ぐ。価格はDBの価格表を参照する。");
 assert.ok(extractPrompt.includes("フロー/DBの切り分け基準"), "flow extraction prompt should include flow-vs-db criteria");
